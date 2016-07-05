@@ -1,13 +1,13 @@
 """
     autograder.py
-    Combines everything and peforms autograding of a single project / assignemnt
+    Combines everything and performs autograding of a single project / assignemnt
 """
 import csv
-import datetime
 import os
 import sys
 
 from Project import Project
+from Student import Student
 
 
 # import Project
@@ -20,7 +20,10 @@ class Autograder( object ):
         # self.read_config()
         self.setup_project()
 
-        self.validate_config()
+        if not self.validate_config():
+            sys.exit()
+
+        self.read_students()
 
 
     def setup_project( self ):
@@ -50,7 +53,8 @@ class Autograder( object ):
         #           assignment2\
         if not os.path.exists( self.proj.gradingroot ):
             print '\nGrading root directory {} does not exist, exit...'.format( self.proj.gradingroot )
-            sys.exit()
+            return False
+            # sys.exit()
 
         self.proj.masterdir = os.path.join( self.proj.gradingroot, 'assignments', self.proj.subdir )
 
@@ -58,7 +62,36 @@ class Autograder( object ):
         # This is where all the solution and provided files are stored
         if not os.path.exists( self.proj.masterdir ):
             print '\nMaster directory {} does not exist, exit...'.format( self.proj.masterdir )
+            return False
+            # sys.exit()
+
+        return True
+
+    def read_students( self ):
+        if not self.validate_config():
             sys.exit()
+
+        students = os.path.join( self.proj.gradingroot, 'students.csv' )
+
+        if not os.path.exists( students ):
+            print '\nStudnt data file {} does not exist, exit...'.format( students )
+            sys.exit()
+
+        with open( students ) as student_db:
+            reader = csv.DictReader( student_db )
+            for row in reader:
+                stud = Student( row )
+                print '{}\n'.format( stud )
+                self.check_student_directory( 'stud' )
+
+
+    def check_student_directory( self, student ):
+        try:
+            stud_dir = os.path.join( self.proj.gradingroot, student.get_dir() )
+            if not os.path.exists( stud_dir ):
+                print '\nStudnt directory {} for {} does not exist, creating it...'.format( student.get_dir(), student.get_name() )
+        except AttributeError:
+            print '\nInput parameter should be of type Student'
 
 
 proj = Autograder()
