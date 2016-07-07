@@ -25,10 +25,12 @@ class Autograder( object ):
 
         self.read_students()
 
+        self.proj.check_provided_files()
+
 
     def setup_project( self ):
 
-        # self.config_file = input('Enter the path to the project configuration csv file : ')
+        # # self.config_file = input('Enter the path to the project configuration csv file : ')
         # self.config_file = raw_input('\nEnter the path to the project configuration csv file : ')
         print '\nEnter the path to the project configuration csv file : '
         self.config_file = 'C:\\Users\\manujinda\\Documents\\++grading\\assignments\\assignment1\\assignment1.csv'
@@ -42,7 +44,7 @@ class Autograder( object ):
         # All the student submissions and project definitions are stored
         # under this directory.
         # gradingroot\
-        #       assignment\
+        #       assignments\
         #           assignment1\
         #           assignment2\
         #       stud1
@@ -51,16 +53,16 @@ class Autograder( object ):
         #       stud2
         #           assignment1\
         #           assignment2\
-        if not os.path.exists( self.proj.gradingroot ):
+        if not os.path.exists( self.proj.get_gradingroot() ):
             print '\nGrading root directory {} does not exist, exit...'.format( self.proj.gradingroot )
             return False
             # sys.exit()
 
-        self.proj.masterdir = os.path.join( self.proj.gradingroot, 'assignments', self.proj.subdir )
+        # self.proj.masterdir = os.path.join( self.proj.gradingroot, 'assignments', self.proj.subdir )
 
         # Check whether the project master directory exisits.
         # This is where all the solution and provided files are stored
-        if not os.path.exists( self.proj.masterdir ):
+        if not os.path.exists( self.proj.get_masterdir() ):
             print '\nMaster directory {} does not exist, exit...'.format( self.proj.masterdir )
             return False
             # sys.exit()
@@ -71,7 +73,7 @@ class Autograder( object ):
         if not self.validate_config():
             sys.exit()
 
-        students = os.path.join( self.proj.gradingroot, 'students.csv' )
+        students = os.path.join( self.proj.get_gradingroot(), 'students.csv' )
 
         if not os.path.exists( students ):
             print '\nStudnt data file {} does not exist, exit...'.format( students )
@@ -82,7 +84,7 @@ class Autograder( object ):
             for row in reader:
                 stud = Student( row )
                 print '{}\n'.format( stud )
-                self.check_student_directory( 'stud' )
+                self.check_student_directory( stud )
 
 
     def check_student_directory( self, student ):
@@ -90,6 +92,7 @@ class Autograder( object ):
             stud_dir = os.path.join( self.proj.gradingroot, student.get_dir() )
             if not os.path.exists( stud_dir ):
                 print '\nStudnt directory {} for {} does not exist, creating it...'.format( student.get_dir(), student.get_name() )
+                os.mkdir( stud_dir )
         except AttributeError:
             print '\nInput parameter should be of type Student'
 

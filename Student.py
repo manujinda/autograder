@@ -1,8 +1,11 @@
 '''
 Created on Jul 4, 2016
+Encapsulates a single student
 
 @author: manujinda
 '''
+
+from Repository import Repository
 
 class Student( object ):
     '''
@@ -21,7 +24,7 @@ class Student( object ):
         self._5_first_name = data_dict['First Name']
         self._6_email = data_dict['Email']
         self._7_dirname = data_dict['Dir Name']
-        self._8_git_repo = data_dict['Git Repo']
+        self._8_repo = Repository( data_dict['Repo'] )
 
     def __str__( self ):
         desc = ''

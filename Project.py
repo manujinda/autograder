@@ -1,4 +1,9 @@
-#!/usr/bin/python
+'''
+Created on Jul 28, 2016
+Encapsulates a single project / assignment / homework
+
+@author: manujinda
+'''
 
 import csv
 import datetime
@@ -10,30 +15,41 @@ from Problem import Problem
 
 class Project( object ):
     """
-        A collection of problems that are bundled togetther as a project.
-        Has a common due dayte.
+        A collection of problems that are bundled together as a project.
+        Has a common due date.
     """
     def __init__( self ):
         self.proj_no = 0
         self.name = ''
         self.duedate = datetime.date( 2016, 6, 28 )
         self.gradingroot = ''
-        self.masterdir = ''
-        self.subdir = 'assignment'
+
+        # This is the sub-directory in which each student submits his/her
+        # solutions to the project. Each student creates a sub-directory
+        # in his or her repo. When cloned each student directory will have
+        # a sub-directory by this name. Further, the master director for a
+        # particular project is also named with this.
+        self.subdir = ''
+
+        # IDs of problems that comprises this project
         self.problem_ids = []
+
+        # ID --> Problem mapping. Problem is an object of class Problem
+        # Each Problem encapsulated the details of that problem.
         self.problems = {}
 
-        # for i in range(3):
-        #    self.problems.append(Problem.Problem(i))
-        #
-        # print 'initialized'
-        # for i in range(3):
-        #    print self.problems[i].prob_no
 
+    '''
+    Read the project configuration file and initialize the project
+    instance variables.
 
+    Before starting actual grading, this method can be used to generate
+    Problem configuration file skeletons so that they can be filled with
+    appropriate data to be used during the auto grading
+    '''
     def setup_project( self, config_path ):
 
-        # Check whether the file exists.
+        # Check whether the project configuration file exists.
         if not os.path.exists( config_path ):
             print '\nConfiguration file {} does not exist, exit...'.format( config_path )
             sys.exit()
@@ -64,15 +80,19 @@ class Project( object ):
         if ( generate == 'y' ):
             self.generate_problem_config()
         else:
-            self.read_problem_config()
-        print generate
+            self.setup_problem()
 
-    def read_problem_config( self ):
+
+    '''
+    Set up the problems that constitutes this project
+    '''
+    def setup_problem( self ):
+        masterdir = self.get_masterdir()
         for p in self.problem_ids:
-            prob_conf = os.path.join( self.gradingroot, 'assignments', self.subdir, 'prob_' + p + '.csv' )
-            print prob_conf
+            prob_conf = os.path.join( masterdir, 'prob_' + p + '.csv' )
+            # print prob_conf
 
-            # Check whether the problem configuration file exisits.
+            # Check whether the problem configuration file exists.
             if not os.path.exists( prob_conf ):
                 print '\nProblem configuration file {} does not exist, exit...'.format( prob_conf )
                 sys.exit()
@@ -85,23 +105,93 @@ class Project( object ):
             print self.problems[p]
 
 
+    '''
+    Generate problem configurtion files
+    '''
     def generate_problem_config( self ):
-        asgnmt_root = os.path.join( self.gradingroot, 'assignments', self.subdir )
+        # asgnmt_root = os.path.join( self.gradingroot, 'assignments', self.subdir )
+        masterdir = self.get_masterdir()
 
-        if not os.path.exists( asgnmt_root ):
-            os.mkdir( asgnmt_root )
+        if not os.path.exists( masterdir ):
+            os.mkdir( masterdir )
 
         for p in self.problem_ids:
-            prob_conf = os.path.join( asgnmt_root, 'prob_' + p + '.csv' )
+            prob_conf = os.path.join( masterdir, 'prob_' + p + '.csv' )
             with open( prob_conf, 'wb' ) as config_file:
                 # writer = csv.DictWriter( config_file )
                 writer = csv.writer( config_file, delimiter = ',', quotechar = '|', quoting = csv.QUOTE_MINIMAL )
-                writer.writerow( ['Key', '{} {}'.format( ' ', 'Value' )] )
+                # writer.writerow( ['Key', '{} {}'.format( ' ', 'Value' )] )
+                writer.writerow( ['Key', ' Value'] )
 
+                # create a temporary Problem object so that we can access
+                # its instance variable names.
+                # temp.__dict__ provides the instances variables of object
+                # temp as instance variable name --> instance variable value
                 temp = Problem( p )
-                print temp.__dict__
                 for key in sorted( temp.__dict__.keys() ):
-                    writer.writerow( [key , '{} {}'.format( ' ', temp.__dict__[key] )] )
+                    # writer.writerow( [key , '{} {}'.format( ' ', temp.__dict__[key] )] )
+                    writer.writerow( [key , ' {}'.format( temp.__dict__[key] )] )
+
+
+    '''
+    This is the root directory where all the grading for a particular
+    class is handled. The directory structure used is as follows:
+        gradingroot\
+              assignments\
+                  assignment1\
+                  assignment2\
+              stud1
+                  assignment1\
+                  assignment2\
+              stud2
+                  assignment1\
+                  assignment2\
+    '''
+    def get_gradingroot( self ):
+        return self.gradingroot
+
+
+    '''
+    masterdir is the directory where all the project related stuff that are
+    supplied to students and grading related stuff are kept.
+    These include supplied code, makefiles, project configuration file,
+    problem configuration files, template answer files.
+    '''
+    def get_masterdir( self ):
+        return os.path.join( self.gradingroot, 'assignments', self.subdir )
+
+
+    '''
+    Check provided files in the master directory
+    '''
+    def check_provided_files( self ):
+        files = set()
+        for p in self.problems.keys():
+            files.update( set( self.problems[p].get_files_provided() ) )
+            # print self.problems[p].get_files_provided()
+
+        master = self.get_masterdir()
+        for f in files:
+            file_path = os.path.join( master, f )
+            if not os.path.exists( file_path ):
+                print 'Provided file {} does not exist in the master directory. Creating...'.format( f )
+
+    '''
+    Check submitted files in the master directory
+    '''
+    def check_submitted_files( self ):
+        files = set()
+        for p in self.problems.keys():
+            files.update( set( self.problems[p].get_files_submitted() ) )
+
+        master = self.get_masterdir()
+        for f in files:
+            file_path = os.path.join( master, f )
+            if not os.path.exists( file_path ):
+                print 'Submitted file {} does not exist in the master directory. Creating...'.format( f )
+
+
+
 
 # p = Project()
 # p.test_meth()
