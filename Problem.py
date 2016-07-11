@@ -21,7 +21,7 @@ class Problem( object ):
         self._04_files_provided = []
         self._05_files_submitted = []
 
-        # A dictionary that maps test inputs to anticipated outputs
+        # A dictionary that maps sandbox inputs to anticipated outputs
         # both inputs and outputs are stored in files. So the dictionary
         # has the form input file --> output file.
         #
