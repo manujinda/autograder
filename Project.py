@@ -19,24 +19,24 @@ class Project( object ):
         Has a common due date.
     """
     def __init__( self ):
-        self.proj_no = 0
-        self.name = ''
-        self.duedate = datetime.date( 2016, 6, 28 )
-        self.gradingroot = ''
+        self._1_proj_no = '1 # insert the assignment number before the # sign'
+        self._2_name = 'hello world # insert the assignment name before the # sign'
+        self._3_duedate = '6/28/2016 # insert the due date before the # sign. Format mm/dd/yyyy'  # datetime.date( 2016, 6, 28 )
+        self._4_gradingroot = ''
 
         # This is the sub-directory in which each student submits his/her
         # solutions to the project. Each student creates a sub-directory
         # in his or her repo. When cloned each student directory will have
         # a sub-directory by this name. Further, the master director for a
         # particular project is also named with this.
-        self.subdir = ''
+        self._5_subdir = 'assignment1 # This is the directory name where files for this assignment is stored'
 
         # IDs of problems that comprises this project
-        self.problem_ids = []
+        self._6_problem_ids = '1 2 # insert the different problem names / numbers of this assignment. Use spaces to separate problems'  # []
 
         # ID --> Problem mapping. Problem is an object of class Problem
         # Each Problem encapsulated the details of that problem.
-        self.problems = {}
+        # self._7_problems = {}
 
 
     '''
@@ -62,17 +62,17 @@ class Project( object ):
                 key = row['Key'].strip()
                 value = row[' Value'].strip()
                 if key == 'proj_no':
-                    self.proj_no = int( value )
+                    self._1_proj_no = int( value )
                 elif key == 'name':
-                    self.name = value
+                    self._2_name = value
                 elif key == 'duedate':
-                    self.duedate = datetime.datetime.strptime( value, '%m/%d/%Y' )
+                    self._3_duedate = datetime.datetime.strptime( value, '%m/%d/%Y' )
                 elif key == 'gradingroot':
-                    self.gradingroot = value
+                    self._4_gradingroot = value
                 elif key == 'subdir':
-                    self.subdir = value
+                    self._5_subdir = value
                 elif key == 'problems':
-                    self.problem_ids = value.split()
+                    self._6_problem_ids = value.split()
                 # config_dict[row['Key']] = row['Value']
 
         generate = raw_input( '\nGenerate Project Skeleton ( y / n ) : ' )
@@ -88,7 +88,7 @@ class Project( object ):
     '''
     def setup_problem( self ):
         masterdir = self.get_masterdir()
-        for p in self.problem_ids:
+        for p in self._6_problem_ids:
             prob_conf = os.path.join( masterdir, 'prob_' + p + '.csv' )
             # print prob_conf
 
@@ -97,25 +97,25 @@ class Project( object ):
                 print '\nProblem configuration file {} does not exist, exit...'.format( prob_conf )
                 sys.exit()
 
-            self.problems[p] = Problem( p )
+            self._7_problems[p] = Problem( p )
 
-            self.problems[p].setup_problem( prob_conf )
+            self._7_problems[p].setup_problem( prob_conf )
 
-        for p in self.problems.keys():
-            print self.problems[p]
+        for p in self._7_problems.keys():
+            print self._7_problems[p]
 
 
     '''
     Generate problem configurtion files
     '''
     def generate_problem_config( self ):
-        # asgnmt_root = os.path.join( self.gradingroot, 'assignments', self.subdir )
+        # asgnmt_root = os.path.join( self._4_gradingroot, 'assignments', self._5_subdir )
         masterdir = self.get_masterdir()
 
         if not os.path.exists( masterdir ):
             os.mkdir( masterdir )
 
-        for p in self.problem_ids:
+        for p in self._6_problem_ids:
             prob_conf = os.path.join( masterdir, 'prob_' + p + '.csv' )
             with open( prob_conf, 'wb' ) as config_file:
                 # writer = csv.DictWriter( config_file )
@@ -148,7 +148,7 @@ class Project( object ):
                   assignment2\
     '''
     def get_gradingroot( self ):
-        return self.gradingroot
+        return self._4_gradingroot
 
 
     '''
@@ -158,7 +158,7 @@ class Project( object ):
     problem configuration files, template answer files.
     '''
     def get_masterdir( self ):
-        return os.path.join( self.gradingroot, 'assignments', self.subdir )
+        return os.path.join( self._4_gradingroot, 'assignments', self._5_subdir )
 
 
     '''
@@ -166,9 +166,9 @@ class Project( object ):
     '''
     def check_provided_files( self ):
         files = set()
-        for p in self.problems.keys():
-            files.update( set( self.problems[p].get_files_provided() ) )
-            # print self.problems[p].get_files_provided()
+        for p in self._7_problems.keys():
+            files.update( set( self._7_problems[p].get_files_provided() ) )
+            # print self._7_problems[p].get_files_provided()
 
         master = self.get_masterdir()
         for f in files:
@@ -181,8 +181,8 @@ class Project( object ):
     '''
     def check_submitted_files( self ):
         files = set()
-        for p in self.problems.keys():
-            files.update( set( self.problems[p].get_files_submitted() ) )
+        for p in self._7_problems.keys():
+            files.update( set( self._7_problems[p].get_files_submitted() ) )
 
         master = self.get_masterdir()
         for f in files:
