@@ -17,14 +17,24 @@ config = ConfigParser.RawConfigParser()
 # non-string values to keys internally, but will receive an error
 # when attempting to write to a file or when you get it in non-raw
 # mode. SafeConfigParser does not allow such assignments to take place.
-config.add_section('Section1')
-config.set('Section1', 'an_int', '15')
-config.set('Section1', 'a_bool', 'true')
-config.set('Section1', 'a_float', '3.1415')
-config.set('Section1', 'baz', 'fun')
-config.set('Section1', 'bar', 'Python')
-config.set('Section1', 'foo', '%(bar)s is %(baz)s!')
+config.add_section( 'Autograder Setup' )
+
+# All the grading for a particular class happens within this directory.
+# There is a predefined directory structure that the auto-grader uses within this directory.
+path = '/home/users/manu/Documents/manujinda/uo_classes/4_2016_summer/boyana/grading'
+config.set( 'Autograder Setup', 'grading_root', path )
+
+
+config.set( 'Autograder Setup', 'grading_master', 'assignments' )
 
 # Writing our configuration file to 'example.cfg'
-with open('example.cfg', 'wb') as configfile:
-    config.write(configfile)
+with open( 'autograder.cfg', 'wb' ) as configfile:
+    config.write( configfile )
+
+config = ConfigParser.SafeConfigParser()
+config.read( '/home/users/manu/Documents/manujinda/uo_classes/4_2016_summer/boyana/autograder_ws/autograder/autograder.cfg' )
+
+# Set the third, optional argument of get to 1 if you wish to use raw mode.
+print config.get( 'Autograder Setup', 'grading_root', 0 )  # -> "Python is fun!"
+print config.get( 'Autograder Setup', 'grading_master', 1 )  # -> "%(bar)s is %(baz)s!"
+
