@@ -6,6 +6,7 @@ A class to encapsulate a version control repository such as Git
 '''
 import os
 import re
+import subprocess
 
 
 class Repository( object ):
@@ -34,14 +35,16 @@ class Repository( object ):
             self.user_name = valid_rui.group( 4 )
             self.repo_name = valid_rui.group( 5 )
             self.repo_type = valid_rui.group( 6 )
+            self.valid = True
         else:
-            self.uri = ''
+            # self.uri = ''
             self.protocol = ''
             self.host = ''
             self.user_name = ''
             self.repo_name = ''
             self.repo_type = ''
-            print 'Invalid git uri'
+            self.valid = False
+            print 'Invalid git uri: {}'.format( self.uri )
 
 #         if valid_rui:
 #             self.repo_type = 'git'
@@ -73,16 +76,16 @@ class Repository( object ):
             desc += '{} > {} \n'.format( f, self.__dict__[f] )
         return desc
 
-    def clone( self, path ):
+    def clone( self, path = '' ):
         '''
         clone the git repo at the location provided.
         Checks whether already cloned beforehand.
         '''
-        try:
-            os.chdir( path )
-        except OSError:
-            print 'Unable to go to directory {} for cloning'.format( path )
-
-        if not os.path.join( path, self.repo_name ):
-            if self.protocol == 'git':
-                cmd = 'git clone' + self.uri
+        if self.valid:
+            cmd = 'git clone {} {}'.format( self.uri, path )
+            cloning = subprocess.Popen( cmd.split(), stdout = subprocess.PIPE, stderr = subprocess.PIPE )
+            out, err = cloning.communicate()
+            print 'output\n', out
+            print 'error\n', err
+        else:
+            print 'Error: Invalid Git uri: {}'.format( self.uri )
