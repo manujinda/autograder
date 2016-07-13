@@ -37,7 +37,7 @@ class Problem( object ):
         self._11_scores = []
 
         # Timeout interval to decide infinite loop
-        # -1 meand do not timeout
+        # -1 means do not timeout
         self._12_timeout = -1
 
     def __str__( self ):
