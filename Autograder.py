@@ -188,4 +188,4 @@ class Autograder( object ):
 if len( sys.argv ) > 2:
     if sys.argv[1] == 'setup':
         if os.path.exists( sys.argv[2] ):
-            prog = Autograder.setup( os.path.join( os.getcwd(), 'autograder.cfg' ) )
+            prog = Autograder.setup( sys.argv[2] )
