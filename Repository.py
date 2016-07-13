@@ -19,10 +19,10 @@ class Repository( object ):
         '''
         Constructor
         '''
-        # git_ssh = re.compile( '^(git@)([a-zA-Z0-9]*)\.(org|com):([a-zA-Z0-9_]*)/([a-zA-Z0-9_-]*)\.(git)$' )
-        # git_https = re.compile( '^(https://)(?:[a-zA-Z0-9_]*@|)([a-zA-Z0-9_]*).(com|org)/([a-zA-Z0-9_]*)/([a-zA-Z0-9_-]*).(git)$' )
-        git_ssh = re.compile( '^(git@)([a-zA-Z0-9]*)\.(?:org|com):([a-zA-Z0-9_]*)/([a-zA-Z0-9_-]*)\.(git)$' )
-        git_https = re.compile( '^(https://)(?:[a-zA-Z0-9_]*@|)([a-zA-Z0-9_]*).(?:com|org)/([a-zA-Z0-9_]*)/([a-zA-Z0-9_-]*).(git)$' )
+        # git_ssh = re.compile( '^(git@)([a-zA-Z0-9]+)\.(org|com):([a-zA-Z0-9_]+)/([a-zA-Z0-9_-]+)\.(git)$' )
+        # git_https = re.compile( '^(https://)(?:[a-zA-Z0-9_]+@|)([a-zA-Z0-9_]+).(com|org)/([a-zA-Z0-9_]+)/([a-zA-Z0-9_-]+).(git)$' )
+        git_ssh = re.compile( '^(git@)([a-zA-Z0-9]+)\.(?:org|com):([a-zA-Z0-9_]+)/([a-zA-Z0-9_-]+)\.(git)$' )
+        git_https = re.compile( '^(https://)(?:[a-zA-Z0-9_]+@|)([a-zA-Z0-9_]+).(?:com|org)/([a-zA-Z0-9_]+)/([a-zA-Z0-9_-]+).(git)$' )
 
         self.uri = repo.strip()
 
