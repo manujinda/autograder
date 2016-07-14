@@ -10,6 +10,17 @@ import ConfigParser
 import sys
 
 
+# playing with output formatting
+
+ret = '{}{}{}_{}'.format( '{:0>', 3, '}', '{}' )
+print ret
+print ret.format( 1, 'abc' )
+
+
+
+sys.exit( 0 )
+# Playing with repository cloning
+
 from Repository import Repository
 
 rep = Repository( 'https://github.com/manujinda/hello-world.git' )
