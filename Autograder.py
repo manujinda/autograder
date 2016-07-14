@@ -26,12 +26,12 @@ class Autograder( object ):
             Read the autograder configuration file and populate grading root
             and grading master directory names
         '''
-        if not os.path.exists( config_file ):
+        if not os.path.exists( self.config_file ):
             print 'Error: Autograder Configuration File {} does not exist. Exit...'.format( config_file )
             sys.exit( 0 )
 
         config = ConfigParser.SafeConfigParser()
-        config.read( config_file )
+        config.read( self.config_file )
 
         # All the grading for a particular offering of a particular class happens under this director
         self.grading_root = config.get( 'Autograder Setup', 'grading_root' )
@@ -42,7 +42,7 @@ class Autograder( object ):
 
         self.students = []
 
-#         self.proj = Project()
+        self.proj = Project()
 #
 #         # self.read_config()
 #         self.setup_project()
@@ -90,7 +90,7 @@ class Autograder( object ):
 
         # Create an example assignment directory and configuration files
         assignment1_config = ConfigParser.SafeConfigParser()
-        assignment1_config.add_section( 'Assignment1' )
+        assignment1_config.add_section( 'assignment1' )
 #         assignment1_config.set( 'Assignment1', 'no', '1 # insert the assignment number before the # sign' )
 #         assignment1_config.set( 'Assignment1', 'name', 'hello world # insert the assignment name before the # sign' )
 #         assignment1_config.set( 'Assignment1', 'duedate', '6/28/2016 # insert the due date before the # sign. Format mm/dd/yyyy' )
@@ -99,8 +99,8 @@ class Autograder( object ):
 
         assignemnt = Project()
         for key in sorted( assignemnt.__dict__.keys() ):
-            assignment1_config.set( 'Assignment1', key, ' {}'.format( assignemnt.__dict__[key] ) )
-        assignment1_config.set( 'Assignment1', '_4_gradingroot', self.grading_root )
+            assignment1_config.set( 'assignment1', key, ' {}'.format( assignemnt.__dict__[key] ) )
+        # assignment1_config.set( 'assignment1', '_4_gradingroot', self.grading_root )
 
 
         assignment1 = os.path.join( self.grading_root, self.grading_master, 'assignment1' )
@@ -129,13 +129,12 @@ class Autograder( object ):
 
     def setup_project( self ):
 
-        # # self.config_file = input('Enter the path to the project configuration csv file : ')
-        # self.config_file = raw_input('\nEnter the path to the project configuration csv file : ')
-        print '\nEnter the path to the project configuration csv file : '
-        self.config_file = 'C:\\Users\\manujinda\\Documents\\++grading\\assignments\\assignment1\\assignment1.csv'
-        print self.config_file
+        # # self.config_file = input('Enter the assignment master sub-directory name ')
+        # self.config_file = raw_input('\nEnter the assignment master sub-directory name ')
+        print '\nEnter the assignment master sub-directory name : '
+        self.assignment_master_sub_dir = 'assignment1'
 
-        self.proj.setup_project( self.config_file )
+        self.proj.setup_project( self.grading_root, self.grading_master, self.assignment_master_sub_dir )
 
 
     def validate_config( self ):
@@ -285,4 +284,5 @@ if len( sys.argv ) > 2:
         if ag.validate_config():
             ag.read_students()
             # ag.update_repos()
-            ag.copy_files_to_grading()
+            # ag.copy_files_to_grading()
+            ag.setup_project()
