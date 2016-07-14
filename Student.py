@@ -2,7 +2,7 @@
 Created on Jul 4, 2016
 Encapsulates a single student
 
-@author: manujinda
+@author: Manujinda Wathugala
 '''
 
 from Repository import Repository
@@ -32,12 +32,27 @@ class Student( object ):
             desc += '{} > {} \n'.format( f[3:], self.__dict__[f] )
         return desc
 
-    def get_dir( self ):
-        return '{:0>3}_{}'.format( self._1_no, self._7_dirname )
+    def get_dir( self, index_len ):
+        # If index_len = 3, this creates a string of the form:
+        # {:3}_{}
+        ret = '{}{}{}_{}'.format( '{:0>', index_len, '}', '{}' )
+
+        # Use the format string created above to format the student
+        # directory name appropriately
+        return ret.format( self._1_no, self._7_dirname )
+
+    def get_index( self ):
+        return '{}'.format( self._1_no )
 
     def get_name( self ):
         return '{} {}'.format( self._5_first_name, self._4_last_name )
 
     def clone_student_repo( self, destination = '' ):
         self._8_repo.clone( destination )
+
+    def pull_student_repo( self, local_path = '' ):
+        self._8_repo.pull( local_path )
+
+    def copy_student_repo( self, source, destination, student ):
+        self._8_repo.copy( source, destination, student )
 
