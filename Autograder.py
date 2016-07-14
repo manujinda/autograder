@@ -8,12 +8,12 @@ import os
 import shutil
 import sys
 
-from Problem import Problem  # Just to access its instance variables to generate a sample configuratin file
+from Problem import Problem  # Just to access its instance variables to generate a sample configuration file
 from Project import Project
+from Repository import Repository
 from Student import Student
 
 
-# import Project
 class Autograder( object ):
 
     def __init__( self, config_file ):
@@ -215,12 +215,53 @@ class Autograder( object ):
                 # self.check_student_directory( stud )
 
 
-    def clone_repos( self ):
+#     def clone_repos( self ):
+#         # When student database is sorted in the ascending order of  student index numbers
+#         # the length of the index number of the last student is the longest. Get the length
+#         # of that index number and pass that to the cloning method so that when creating the
+#         # local student repository directory name each directory have the index number of each
+#         # student prefixed to student name in such a way prefixed index numbers have the same
+#         # length with 0s padded in the left. e.g. 003_manujinda
+#         index_len = len( '{}'.format( self.students[-1].get_index() ) )
+#         for stud in self.students:
+#             stud_dir = os.path.join( self.grading_root, self.students_directory, stud.get_dir( index_len ) )
+#             if not os.path.exists( stud_dir ):
+#                 stud.clone_student_repo( stud_dir )
+#             else:
+#                 print 'Repository path {} already exists'.format( stud_dir )
+
+    def update_repos( self ):
+        # When student database is sorted in the ascending order of  student index numbers
+        # the length of the index number of the last student is the longest. Get the length
+        # of that index number and pass that to the cloning method so that when creating the
+        # local student repository directory name each directory have the index number of each
+        # student prefixed to student name in such a way prefixed index numbers have the same
+        # length with 0s padded in the left. e.g. 003_manujinda
+        index_len = len( '{}'.format( self.students[-1].get_index() ) )
         for stud in self.students:
-            stud_dir = os.path.join( self.grading_root, self.students_directory, stud.get_dir() )
-            print stud_dir
+            stud_dir = os.path.join( self.grading_root, self.students_directory, stud.get_dir( index_len ) )
             if not os.path.exists( stud_dir ):
+                # Student repository has not been cloned. Have to clone it first
                 stud.clone_student_repo( stud_dir )
+            else:
+                stud.pull_student_repo( stud_dir )
+
+
+    '''
+    Copying files from cloned student repos to student grading folders.
+    At the moment I'm making use of git itself to do the job. I clone the
+    cloned student repo in students directory to the grading directory.
+    If this has any bad implications I'd have to copy files using
+    OS file copy utilities.
+    '''
+    def copy_files_to_grading( self ):
+        index_len = len( '{}'.format( self.students[-1].get_index() ) )
+        source = os.path.join( self.grading_root, self.students_directory )
+        destination = os.path.join( self.grading_root, self.grading_directory )
+        for stud in self.students:
+            stud.copy_student_repo( source, destination, stud.get_dir( index_len ) )
+
+
 
 
     def check_student_directory( self, student ):
@@ -240,7 +281,8 @@ if len( sys.argv ) > 2:
     if sys.argv[1] == 'setup':
         if os.path.exists( sys.argv[2] ):
             ag.setup_grading_dir_tree()
-    if sys.argv[1] == 'clone':
+    if sys.argv[1] == 'update':
         if ag.validate_config():
             ag.read_students()
-            ag.clone_repos()
+            # ag.update_repos()
+            ag.copy_files_to_grading()
