@@ -16,26 +16,15 @@ from Student import Student
 # import Project
 class Autograder( object ):
 
-    def __init__( self ):
+    def __init__( self, config_file ):
 
-        self.proj = Project()
+        self.students_directory = 'students'
+        self.grading_directory = 'grading'
+        self.config_file = config_file
 
-        # self.read_config()
-        self.setup_project()
-
-        if not self.validate_config():
-            sys.exit()
-
-        self.read_students()
-
-        self.proj.check_provided_files()
-
-
-    @classmethod
-    def setup( self, config_file ):
         '''
-            Read the autograder configuration file and setup an autograder directory tree for grading
-            projects / assignments for a particular offering of a particular class
+            Read the autograder configuration file and populate grading root
+            and grading master directory names
         '''
         if not os.path.exists( config_file ):
             print 'Error: Autograder Configuration File {} does not exist. Exit...'.format( config_file )
@@ -51,31 +40,53 @@ class Autograder( object ):
         # For each project / assignment, there is a separate directory in this directory
         self.grading_master = config.get( 'Autograder Setup', 'grading_master' )
 
+        self.students = []
+
+#         self.proj = Project()
+#
+#         # self.read_config()
+#         self.setup_project()
+#
+#         if not self.validate_config():
+#             sys.exit()
+#
+#         self.read_students()
+#
+#         self.proj.check_provided_files()
+
+
+    # @classmethod
+    '''
+        Setup an autograder directory tree for grading
+        projects / assignments for a particular offering
+        of a particular class
+    '''
+    def setup_grading_dir_tree( self ):
         if os.path.exists( self.grading_root ):
             print 'Error: Autograder grading root directory {} already exists. Exit...'.format( self.grading_root )
             sys.exit( 0 )
 
-        students_directory = 'students'
-        grading_directory = 'grading'
+#         students_directory = 'students'
+#         grading_directory = 'grading'
 
         os.mkdir( self.grading_root )
         os.mkdir( os.path.join( self.grading_root, self.grading_master ) )
 
         # All the student git repos are cloned in this directory
-        os.mkdir( os.path.join( self.grading_root, students_directory ) )
+        os.mkdir( os.path.join( self.grading_root, self.students_directory ) )
 
         # All the compiling and grading of student submission happens here.
         # Foe each student there is a directory with the cloned student repo name in this directory.
-        os.mkdir( os.path.join( self.grading_root, grading_directory ) )
+        os.mkdir( os.path.join( self.grading_root, self.grading_directory ) )
 
         # Copy the autograder configuration file to autograder directory for later usage
-        shutil.copy2( config_file, os.path.join( self.grading_root, 'autograder.cfg' ) )
+        shutil.copy2( self.config_file, os.path.join( self.grading_root, 'autograder.cfg' ) )
 
         # Create the skeleton of the student data csv file
-        student_db = os.path.join( self.grading_root, students_directory, 'students.csv' )
+        student_db = os.path.join( self.grading_root, self.students_directory, 'students.csv' )
         with open( student_db, 'wb' ) as students:
             writer = csv.writer( students, delimiter = ',', quotechar = '|', quoting = csv.QUOTE_MINIMAL )
-            writer.writerow( ['No', ' UO ID', ' Duck ID', ' Last Name', ' First Name', ' Email', ' Dir Name', ' Repo'] )
+            writer.writerow( ['No', 'UO ID', 'Duck ID', 'Last Name', 'First Name', 'Email', 'Dir Name', 'Repo'] )
 
         # Create an example assignment directory and configuration files
         assignment1_config = ConfigParser.SafeConfigParser()
@@ -128,40 +139,68 @@ class Autograder( object ):
 
 
     def validate_config( self ):
-        # Check whether the grading root directory exisits.
+        # Check whether the grading root directory exists.
         # All the student submissions and project definitions are stored
         # under this directory.
         # gradingroot\
+        #       autograder.cfg
         #       assignments\
         #           assignment1\
         #           assignment2\
-        #       stud1
-        #           assignment1\
-        #           assignment2\
-        #       stud2
-        #           assignment1\
-        #           assignment2\
-        if not os.path.exists( self.proj.get_gradingroot() ):
-            print '\nGrading root directory {} does not exist, exit...'.format( self.proj.gradingroot )
+        #       grading\
+        #           stud1
+        #               assignment1\
+        #               assignment2\
+        #           stud2
+        #               assignment1\
+        #               assignment2\
+        #       students\
+        #           students.csv
+        #           stud1
+        #               assignment1\
+        #               assignment2\
+        #           stud2
+        #               assignment1\
+        #               assignment2\
+        if not os.path.exists( self.grading_root ):
+            print '\nGrading root directory {} does not exist, exit...'.format( self.grading_root )
             return False
             # sys.exit()
 
         # self.proj.masterdir = os.path.join( self.proj.gradingroot, 'assignments', self.proj.subdir )
 
-        # Check whether the project master directory exisits.
+        # Check whether the project master directory exists.
         # This is where all the solution and provided files are stored
-        if not os.path.exists( self.proj.get_masterdir() ):
-            print '\nMaster directory {} does not exist, exit...'.format( self.proj.masterdir )
+        master = os.path.join( self.grading_root, self.grading_master )
+        if not os.path.exists( master ):
+            print '\nMaster directory {} does not exist, exit...'.format( master )
+            return False
+            # sys.exit()
+
+        # Check whether the student directory exists.
+        # This is where all the cloned student repos are stored
+        students = os.path.join( self.grading_root, self.students_directory )
+        if not os.path.exists( students ):
+            print '\nMaster directory {} does not exist, exit...'.format( students )
+            return False
+            # sys.exit()
+
+        # Check whether the grading directory exists.
+        # This is where all grading happens.
+        grading = os.path.join( self.grading_root, self.grading_directory )
+        if not os.path.exists( grading ):
+            print '\nMaster directory {} does not exist, exit...'.format( grading )
             return False
             # sys.exit()
 
         return True
 
+
     def read_students( self ):
         if not self.validate_config():
             sys.exit()
 
-        students = os.path.join( self.proj.get_gradingroot(), 'students.csv' )
+        students = os.path.join( self.grading_root, self.students_directory, 'students.csv' )
 
         if not os.path.exists( students ):
             print '\nStudnt data file {} does not exist, exit...'.format( students )
@@ -171,8 +210,17 @@ class Autograder( object ):
             reader = csv.DictReader( student_db )
             for row in reader:
                 stud = Student( row )
-                print '{}\n'.format( stud )
-                self.check_student_directory( stud )
+                self.students.append( stud )
+                # print '{}\n'.format( stud )
+                # self.check_student_directory( stud )
+
+
+    def clone_repos( self ):
+        for stud in self.students:
+            stud_dir = os.path.join( self.grading_root, self.students_directory, stud.get_dir() )
+            print stud_dir
+            if not os.path.exists( stud_dir ):
+                stud.clone_student_repo( stud_dir )
 
 
     def check_student_directory( self, student ):
@@ -185,7 +233,14 @@ class Autograder( object ):
             print '\nInput parameter should be of type Student'
 
 
+
+
 if len( sys.argv ) > 2:
+    ag = Autograder( sys.argv[2] )
     if sys.argv[1] == 'setup':
         if os.path.exists( sys.argv[2] ):
-            prog = Autograder.setup( sys.argv[2] )
+            ag.setup_grading_dir_tree()
+    if sys.argv[1] == 'clone':
+        if ag.validate_config():
+            ag.read_students()
+            ag.clone_repos()
