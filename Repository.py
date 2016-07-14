@@ -2,7 +2,7 @@
 Created on Jul 6, 2016
 A class to encapsulate a version control repository such as Git
 
-@author: manujinda
+@author: Manujinda Wathugala
 '''
 import os
 import re
@@ -48,29 +48,6 @@ class Repository( object ):
             self.valid = False
             print 'Invalid git uri: {}'.format( self.uri )
 
-#         if valid_rui:
-#             self.repo_type = 'git'
-#             self.protocol = 'ssh'
-#             self.host = valid_rui.group( 2 )
-#             self.user_name = valid_rui.group( 4 )
-#             self.repo_name = valid_rui.group( 5 )
-#         else:
-#             valid_rui = git_https.match( self.uri )
-#
-#             if valid_rui:
-#                 self.repo_type = 'git'
-#                 self.protocol = 'https'
-#                 self.host = valid_rui.group( 3 )
-#                 self.user_name = valid_rui.group( 5 )
-#                 self.repo_name = valid_rui.group( 6 )
-#             else:
-#                 self.repo_type = ''
-#                 self.protocol = ''
-#                 self.host = ''
-#                 self.user_name = ''
-#                 self.repo_name = ''
-#                 print 'Invalid git uri'
-
 
     def __str__( self ):
         desc = ''
@@ -95,6 +72,7 @@ class Repository( object ):
         else:
             print 'Error: Invalid repository uri: {}'.format( self.uri )
 
+
     def pull( self, path = '' ):
         if path:
             cwd = os.getcwd()
@@ -112,6 +90,7 @@ class Repository( object ):
                 os.chdir( cwd )
         else:
             print 'empty path'
+
 
     '''
     Copy a local repository to another local folder
