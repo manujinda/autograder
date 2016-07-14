@@ -137,15 +137,25 @@ class Project( object ):
     This is the root directory where all the grading for a particular
     class is handled. The directory structure used is as follows:
         gradingroot\
+              autograder.cfg
               assignments\
                   assignment1\
                   assignment2\
-              stud1
-                  assignment1\
-                  assignment2\
-              stud2
-                  assignment1\
-                  assignment2\
+              grading\
+                  stud1
+                      assignment1\
+                      assignment2\
+                  stud2
+                      assignment1\
+                      assignment2\
+              students\
+                  students.csv
+                  stud1
+                      assignment1\
+                      assignment2\
+                  stud2
+                      assignment1\
+                      assignment2\
     '''
     def get_gradingroot( self ):
         return self._4_gradingroot
