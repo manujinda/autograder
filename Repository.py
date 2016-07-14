@@ -84,10 +84,62 @@ class Repository( object ):
         Checks whether already cloned beforehand.
         '''
         if self.valid:
-            cmd = 'git clone {} {}'.format( self.uri, path )
-            cloning = subprocess.Popen( cmd.split(), stdout = subprocess.PIPE, stderr = subprocess.PIPE )
-            out, err = cloning.communicate()
-            print 'output\n', out
-            print 'error\n', err
+            if self.repo_type == 'git':
+                # This is a git repository
+                cmd = 'git clone {} {}'.format( self.uri, path )
+                cloning = subprocess.Popen( cmd.split(), stdout = subprocess.PIPE, stderr = subprocess.PIPE )
+                out, err = cloning.communicate()
+                print out
+                print err
+                print cloning.returncode
         else:
-            print 'Error: Invalid Git uri: {}'.format( self.uri )
+            print 'Error: Invalid repository uri: {}'.format( self.uri )
+
+    def pull( self, path = '' ):
+        if path:
+            cwd = os.getcwd()
+            if os.path.exists( path ):
+                os.chdir( path )
+                if self.repo_type == 'git':
+                    if os.path.exists( '.git' ):
+                        pulling = subprocess.Popen( ['git', 'pull'], stdout = subprocess.PIPE, stderr = subprocess.PIPE )
+                        out, err = pulling.communicate()
+                        print out
+                        print err
+                        print pulling.returncode
+                    else:
+                        print 'this is not a git repo'
+                os.chdir( cwd )
+        else:
+            print 'empty path'
+
+    '''
+    Copy a local repository to another local folder
+    '''
+    def copy( self, source, destination, student ):
+        src = os.path.join( source, student )
+        if self.repo_type == 'git':
+            if os.path.exists( os.path.join( src, '.git' ) ):
+                root = 'git {}{}'
+                cwd = os.getcwd()
+                repo_copy = os.path.join( destination, student )
+                if os.path.exists( os.path.join( repo_copy, '.git' ) ):
+                    os.chdir( repo_copy )
+                    cmd = root.format( 'pull', '' )
+                elif not os.path.exists( repo_copy ):
+                    os.chdir( destination )
+                    cmd = root.format( 'clone file://', src )
+                    print repo_copy
+                else:
+                    cmd = ''
+                    print 'Error: Destination directory already exists but not a repository'
+
+                if cmd:
+                    copying = subprocess.Popen( cmd.split(), stdout = subprocess.PIPE, stderr = subprocess.PIPE )
+                    out, err = copying.communicate()
+                    print out
+                    print err
+                    print copying.returncode
+
+                os.chdir( cwd )
+
