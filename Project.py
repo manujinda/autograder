@@ -2,9 +2,10 @@
 Created on Jul 28, 2016
 Encapsulates a single project / assignment / homework
 
-@author: manujinda
+@author: Manujinda Wathugala
 '''
 
+import ConfigParser
 import csv
 import datetime
 import os
@@ -19,24 +20,31 @@ class Project( object ):
         Has a common due date.
     """
     def __init__( self ):
-        self._1_proj_no = '1 # insert the assignment number before the # sign'
-        self._2_name = 'hello world # insert the assignment name before the # sign'
-        self._3_duedate = '6/28/2016 # insert the due date before the # sign. Format mm/dd/yyyy'  # datetime.date( 2016, 6, 28 )
-        self._4_gradingroot = ''
+        self._1_proj_no = '1 ; insert the assignment number before the # sign'
+        self._2_name = 'hello world ; insert the assignment name before the # sign'
+        self._3_duedate = '6/28/2016 ; insert the due date before the # sign. Format mm/dd/yyyy'  # datetime.date( 2016, 6, 28 )
+        # self._4_gradingroot = ''
 
         # This is the sub-directory in which each student submits his/her
         # solutions to the project. Each student creates a sub-directory
         # in his or her repo. When cloned each student directory will have
         # a sub-directory by this name. Further, the master director for a
         # particular project is also named with this.
-        self._5_subdir = 'assignment1 # This is the directory name where files for this assignment is stored'
+        self._5_subdir = 'assignment1 ; This is the directory name where files for this assignment is stored'
 
         # IDs of problems that comprises this project
-        self._6_problem_ids = '1 2 # insert the different problem names / numbers of this assignment. Use spaces to separate problems'  # []
+        self._6_problem_ids = '1 2 ; insert the different problem names / numbers of this assignment. Use spaces to separate problems'  # []
 
         # ID --> Problem mapping. Problem is an object of class Problem
         # Each Problem encapsulated the details of that problem.
         # self._7_problems = {}
+
+
+    def __str__( self ):
+        desc = ''
+        for f in sorted( self.__dict__.keys() ):
+            desc += '{} > {} \n'.format( f[3:], self.__dict__[f] )
+        return desc
 
 
     '''
@@ -47,40 +55,71 @@ class Project( object ):
     Problem configuration file skeletons so that they can be filled with
     appropriate data to be used during the auto grading
     '''
-    def setup_project( self, config_path ):
+    def setup_project( self, grading_root, grading_master, assignment_master_sub_dir ):
+
+        self._4_gradingroot = grading_root
+        self._5_subdir = assignment_master_sub_dir
+
+        config_file = os.path.join( self._4_gradingroot, grading_master, self._5_subdir, '{}.cfg'.format( self._5_subdir ) )
 
         # Check whether the project configuration file exists.
-        if not os.path.exists( config_path ):
-            print '\nConfiguration file {} does not exist, exit...'.format( config_path )
+        if not os.path.exists( config_file ):
+            print '\nConfiguration file {} does not exist, exit...'.format( config_file )
             sys.exit()
 
-        # config_dict = {}
-        with open( config_path ) as config_file:
-            reader = csv.DictReader( config_file )
-            for row in reader:
-                # self.__dict__[row['Key']] = row['Value']
-                key = row['Key'].strip()
-                value = row[' Value'].strip()
-                if key == 'proj_no':
-                    self._1_proj_no = int( value )
-                elif key == 'name':
-                    self._2_name = value
-                elif key == 'duedate':
-                    self._3_duedate = datetime.datetime.strptime( value, '%m/%d/%Y' )
-                elif key == 'gradingroot':
-                    self._4_gradingroot = value
-                elif key == 'subdir':
-                    self._5_subdir = value
-                elif key == 'problems':
-                    self._6_problem_ids = value.split()
-                # config_dict[row['Key']] = row['Value']
+        config = ConfigParser.SafeConfigParser()
+        config.read( config_file )
 
+        for key in sorted( self.__dict__.keys() ):
+            self.__dict__[key] = config.get( self._5_subdir, key ).strip()
+
+        self._1_proj_no = int( self._1_proj_no )
+        self._3_duedate = datetime.datetime.strptime( self._3_duedate, '%m/%d/%Y' )
+        self._6_problem_ids = self._6_problem_ids.split()
+
+        print self
+        return
         generate = raw_input( '\nGenerate Project Skeleton ( y / n ) : ' )
 
         if ( generate == 'y' ):
             self.generate_problem_config()
         else:
             self.setup_problem()
+
+#     def setup_project( self, config_path ):
+#
+#         # Check whether the project configuration file exists.
+#         if not os.path.exists( config_path ):
+#             print '\nConfiguration file {} does not exist, exit...'.format( config_path )
+#             sys.exit()
+#
+#         # config_dict = {}
+#         with open( config_path ) as config_file:
+#             reader = csv.DictReader( config_file )
+#             for row in reader:
+#                 # self.__dict__[row['Key']] = row['Value']
+#                 key = row['Key'].strip()
+#                 value = row[' Value'].strip()
+#                 if key == 'proj_no':
+#                     self._1_proj_no = int( value )
+#                 elif key == 'name':
+#                     self._2_name = value
+#                 elif key == 'duedate':
+#                     self._3_duedate = datetime.datetime.strptime( value, '%m/%d/%Y' )
+#                 elif key == 'gradingroot':
+#                     self._4_gradingroot = value
+#                 elif key == 'subdir':
+#                     self._5_subdir = value
+#                 elif key == 'problems':
+#                     self._6_problem_ids = value.split()
+#                 # config_dict[row['Key']] = row['Value']
+#
+#         generate = raw_input( '\nGenerate Project Skeleton ( y / n ) : ' )
+#
+#         if ( generate == 'y' ):
+#             self.generate_problem_config()
+#         else:
+#             self.setup_problem()
 
 
     '''
