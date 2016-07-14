@@ -33,8 +33,11 @@ class Student( object ):
         return desc
 
     def get_dir( self ):
-        return self._7_dirname
+        return '{:0>3}_{}'.format( self._1_no, self._7_dirname )
 
     def get_name( self ):
         return '{} {}'.format( self._5_first_name, self._4_last_name )
+
+    def clone_student_repo( self, destination = '' ):
+        self._8_repo.clone( destination )
 
