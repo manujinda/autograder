@@ -21,6 +21,7 @@ class Autograder( object ):
         self.students_directory = 'students'
         self.grading_directory = 'grading'
         self.config_file = config_file
+        self.proj_loaded = False  # Keeps track of whether a valid project configuration file has been loaded
 
         '''
             Read the autograder configuration file and populate grading root
@@ -89,8 +90,9 @@ class Autograder( object ):
             writer.writerow( ['No', 'UO ID', 'Duck ID', 'Last Name', 'First Name', 'Email', 'Dir Name', 'Repo'] )
 
         # Create an example assignment directory and configuration files
-        assignment1_config = ConfigParser.SafeConfigParser()
-        assignment1_config.add_section( 'assignment1' )
+        assignment_name = 'assignment1'
+        assignment_config = ConfigParser.SafeConfigParser()
+        assignment_config.add_section( assignment_name )
 #         assignment1_config.set( 'Assignment1', 'no', '1 # insert the assignment number before the # sign' )
 #         assignment1_config.set( 'Assignment1', 'name', 'hello world # insert the assignment name before the # sign' )
 #         assignment1_config.set( 'Assignment1', 'duedate', '6/28/2016 # insert the due date before the # sign. Format mm/dd/yyyy' )
@@ -99,30 +101,31 @@ class Autograder( object ):
 
         assignemnt = Project()
         for key in sorted( assignemnt.__dict__.keys() ):
-            assignment1_config.set( 'assignment1', key, ' {}'.format( assignemnt.__dict__[key] ) )
+            assignment_config.set( assignment_name, key, ' {}'.format( assignemnt.__dict__[key] ) )
         # assignment1_config.set( 'assignment1', '_4_gradingroot', self.grading_root )
 
 
-        assignment1 = os.path.join( self.grading_root, self.grading_master, 'assignment1' )
-        os.mkdir( assignment1 )
+        assignment_path = os.path.join( self.grading_root, self.grading_master, assignment_name )
+        os.mkdir( assignment_path )
 
-        with open( os.path.join( assignment1, 'assignment1.cfg' ), 'wb' ) as configfile:
-            assignment1_config.write( configfile )
+        with open( os.path.join( assignment_path, '+_1_{}.cfg'.format( assignment_name ) ), 'wb' ) as configfile:
+            assignment_config.write( configfile )
 
         # create a temporary Problem object so that we can access
         # its instance variable names.
         # temp.__dict__ provides the instances variables of object
         # temp as instance variable name --> instance variable value
+        prob_config = ConfigParser.SafeConfigParser()
         for p in range( 1, 3 ):
             temp = Problem( p )
-            prob_config = ConfigParser.SafeConfigParser()
-            section = 'problem_{}'.format( p )
+#            prob_config = ConfigParser.SafeConfigParser()
+            section = '{}_problem_{}'.format( assignment_name, p )
             prob_config.add_section( section )
             for key in sorted( temp.__dict__.keys() ):
                 prob_config.set( section, key, ' {}'.format( temp.__dict__[key] ) )
 
-            with open( os.path.join( assignment1, section + '.cfg' ), 'wb' ) as configfile:
-                prob_config.write( configfile )
+        with open( os.path.join( assignment_path, '+_2_{}_problems.cfg'.format( assignment_name ) ), 'wb' ) as configfile:
+            prob_config.write( configfile )
 
         print 'Setting up autograder directory structure completed successfully'
 
@@ -134,7 +137,7 @@ class Autograder( object ):
         print '\nEnter the assignment master sub-directory name : '
         self.assignment_master_sub_dir = 'assignment1'
 
-        self.proj.setup_project( self.grading_root, self.grading_master, self.assignment_master_sub_dir )
+        self.proj_loaded = self.proj.setup_project( self.grading_root, self.grading_master, self.assignment_master_sub_dir )
 
 
     def validate_config( self ):
@@ -261,8 +264,6 @@ class Autograder( object ):
             stud.copy_student_repo( source, destination, stud.get_dir( index_len ) )
 
 
-
-
     def check_student_directory( self, student ):
         try:
             stud_dir = os.path.join( self.proj.gradingroot, student.get_dir() )
@@ -273,6 +274,18 @@ class Autograder( object ):
             print '\nInput parameter should be of type Student'
 
 
+    '''
+    If a valid project configuration file has been loaded, this will generate necessary problem configuration file
+    '''
+    def gen_prob_config_skel( self ):
+        if self.proj_loaded:
+            self.proj.generate_problem_config()
+
+
+    def setup_problems( self ):
+        if self.proj_loaded:
+            self.proj.setup_problems()
+
 
 
 if len( sys.argv ) > 2:
@@ -280,9 +293,21 @@ if len( sys.argv ) > 2:
     if sys.argv[1] == 'setup':
         if os.path.exists( sys.argv[2] ):
             ag.setup_grading_dir_tree()
-    if sys.argv[1] == 'update':
+    elif sys.argv[1] == 'setproj':
         if ag.validate_config():
             ag.read_students()
-            # ag.update_repos()
-            # ag.copy_files_to_grading()
             ag.setup_project()
+    elif sys.argv[1] == 'update':
+        if ag.validate_config():
+            ag.read_students()
+            ag.update_repos()
+    elif sys.argv[1] == 'copy':
+        if ag.validate_config():
+            ag.read_students()
+            ag.update_repos()
+            ag.copy_files_to_grading()
+    elif sys.argv[1] == 'genprob':
+        if ag.validate_config():
+            ag.setup_project()
+            ag.gen_prob_config_skel()
+            ag.setup_problems()
