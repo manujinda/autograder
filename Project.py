@@ -6,7 +6,6 @@ Encapsulates a single project / assignment / homework
 '''
 
 import ConfigParser
-import csv
 import datetime
 import os
 import sys
@@ -37,7 +36,7 @@ class Project( object ):
 
         # ID --> Problem mapping. Problem is an object of class Problem
         # Each Problem encapsulated the details of that problem.
-        # self._7_problems = {}
+        # self._8_problems = {}
 
 
     def __str__( self ):
@@ -57,10 +56,8 @@ class Project( object ):
     '''
     def setup_project( self, grading_root, grading_master, assignment_master_sub_dir ):
 
-        self._4_gradingroot = grading_root
-        self._5_subdir = assignment_master_sub_dir
-
-        config_file = os.path.join( self._4_gradingroot, grading_master, self._5_subdir, '{}.cfg'.format( self._5_subdir ) )
+#        config_file = os.path.join( self._4_gradingroot, self._7_grading_master, self._5_subdir, '{}.cfg'.format( self._5_subdir ) )
+        config_file = os.path.join( grading_root, grading_master, assignment_master_sub_dir, '+_1_{}.cfg'.format( assignment_master_sub_dir ) )
 
         # Check whether the project configuration file exists.
         if not os.path.exists( config_file ):
@@ -71,105 +68,86 @@ class Project( object ):
         config.read( config_file )
 
         for key in sorted( self.__dict__.keys() ):
-            self.__dict__[key] = config.get( self._5_subdir, key ).strip()
+            self.__dict__[key] = config.get( assignment_master_sub_dir, key ).strip()
 
         self._1_proj_no = int( self._1_proj_no )
         self._3_duedate = datetime.datetime.strptime( self._3_duedate, '%m/%d/%Y' )
         self._6_problem_ids = self._6_problem_ids.split()
 
+        self._4_gradingroot = grading_root
+        self._5_subdir = assignment_master_sub_dir
+        self._7_grading_master = grading_master
+
         print self
-        return
-        generate = raw_input( '\nGenerate Project Skeleton ( y / n ) : ' )
-
-        if ( generate == 'y' ):
-            self.generate_problem_config()
-        else:
-            self.setup_problem()
-
-#     def setup_project( self, config_path ):
-#
-#         # Check whether the project configuration file exists.
-#         if not os.path.exists( config_path ):
-#             print '\nConfiguration file {} does not exist, exit...'.format( config_path )
-#             sys.exit()
-#
-#         # config_dict = {}
-#         with open( config_path ) as config_file:
-#             reader = csv.DictReader( config_file )
-#             for row in reader:
-#                 # self.__dict__[row['Key']] = row['Value']
-#                 key = row['Key'].strip()
-#                 value = row[' Value'].strip()
-#                 if key == 'proj_no':
-#                     self._1_proj_no = int( value )
-#                 elif key == 'name':
-#                     self._2_name = value
-#                 elif key == 'duedate':
-#                     self._3_duedate = datetime.datetime.strptime( value, '%m/%d/%Y' )
-#                 elif key == 'gradingroot':
-#                     self._4_gradingroot = value
-#                 elif key == 'subdir':
-#                     self._5_subdir = value
-#                 elif key == 'problems':
-#                     self._6_problem_ids = value.split()
-#                 # config_dict[row['Key']] = row['Value']
-#
+        return True
 #         generate = raw_input( '\nGenerate Project Skeleton ( y / n ) : ' )
 #
 #         if ( generate == 'y' ):
 #             self.generate_problem_config()
 #         else:
-#             self.setup_problem()
+#             self.setup_problems()
 
 
     '''
     Set up the problems that constitutes this project
     '''
-    def setup_problem( self ):
-        masterdir = self.get_masterdir()
+    def setup_problems( self ):
+        prob_conf = self.get_prob_config_path()
+        section_prefix = '{}_problem_{}'.format( self._5_subdir, {} )
+        # Check whether the problem configuration file exists.
+        if not os.path.exists( prob_conf ):
+            print '\nProblem configuration file {} does not exist, exit...'.format( prob_conf )
+            sys.exit()
+
+        # ID --> Problem mapping. Problem is an object of class Problem
+        # Each Problem encapsulated the details of that problem.
+        self._8_problems = {}
+
         for p in self._6_problem_ids:
-            prob_conf = os.path.join( masterdir, 'prob_' + p + '.csv' )
-            # print prob_conf
+            self._8_problems[p] = Problem( p )
 
-            # Check whether the problem configuration file exists.
-            if not os.path.exists( prob_conf ):
-                print '\nProblem configuration file {} does not exist, exit...'.format( prob_conf )
-                sys.exit()
+            self._8_problems[p].setup_problem( prob_conf, section_prefix.format( p ) )
 
-            self._7_problems[p] = Problem( p )
-
-            self._7_problems[p].setup_problem( prob_conf )
-
-        for p in self._7_problems.keys():
-            print self._7_problems[p]
+#         for p in self._8_problems.keys():
+#             print self._8_problems[p]
+        return True
 
 
     '''
-    Generate problem configurtion files
+    Generate problem configuration files
     '''
     def generate_problem_config( self ):
         # asgnmt_root = os.path.join( self._4_gradingroot, 'assignments', self._5_subdir )
-        masterdir = self.get_masterdir()
+        assignment_path = self.get_masterdir()
 
-        if not os.path.exists( masterdir ):
-            os.mkdir( masterdir )
+        if not os.path.exists( assignment_path ):
+            os.mkdir( assignment_path )
 
+        prob_config = ConfigParser.SafeConfigParser()
         for p in self._6_problem_ids:
-            prob_conf = os.path.join( masterdir, 'prob_' + p + '.csv' )
-            with open( prob_conf, 'wb' ) as config_file:
-                # writer = csv.DictWriter( config_file )
-                writer = csv.writer( config_file, delimiter = ',', quotechar = '|', quoting = csv.QUOTE_MINIMAL )
-                # writer.writerow( ['Key', '{} {}'.format( ' ', 'Value' )] )
-                writer.writerow( ['Key', ' Value'] )
+            # create a temporary Problem object so that we can access
+            # its instance variable names.
+            # temp.__dict__ provides the instances variables of object
+            # temp as instance variable name --> instance variable value
+            temp = Problem( p )
+            section = '{}_problem_{}'.format( self._5_subdir, p )
+            prob_config.add_section( section )
+            for key in sorted( temp.__dict__.keys() ):
+                prob_config.set( section, key, ' {}'.format( temp.__dict__[key] ) )
 
-                # create a temporary Problem object so that we can access
-                # its instance variable names.
-                # temp.__dict__ provides the instances variables of object
-                # temp as instance variable name --> instance variable value
-                temp = Problem( p )
-                for key in sorted( temp.__dict__.keys() ):
-                    # writer.writerow( [key , '{} {}'.format( ' ', temp.__dict__[key] )] )
-                    writer.writerow( [key , ' {}'.format( temp.__dict__[key] )] )
+        # with open( os.path.join( assignment_path, '+_2_{}_problems.cfg'.format( self._5_subdir ) ), 'wb' ) as configfile:
+        with open( self.get_prob_config_path(), 'wb' ) as configfile:
+            prob_config.write( configfile )
+
+        print 'Setting up problem configuration file skeleton completed successfully'
+
+
+    '''
+    Generate the path to the configuration file that holds to configuration details of problems
+    where this project is comprised of
+    '''
+    def get_prob_config_path( self ):
+        return os.path.join( self.get_masterdir(), '+_2_{}_problems.cfg'.format( self._5_subdir ) )
 
 
     '''
@@ -207,11 +185,11 @@ class Project( object ):
     problem configuration files, template answer files.
     '''
     def get_masterdir( self ):
-        return os.path.join( self._4_gradingroot, 'assignments', self._5_subdir )
+        return os.path.join( self._4_gradingroot, self._7_grading_master, self._5_subdir )
 
 
     '''
-    Check provided files in the master directory
+    Check provided files in the master directory. If not found create those files
     '''
     def check_provided_files( self ):
         files = set()
@@ -226,7 +204,7 @@ class Project( object ):
                 print 'Provided file {} does not exist in the master directory. Creating...'.format( f )
 
     '''
-    Check submitted files in the master directory
+    Check submitted files in the master directory. If not create them
     '''
     def check_submitted_files( self ):
         files = set()
