@@ -8,8 +8,8 @@ import os
 import shutil
 import sys
 
+from Assignment import Assignment
 from Problem import Problem  # Just to access its instance variables to generate a sample configuration file
-from Project import Project
 from Repository import Repository
 from Student import Student
 
@@ -21,7 +21,7 @@ class Autograder( object ):
         self.students_directory = 'students'
         self.grading_directory = 'grading'
         self.config_file = config_file
-        self.proj_loaded = False  # Keeps track of whether a valid project configuration file has been loaded
+        self.asmnt_loaded = False  # Keeps track of whether a valid assignment configuration file has been loaded
 
         '''
             Read the autograder configuration file and populate grading root
@@ -43,17 +43,17 @@ class Autograder( object ):
 
         self.students = []
 
-        self.proj = Project()
+        self.asmnt = Assignment()
 #
 #         # self.read_config()
-#         self.setup_project()
+#         self.setup_assignment()
 #
 #         if not self.validate_config():
 #             sys.exit()
 #
 #         self.read_students()
 #
-#         self.proj.check_provided_files()
+#         self.asmnt.check_provided_files()
 
 
     # @classmethod
@@ -99,7 +99,7 @@ class Autograder( object ):
 #         assignment1_config.set( 'Assignment1', 'subdir', 'assignment1 # This is the directory name where files for this assignment is stored' )
 #         assignment1_config.set( 'Assignment1', 'problems', '1 2 # insert the different problem names / numbers of this assignment. Use spaces to separate problems' )
 
-        assignemnt = Project()
+        assignemnt = Assignment()
         for key in sorted( assignemnt.__dict__.keys() ):
             assignment_config.set( assignment_name, key, ' {}'.format( assignemnt.__dict__[key] ) )
         # assignment1_config.set( 'assignment1', '_4_gradingroot', self.grading_root )
@@ -130,19 +130,19 @@ class Autograder( object ):
         print 'Setting up autograder directory structure completed successfully'
 
 
-    def setup_project( self ):
+    def setup_assignment( self ):
 
         # # self.config_file = input('Enter the assignment master sub-directory name ')
         # self.config_file = raw_input('\nEnter the assignment master sub-directory name ')
         print '\nEnter the assignment master sub-directory name : '
         self.assignment_master_sub_dir = 'assignment1'
 
-        self.proj_loaded = self.proj.setup_project( self.grading_root, self.grading_master, self.assignment_master_sub_dir )
+        self.asmnt_loaded = self.asmnt.setup_assignment( self.grading_root, self.grading_master, self.assignment_master_sub_dir )
 
 
     def validate_config( self ):
         # Check whether the grading root directory exists.
-        # All the student submissions and project definitions are stored
+        # All the student submissions and assignment definitions are stored
         # under this directory.
         # gradingroot\
         #       autograder.cfg
@@ -169,9 +169,9 @@ class Autograder( object ):
             return False
             # sys.exit()
 
-        # self.proj.masterdir = os.path.join( self.proj.gradingroot, 'assignments', self.proj.subdir )
+        # self.asmnt.masterdir = os.path.join( self.asmnt.gradingroot, 'assignments', self.asmnt.subdir )
 
-        # Check whether the project master directory exists.
+        # Check whether the assignment master directory exists.
         # This is where all the solution and provided files are stored
         master = os.path.join( self.grading_root, self.grading_master )
         if not os.path.exists( master ):
@@ -266,7 +266,7 @@ class Autograder( object ):
 
     def check_student_directory( self, student ):
         try:
-            stud_dir = os.path.join( self.proj.gradingroot, student.get_dir() )
+            stud_dir = os.path.join( self.asmnt.gradingroot, student.get_dir() )
             if not os.path.exists( stud_dir ):
                 print '\nStudnt directory {} for {} does not exist, creating it...'.format( student.get_dir(), student.get_name() )
                 os.mkdir( stud_dir )
@@ -275,16 +275,18 @@ class Autograder( object ):
 
 
     '''
-    If a valid project configuration file has been loaded, this will generate necessary problem configuration file
+    If a valid assignment configuration file has been loaded, this will generate necessary problem configuration file
     '''
     def gen_prob_config_skel( self ):
-        if self.proj_loaded:
-            self.proj.generate_problem_config()
+        if self.asmnt_loaded:
+            self.asmnt.generate_problem_config()
 
 
     def setup_problems( self ):
-        if self.proj_loaded:
-            self.proj.setup_problems()
+        if self.asmnt_loaded:
+            self.asmnt.setup_problems()
+
+
 
 
 
@@ -293,10 +295,10 @@ if len( sys.argv ) > 2:
     if sys.argv[1] == 'setup':
         if os.path.exists( sys.argv[2] ):
             ag.setup_grading_dir_tree()
-    elif sys.argv[1] == 'setproj':
+    elif sys.argv[1] == 'setasmnt':
         if ag.validate_config():
             ag.read_students()
-            ag.setup_project()
+            ag.setup_assignment()
     elif sys.argv[1] == 'update':
         if ag.validate_config():
             ag.read_students()
@@ -308,6 +310,6 @@ if len( sys.argv ) > 2:
             ag.copy_files_to_grading()
     elif sys.argv[1] == 'genprob':
         if ag.validate_config():
-            ag.setup_project()
+            ag.setup_assignment()
             ag.gen_prob_config_skel()
             ag.setup_problems()

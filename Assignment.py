@@ -13,25 +13,25 @@ import sys
 from Problem import Problem
 
 
-class Project( object ):
+class Assignment( object ):
     """
-        A collection of problems that are bundled together as a project.
+        A collection of problems that are bundled together as an assignment.
         Has a common due date.
     """
     def __init__( self ):
-        self._1_proj_no = '1 ; insert the assignment number before the # sign'
+        self._1_asnmt_no = '1 ; insert the assignment number before the # sign'
         self._2_name = 'hello world ; insert the assignment name before the # sign'
         self._3_duedate = '6/28/2016 ; insert the due date before the # sign. Format mm/dd/yyyy'  # datetime.date( 2016, 6, 28 )
         # self._4_gradingroot = ''
 
         # This is the sub-directory in which each student submits his/her
-        # solutions to the project. Each student creates a sub-directory
+        # solutions to the assignment. Each student creates a sub-directory
         # in his or her repo. When cloned each student directory will have
         # a sub-directory by this name. Further, the master director for a
-        # particular project is also named with this.
+        # particular assignment is also named with this.
         self._5_subdir = 'assignment1 ; This is the directory name where files for this assignment is stored'
 
-        # IDs of problems that comprises this project
+        # IDs of problems that comprises this assignment
         self._6_problem_ids = '1 2 ; insert the different problem names / numbers of this assignment. Use spaces to separate problems'  # []
 
         # ID --> Problem mapping. Problem is an object of class Problem
@@ -47,19 +47,19 @@ class Project( object ):
 
 
     '''
-    Read the project configuration file and initialize the project
+    Read the assignment configuration file and initialize the assignment
     instance variables.
 
     Before starting actual grading, this method can be used to generate
     Problem configuration file skeletons so that they can be filled with
     appropriate data to be used during the auto grading
     '''
-    def setup_project( self, grading_root, grading_master, assignment_master_sub_dir ):
+    def setup_assignment( self, grading_root, grading_master, assignment_master_sub_dir ):
 
 #        config_file = os.path.join( self._4_gradingroot, self._7_grading_master, self._5_subdir, '{}.cfg'.format( self._5_subdir ) )
         config_file = os.path.join( grading_root, grading_master, assignment_master_sub_dir, '+_1_{}.cfg'.format( assignment_master_sub_dir ) )
 
-        # Check whether the project configuration file exists.
+        # Check whether the assignment configuration file exists.
         if not os.path.exists( config_file ):
             print '\nConfiguration file {} does not exist, exit...'.format( config_file )
             sys.exit()
@@ -70,7 +70,7 @@ class Project( object ):
         for key in sorted( self.__dict__.keys() ):
             self.__dict__[key] = config.get( assignment_master_sub_dir, key ).strip()
 
-        self._1_proj_no = int( self._1_proj_no )
+        self._1_asnmt_no = int( self._1_asnmt_no )
         self._3_duedate = datetime.datetime.strptime( self._3_duedate, '%m/%d/%Y' )
         self._6_problem_ids = self._6_problem_ids.split()
 
@@ -80,7 +80,7 @@ class Project( object ):
 
         print self
         return True
-#         generate = raw_input( '\nGenerate Project Skeleton ( y / n ) : ' )
+#         generate = raw_input( '\nGenerate Assignment Skeleton ( y / n ) : ' )
 #
 #         if ( generate == 'y' ):
 #             self.generate_problem_config()
@@ -89,7 +89,7 @@ class Project( object ):
 
 
     '''
-    Set up the problems that constitutes this project
+    Set up the problems that constitutes this assignment
     '''
     def setup_problems( self ):
         prob_conf = self.get_prob_config_path()
@@ -144,7 +144,7 @@ class Project( object ):
 
     '''
     Generate the path to the configuration file that holds to configuration details of problems
-    where this project is comprised of
+    where this assignment is comprised of
     '''
     def get_prob_config_path( self ):
         return os.path.join( self.get_masterdir(), '+_2_{}_problems.cfg'.format( self._5_subdir ) )
@@ -179,9 +179,9 @@ class Project( object ):
 
 
     '''
-    masterdir is the directory where all the project related stuff that are
+    masterdir is the directory where all the assignment related stuff that are
     supplied to students and grading related stuff are kept.
-    These include supplied code, makefiles, project configuration file,
+    These include supplied code, makefiles, assignment configuration file,
     problem configuration files, template answer files.
     '''
     def get_masterdir( self ):
@@ -220,5 +220,5 @@ class Project( object ):
 
 
 
-# p = Project()
+# p = Assignment()
 # p.test_meth()
