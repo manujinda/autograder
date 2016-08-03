@@ -52,7 +52,7 @@ class Problem( object ):
     '''
     def setup_problem( self, config_file, section ):
 
-        # Check whether the project configuration file exists.
+        # Check whether the problem configuration file exists.
         if not os.path.exists( config_file ):
             print '\nProblem configuration file {} does not exist, exit...'.format( config_file )
             sys.exit()
