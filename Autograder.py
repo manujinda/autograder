@@ -135,7 +135,7 @@ class Autograder( object ):
         # # self.config_file = input('Enter the assignment master sub-directory name ')
         # self.config_file = raw_input('\nEnter the assignment master sub-directory name ')
         print '\nEnter the assignment master sub-directory name : '
-        self.assignment_master_sub_dir = 'assignment1'
+        self.assignment_master_sub_dir = '{}_{}'.format( self.grading_master[:-1], 1 )  # 'assignment1'
 
         self.asmnt_loaded = self.asmnt.setup_assignment( self.grading_root, self.grading_master, self.assignment_master_sub_dir )
 
