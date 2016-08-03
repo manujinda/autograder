@@ -90,7 +90,7 @@ class Autograder( object ):
             writer.writerow( ['No', 'UO ID', 'Duck ID', 'Last Name', 'First Name', 'Email', 'Dir Name', 'Repo'] )
 
         # Create an example assignment directory and configuration files
-        assignment_name = 'assignment1'
+        assignment_name = '{}_{}'.format( self.grading_master[:-1], 1 )  # 'assignment1'
         assignment_config = ConfigParser.SafeConfigParser()
         assignment_config.add_section( assignment_name )
 #         assignment1_config.set( 'Assignment1', 'no', '1 # insert the assignment number before the # sign' )
