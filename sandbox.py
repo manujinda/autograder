@@ -10,6 +10,20 @@ import ConfigParser
 import sys
 
 
+# playing with parsing input
+inp = '1:prog 2:mcq 3:code'
+prob = inp.split()
+print prob
+for p in prob:
+    print p.split( ':' )
+
+d = {1:'a', 2:'b', 3:'c'}
+
+for i in d:
+    print i
+
+sys.exit( 0 )
+
 # playing with output formatting
 
 ret = '{}{}{}_{}'.format( '{:0>', 3, '}', '{}' )
