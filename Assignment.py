@@ -19,9 +19,9 @@ class Assignment( object ):
         Has a common due date.
     """
     def __init__( self ):
-        self._1_asnmt_no = '1 ; insert the assignment number before the # sign'
-        self._2_name = 'hello world ; insert the assignment name before the # sign'
-        self._3_duedate = '6/28/2016 ; insert the due date before the # sign. Format mm/dd/yyyy'  # datetime.date( 2016, 6, 28 )
+        self._1_asnmt_no = '1 ; insert the assignment number before the ; sign'
+        self._2_name = 'hello world ; insert the assignment name before the ; sign'
+        self._3_duedate = '6/28/2016 ; insert the due date before the ; sign. Format mm/dd/yyyy'  # datetime.date( 2016, 6, 28 )
         # self._4_gradingroot = ''
 
         # This is the sub-directory in which each student submits his/her
@@ -32,16 +32,18 @@ class Assignment( object ):
         self._5_subdir = 'assignment1 ; This is the directory name where files for this assignment is stored'
 
         # IDs of problems that comprises this assignment
-        self._6_problem_ids = '1 2 ; insert the different problem names / numbers of this assignment. Use spaces to separate problems'  # []
+        self._6_problem_ids = '1:prog 2:code 3:ans 4:mcq ; insert the different problem names / numbers of this assignment followed by problem type separated by a :. Use spaces to separate problems'  # []
 
         # ID --> Problem mapping. Problem is an object of class Problem
         # Each Problem encapsulated the details of that problem.
         # self._8_problems = {}
 
+        self._99_loaded = False
+
 
     def __str__( self ):
         desc = ''
-        for f in sorted( self.__dict__.keys() ):
+        for f in sorted( self.__dict__.keys() )[:-1]:
             desc += '{} > {} \n'.format( f[3:], self.__dict__[f] )
         return desc
 
@@ -67,8 +69,8 @@ class Assignment( object ):
         config = ConfigParser.SafeConfigParser()
         config.read( config_file )
 
-        for key in sorted( self.__dict__.keys() ):
-            self.__dict__[key] = config.get( assignment_master_sub_dir, key ).strip()
+        for key in sorted( self.__dict__.keys() )[:-1]:
+            self.__dict__[key] = config.get( assignment_master_sub_dir, key[3:] ).strip()
 
         self._1_asnmt_no = int( self._1_asnmt_no )
         self._3_duedate = datetime.datetime.strptime( self._3_duedate, '%m/%d/%Y' )
@@ -78,7 +80,14 @@ class Assignment( object ):
         self._5_subdir = assignment_master_sub_dir
         self._7_grading_master = grading_master
 
+        temp_prob = {}
+        for p in self._6_problem_ids:
+            q = p.split( ':' )
+            temp_prob[q[0]] = q[1]
+        self._6_problem_ids = temp_prob
+
         print self
+        self._99_loaded = True
         return True
 #         generate = raw_input( '\nGenerate Assignment Skeleton ( y / n ) : ' )
 #
@@ -92,54 +101,60 @@ class Assignment( object ):
     Set up the problems that constitutes this assignment
     '''
     def setup_problems( self ):
-        prob_conf = self.get_prob_config_path()
-        section_prefix = '{}_problem_{}'.format( self._5_subdir, {} )
-        # Check whether the problem configuration file exists.
-        if not os.path.exists( prob_conf ):
-            print '\nProblem configuration file {} does not exist, exit...'.format( prob_conf )
-            sys.exit()
+        if self._99_loaded:
+            prob_conf = self.get_prob_config_path()
+            section_prefix = '{}_problem_{}'.format( self._5_subdir, {} )
+            # Check whether the problem configuration file exists.
+            if not os.path.exists( prob_conf ):
+                print '\nProblem configuration file {} does not exist, exit...'.format( prob_conf )
+                sys.exit()
 
-        # ID --> Problem mapping. Problem is an object of class Problem
-        # Each Problem encapsulated the details of that problem.
-        self._8_problems = {}
+            # ID --> Problem mapping. Problem is an object of class Problem
+            # Each Problem encapsulated the details of that problem.
+            self._8_problems = {}
 
-        for p in self._6_problem_ids:
-            self._8_problems[p] = Problem( p )
+            for p in sorted( self._6_problem_ids ):
+                self._8_problems[p] = Problem( p, self._6_problem_ids[p] )
 
-            self._8_problems[p].setup_problem( prob_conf, section_prefix.format( p ) )
+                self._8_problems[p].setup_problem( prob_conf, section_prefix.format( p ) )
 
-#         for p in self._8_problems.keys():
-#             print self._8_problems[p]
-        return True
+    #         for p in self._8_problems.keys():
+    #             print self._8_problems[p]
+            return True
+        else:
+            return False
 
 
     '''
     Generate problem configuration files
     '''
     def generate_problem_config( self ):
-        # asgnmt_root = os.path.join( self._4_gradingroot, 'assignments', self._5_subdir )
-        assignment_path = self.get_masterdir()
+        if self._99_loaded:
+            # asgnmt_root = os.path.join( self._4_gradingroot, 'assignments', self._5_subdir )
+            assignment_path = self.get_masterdir()
 
-        if not os.path.exists( assignment_path ):
-            os.mkdir( assignment_path )
+            if not os.path.exists( assignment_path ):
+                os.mkdir( assignment_path )
 
-        prob_config = ConfigParser.SafeConfigParser()
-        for p in self._6_problem_ids:
-            # create a temporary Problem object so that we can access
-            # its instance variable names.
-            # temp.__dict__ provides the instances variables of object
-            # temp as instance variable name --> instance variable value
-            temp = Problem( p )
-            section = '{}_problem_{}'.format( self._5_subdir, p )
-            prob_config.add_section( section )
-            for key in sorted( temp.__dict__.keys() ):
-                prob_config.set( section, key, ' {}'.format( temp.__dict__[key] ) )
+            prob_config = ConfigParser.SafeConfigParser()
+            for p in sorted( self._6_problem_ids ):
+                # create a temporary Problem object so that we can access
+                # its instance variable names.
+                # temp.__dict__ provides the instances variables of object
+                # temp as instance variable name --> instance variable value
+                temp = Problem( p, self._6_problem_ids[p] )
+                section = '{}_problem_{}'.format( self._5_subdir, p )
+                prob_config.add_section( section )
+                for key in sorted( temp.__dict__.keys() ):
+                    prob_config.set( section, key[4:], ' {}'.format( temp.__dict__[key] ) )
 
-        # with open( os.path.join( assignment_path, '+_2_{}_problems.cfg'.format( self._5_subdir ) ), 'wb' ) as configfile:
-        with open( self.get_prob_config_path(), 'wb' ) as configfile:
-            prob_config.write( configfile )
+            # with open( os.path.join( assignment_path, '+_2_{}_problems.cfg'.format( self._5_subdir ) ), 'wb' ) as configfile:
+            with open( self.get_prob_config_path(), 'wb' ) as configfile:
+                prob_config.write( configfile )
 
-        print 'Setting up problem configuration file skeleton completed successfully'
+            print 'Setting up problem configuration file skeleton completed successfully'
+        else:
+            print 'Error: Need to load an assignment configuration before generating problem configurations'
 
 
     '''
@@ -186,6 +201,13 @@ class Assignment( object ):
     '''
     def get_masterdir( self ):
         return os.path.join( self._4_gradingroot, self._7_grading_master, self._5_subdir )
+
+
+    def get_problem_ids( self ):
+        if self._99_loaded:
+            return self._6_problem_ids
+        else:
+            return {}
 
 
     '''

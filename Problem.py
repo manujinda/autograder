@@ -14,12 +14,13 @@ class Problem( object ):
         A class to represent a single problem or a Homework
     """
 
-    def __init__( self, no ):
+    def __init__( self, no, prob_type ):
         self._01_prob_no = no
         self._02_name = 'Problem name'
-        self._03_prob_desc = 'Problem description'
-        self._04_files_provided = []
-        self._05_files_submitted = []
+        self._03_prob_type = prob_type
+        self._04_prob_desc = 'Problem description'
+        self._05_files_provided = []
+        self._06_files_submitted = []
 
         # A dictionary that maps sandbox inputs to anticipated outputs
         # both inputs and outputs are stored in files. So the dictionary
@@ -28,17 +29,17 @@ class Problem( object ):
         # !!! need more thought as to how to handle different kinds of
         # inputs such as: command line arguments, inputs read by the program
         # using a prompt, file inputs etc.
-        self._06_inp_outps = {}
+        self._07_inp_outps = {}
 
-        self._07_language = ''
-        self._08_command_line_options = False
-        self._09_student_make_file = False
-        self._10_make_targs = []
-        self._11_scores = []
+        self._08_language = ''
+        self._09_command_line_options = False
+        self._10_student_make_file = False
+        self._11_make_targs = []
+        self._12_scores = []
 
         # Timeout interval to decide infinite loop
         # -1 means do not timeout
-        self._12_timeout = -1
+        self._13_timeout = -1
 
     def __str__( self ):
         desc = ''
@@ -61,7 +62,7 @@ class Problem( object ):
         config.read( config_file )
 
         for key in sorted( self.__dict__.keys() ):
-            self.__dict__[key] = config.get( section, key ).strip()
+            self.__dict__[key] = config.get( section, key[4:] ).strip()
 
         print self
         return True
@@ -69,8 +70,8 @@ class Problem( object ):
 
 
     def get_files_provided( self ):
-        return self._04_files_provided
+        return self._05_files_provided
 
 
     def get_files_submitted( self ):
-        return self._05_files_submitted
+        return self._06_files_submitted

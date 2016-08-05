@@ -99,9 +99,9 @@ class Autograder( object ):
 #         assignment1_config.set( 'Assignment1', 'subdir', 'assignment1 # This is the directory name where files for this assignment is stored' )
 #         assignment1_config.set( 'Assignment1', 'problems', '1 2 # insert the different problem names / numbers of this assignment. Use spaces to separate problems' )
 
-        assignemnt = Assignment()
-        for key in sorted( assignemnt.__dict__.keys() ):
-            assignment_config.set( assignment_name, key, ' {}'.format( assignemnt.__dict__[key] ) )
+        assignment = Assignment()
+        for key in sorted( assignment.__dict__.keys() )[:-1]:
+            assignment_config.set( assignment_name, key[3:], ' {}'.format( assignment.__dict__[key] ) )
         # assignment1_config.set( 'assignment1', '_4_gradingroot', self.grading_root )
 
 
@@ -111,18 +111,22 @@ class Autograder( object ):
         with open( os.path.join( assignment_path, '+_1_{}.cfg'.format( assignment_name ) ), 'wb' ) as configfile:
             assignment_config.write( configfile )
 
+        # Populate the assignment with the just created assignment configuration file
+        assignment.setup_assignment( self.grading_root, self.grading_master, assignment_name )
+        problems = assignment.get_problem_ids()
+
         # create a temporary Problem object so that we can access
         # its instance variable names.
         # temp.__dict__ provides the instances variables of object
         # temp as instance variable name --> instance variable value
         prob_config = ConfigParser.SafeConfigParser()
-        for p in range( 1, 3 ):
-            temp = Problem( p )
+        for p in sorted( problems ):
+            temp = Problem( p, problems[p] )
 #            prob_config = ConfigParser.SafeConfigParser()
             section = '{}_problem_{}'.format( assignment_name, p )
             prob_config.add_section( section )
             for key in sorted( temp.__dict__.keys() ):
-                prob_config.set( section, key, ' {}'.format( temp.__dict__[key] ) )
+                prob_config.set( section, key[4:], ' {}'.format( temp.__dict__[key] ) )
 
         with open( os.path.join( assignment_path, '+_2_{}_problems.cfg'.format( assignment_name ) ), 'wb' ) as configfile:
             prob_config.write( configfile )
