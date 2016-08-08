@@ -19,27 +19,34 @@ class Problem( object ):
         self._02_name = 'Problem name'
         self._03_prob_type = prob_type
         self._04_prob_desc = 'Problem description'
-        self._05_files_provided = []
-        self._06_files_submitted = []
 
-        # A dictionary that maps sandbox inputs to anticipated outputs
-        # both inputs and outputs are stored in files. So the dictionary
-        # has the form input file --> output file.
-        #
-        # !!! need more thought as to how to handle different kinds of
-        # inputs such as: command line arguments, inputs read by the program
-        # using a prompt, file inputs etc.
-        self._07_inp_outps = {}
+        if prob_type == 'prog':
+            self._05_files_provided = ' ; List the names of the provided files before the ; separated by spaces'
 
-        self._08_language = ''
-        self._09_command_line_options = False
-        self._10_student_make_file = False
-        self._11_make_targs = []
+            # A dictionary that maps sandbox inputs to anticipated outputs
+            # both inputs and outputs are stored in files. So the dictionary
+            # has the form input file --> output file.
+            #
+            # !!! need more thought as to how to handle different kinds of
+            # inputs such as: command line arguments, inputs read by the program
+            # using a prompt, file inputs etc.
+            self._07_inp_outps = {}
+
+            self._09_command_line_options = False
+            self._10_student_make_file = False
+            self._11_make_targs = []
+
+            # Timeout interval to decide infinite loop
+            # -1 means do not timeout
+            self._13_timeout = -1
+
+        if prob_type == 'prog' or prob_type == 'code':
+            self._08_language = ''
+
+        self._06_files_submitted = ' ; List the names of the files students are supposed to submit before the ; separated by spaces'
+
         self._12_scores = []
 
-        # Timeout interval to decide infinite loop
-        # -1 means do not timeout
-        self._13_timeout = -1
 
     def __str__( self ):
         desc = ''
