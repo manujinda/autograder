@@ -29,7 +29,7 @@ class Assignment( object ):
         # in his or her repo. When cloned each student directory will have
         # a sub-directory by this name. Further, the master director for a
         # particular assignment is also named with this.
-        self._5_subdir = 'assignment1 ; This is the directory name where files for this assignment is stored'
+        # self._5_subdir = 'assignment1 ; This is the directory name where files for this assignment is stored'
 
         # IDs of problems that comprises this assignment
         self._6_problem_ids = '1:prog 2:code 3:ans 4:mcq ; insert the different problem names / numbers of this assignment followed by problem type separated by a :. Use spaces to separate problems'  # []
