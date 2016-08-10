@@ -104,29 +104,32 @@ class Assignment( object ):
             if key[0:4] != '_99_':
                 self.__dict__[key] = config.get( assignment_master_sub_dir, key[3:] ).strip()
 
-        self._1_asnmt_no = int( self._1_asnmt_no )
+        # self._1_asnmt_no = int( self._1_asnmt_no )
         self._3_duedate = datetime.datetime.strptime( self._3_duedate, '%m/%d/%Y' )
-        self._6_problem_ids = self._6_problem_ids.split()
 
         self._4_gradingroot = grading_root
         self._5_subdir = assignment_master_sub_dir
         self._7_grading_master = grading_master
 
+#         self._6_problem_ids = self._6_problem_ids.split()
+#         temp_prob = {}
+#         for p in self._6_problem_ids:
+#             q = p.split( ':' )
+#             temp_prob[q[0]] = q[1]
+#         self._6_problem_ids = temp_prob
+
+        problems = AgGlobals.parse_config_line( self._6_problem_ids )
         temp_prob = {}
-        for p in self._6_problem_ids:
-            q = p.split( ':' )
-            temp_prob[q[0]] = q[1]
+        for p in problems:
+            temp_prob[p[0]] = p[1]
+
+        # This is a dictiory of the form:
+        #    problem_id -> problem_type
         self._6_problem_ids = temp_prob
 
         print self
         self._99_loaded = True
         return True
-#         generate = raw_input( '\nGenerate Assignment Skeleton ( y / n ) : ' )
-#
-#         if ( generate == 'y' ):
-#             self.generate_problem_config()
-#         else:
-#             self.setup_problems()
 
 
     '''
@@ -150,8 +153,14 @@ class Assignment( object ):
 
                 self._8_problems[p].setup_problem( prob_conf, section_prefix.format( p ) )
 
-    #         for p in self._8_problems.keys():
-    #             print self._8_problems[p]
+            # Check problem dependencies
+            prob_id_set = set( self._6_problem_ids )
+            for p in sorted( self._6_problem_ids ):
+                depend_set = self._8_problems[p].get_dependencies()
+                if not depend_set.issubset( prob_id_set ):
+                    print 'Error: Problem {} - {} is dependent on undefined problems {}.'.format( p, self._8_problems[p].get_name(), depend_set - prob_id_set )
+                    return False
+
             return True
         else:
             return False
@@ -263,6 +272,8 @@ class Assignment( object ):
             file_path = os.path.join( master, f )
             if not os.path.exists( file_path ):
                 print 'Provided file {} does not exist in the master directory. Creating...'.format( f )
+                fo = open( file_path, 'a' )
+                fo.close()
 
     '''
     Check submitted files in the master directory. If not create them
@@ -277,6 +288,8 @@ class Assignment( object ):
             file_path = os.path.join( master, f )
             if not os.path.exists( file_path ):
                 print 'Submitted file {} does not exist in the master directory. Creating...'.format( f )
+                fo = open( file_path, 'a' )
+                fo.close()
 
 
 

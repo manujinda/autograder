@@ -9,6 +9,16 @@ This chages rapidly. Not a part of the main project. This is just my playground 
 import ConfigParser
 import sys
 
+def parse_config_line( line ):
+    parts = line.split()
+    ll = []
+    for p in parts:
+        ll.append( p.split( ':' ) )
+
+    return ll
+
+print parse_config_line( '111:aaa:xxx 22:bbbbb:yy 3:ccc' )
+
 key = '_99_loaded'
 print key[0:4]
 

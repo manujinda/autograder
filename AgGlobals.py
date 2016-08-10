@@ -43,3 +43,19 @@ class AgGlobals( object ):
 
     def get_problem_section( self, assignment_name, problem_id ):
         return self.prob_section_format.format( assignment_name, problem_id )
+
+    '''
+        When a string of the form:
+            111:aaa:xxx 22:bbbbb:yy 3:ccc
+        is passed this returns a list of lists of the form:
+            [ [111, aaa, xxx], [22, bbbbb, yy], [3, cc] ]
+    '''
+    @classmethod
+    def parse_config_line( cls, line ):
+        parts = line.split()
+        ll = []
+        for p in parts:
+            ll.append( p.split( ':' ) )
+
+        return ll
+

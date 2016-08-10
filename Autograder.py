@@ -272,9 +272,15 @@ class Autograder( object ):
 
     def setup_problems( self ):
         if self.asmnt_loaded:
-            self.asmnt.setup_problems()
+            return self.asmnt.setup_problems()
+
+        return False
 
 
+    def generate_files( self ):
+        if self.asmnt_loaded:
+            self.asmnt.check_provided_files()
+            self.asmnt.check_submitted_files()
 
 agg = AgGlobals()
 
@@ -316,6 +322,21 @@ if len( sys.argv ) > 2:
                 if ag.setup_assignment( sys.argv[3] ):
                     ag.gen_prob_config_skel()
                 # ag.setup_problems()
+
+    elif sys.argv[1] == 'genfiles':
+        # Generate blank files described in the Assignment / Project. The configuration files for the
+        # Assignment and its problems must be complete before running this command
+        # Command:
+        #     $ python Autograder.py genfiles <path to autograder root directory> <assignment / project name>
+        # Test Parameters
+        #    genfiles /home/users/manu/Documents/manujinda/uo_classes/4_2016_summer/boyana/grading assignment_2
+        ag_cfg = os.path.join( sys.argv[2], agg.get_autograder_cfg_name() )
+        ag = Autograder( ag_cfg )
+        if ag.created():
+            if ag.validate_config():
+                if ag.setup_assignment( sys.argv[3] ):
+                    if ag.setup_problems():
+                        ag.generate_files()
 
     elif sys.argv[1] == 'setasmnt':
         ag = Autograder( sys.argv[2] )
