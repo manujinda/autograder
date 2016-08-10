@@ -10,6 +10,7 @@ import datetime
 import os
 import sys
 
+from AgGlobals import AgGlobals
 from Problem import Problem
 
 
@@ -38,14 +39,44 @@ class Assignment( object ):
         # Each Problem encapsulated the details of that problem.
         # self._8_problems = {}
 
+        self._99_agg = AgGlobals()
         self._99_loaded = False
 
 
     def __str__( self ):
         desc = ''
-        for f in sorted( self.__dict__.keys() )[:-1]:
-            desc += '{} > {} \n'.format( f[3:], self.__dict__[f] )
+        for key in sorted( self.__dict__.keys() ):  # [:-1]:
+            if key[0:4] != '_99_':
+                desc += '{} > {} \n'.format( key[3:], self.__dict__[key] )
         return desc
+
+
+    ''' Generate a new blank assignment.
+        Creates the directory and the default assignment configuration file '''
+    # @classmethod
+    def new_assignment( self, grading_root, grading_master, assignment_name ):
+
+        assignment_master_sub_dir = os.path.join( grading_root, grading_master, assignment_name )
+        if not os.path.exists( assignment_master_sub_dir ):
+            os.mkdir( assignment_master_sub_dir )
+
+            assignment_config = ConfigParser.SafeConfigParser()
+            assignment_config.add_section( assignment_name )
+
+            for key in sorted( self.__dict__.keys() ):  # [:-1]:
+                # Filter only the instances variables that are necessary for the configuration file
+                if key[0:4] != '_99_':
+                    assignment_config.set( assignment_name, key[3:], ' {}'.format( self.__dict__[key] ) )
+
+            cfg_path = os.path.join( assignment_master_sub_dir, self._99_agg.get_asmt_cfg_name( assignment_name ) )
+            with open( cfg_path, 'wb' ) as configfile:
+                assignment_config.write( configfile )
+            print 'Success: Blank assignment {} successfully created'.format( assignment_name )
+            print 'Update the configuration file: {} as necessary to define the assignment'.format( cfg_path )
+            print 'Then run python ... to generate problem skeleton file'
+        else:
+            print 'Error: Assignment {} already exists. Cannot overwrite'.format( assignment_name )
+
 
 
     '''
@@ -58,19 +89,20 @@ class Assignment( object ):
     '''
     def setup_assignment( self, grading_root, grading_master, assignment_master_sub_dir ):
 
-#        config_file = os.path.join( self._4_gradingroot, self._7_grading_master, self._5_subdir, '{}.cfg'.format( self._5_subdir ) )
-        config_file = os.path.join( grading_root, grading_master, assignment_master_sub_dir, '+_1_{}.cfg'.format( assignment_master_sub_dir ) )
+        # config_file = os.path.join( grading_root, grading_master, assignment_master_sub_dir, '+_1_{}.cfg'.format( assignment_master_sub_dir ) )
+        config_file = os.path.join( grading_root, grading_master, assignment_master_sub_dir, self._99_agg.get_asmt_cfg_name( assignment_master_sub_dir ) )
 
         # Check whether the assignment configuration file exists.
         if not os.path.exists( config_file ):
             print '\nConfiguration file {} does not exist, exit...'.format( config_file )
-            sys.exit()
+            return False
 
         config = ConfigParser.SafeConfigParser()
         config.read( config_file )
 
-        for key in sorted( self.__dict__.keys() )[:-1]:
-            self.__dict__[key] = config.get( assignment_master_sub_dir, key[3:] ).strip()
+        for key in sorted( self.__dict__.keys() ):  # [:-1]:
+            if key[0:4] != '_99_':
+                self.__dict__[key] = config.get( assignment_master_sub_dir, key[3:] ).strip()
 
         self._1_asnmt_no = int( self._1_asnmt_no )
         self._3_duedate = datetime.datetime.strptime( self._3_duedate, '%m/%d/%Y' )
@@ -130,6 +162,12 @@ class Assignment( object ):
     '''
     def generate_problem_config( self ):
         if self._99_loaded:
+            prob_cfg = self.get_prob_config_path()
+
+            if os.path.exists( prob_cfg ):
+                print 'Error: Problem configuration file {} already exisits. Cannot overwrite. Exit...'.format( prob_cfg )
+                sys.exit()
+
             # asgnmt_root = os.path.join( self._4_gradingroot, 'assignments', self._5_subdir )
             assignment_path = self.get_masterdir()
 
@@ -143,12 +181,12 @@ class Assignment( object ):
                 # temp.__dict__ provides the instances variables of object
                 # temp as instance variable name --> instance variable value
                 temp = Problem( p, self._6_problem_ids[p] )
-                section = '{}_problem_{}'.format( self._5_subdir, p )
+                # section = '{}_problem_{}'.format( self._5_subdir, p )
+                section = self._99_agg.get_problem_section( self._5_subdir, p )
                 prob_config.add_section( section )
                 for key in sorted( temp.__dict__.keys() ):
                     prob_config.set( section, key[4:], ' {}'.format( temp.__dict__[key] ) )
 
-            # with open( os.path.join( assignment_path, '+_2_{}_problems.cfg'.format( self._5_subdir ) ), 'wb' ) as configfile:
             with open( self.get_prob_config_path(), 'wb' ) as configfile:
                 prob_config.write( configfile )
 
@@ -162,7 +200,8 @@ class Assignment( object ):
     where this assignment is comprised of
     '''
     def get_prob_config_path( self ):
-        return os.path.join( self.get_masterdir(), '+_2_{}_problems.cfg'.format( self._5_subdir ) )
+        # return os.path.join( self.get_masterdir(), '+_2_{}_problems.cfg'.format( self._5_subdir ) )
+        return os.path.join( self.get_masterdir(), self._99_agg.get_prob_cfg_name( self._5_subdir ) )
 
 
     '''

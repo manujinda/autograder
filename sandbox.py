@@ -9,6 +9,8 @@ This chages rapidly. Not a part of the main project. This is just my playground 
 import ConfigParser
 import sys
 
+key = '_99_loaded'
+print key[0:4]
 
 # playing with parsing input
 inp = '1:prog 2:mcq 3:code'

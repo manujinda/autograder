@@ -8,6 +8,7 @@ import os
 import shutil
 import sys
 
+from AgGlobals import AgGlobals
 from Assignment import Assignment
 from Problem import Problem  # Just to access its instance variables to generate a sample configuration file
 from Repository import Repository
@@ -18,18 +19,17 @@ class Autograder( object ):
 
     def __init__( self, config_file ):
 
-        self.students_directory = 'students'
-        self.grading_directory = 'grading'
-        self.config_file = config_file
-        self.asmnt_loaded = False  # Keeps track of whether a valid assignment configuration file has been loaded
+        self.ag_created = False
 
         '''
             Read the autograder configuration file and populate grading root
             and grading master directory names
         '''
-        if not os.path.exists( self.config_file ):
+        if not os.path.exists( config_file ):
             print 'Error: Autograder Configuration File {} does not exist. Exit...'.format( config_file )
             sys.exit( 0 )
+
+        self.config_file = config_file
 
         config = ConfigParser.SafeConfigParser()
         config.read( self.config_file )
@@ -44,16 +44,20 @@ class Autograder( object ):
         self.students = []
 
         self.asmnt = Assignment()
-#
-#         # self.read_config()
-#         self.setup_assignment()
-#
-#         if not self.validate_config():
-#             sys.exit()
-#
-#         self.read_students()
-#
-#         self.asmnt.check_provided_files()
+
+        # To get access to autograder global standards such as
+        # file naming conventions
+        self.agg = AgGlobals()
+        self.students_directory = self.agg.get_students_directory()
+        self.grading_directory = self.agg.get_grading_directory()
+        self.asmnt_loaded = False  # Keeps track of whether a valid assignment configuration file has been loaded
+
+        self.ag_created = True
+
+
+
+    def created( self ):
+        return self.ag_created
 
 
     # @classmethod
@@ -81,67 +85,47 @@ class Autograder( object ):
         os.mkdir( os.path.join( self.grading_root, self.grading_directory ) )
 
         # Copy the autograder configuration file to autograder directory for later usage
-        shutil.copy2( self.config_file, os.path.join( self.grading_root, 'autograder.cfg' ) )
+        shutil.copy2( self.config_file, os.path.join( self.grading_root, self.agg.get_autograder_cfg_name() ) )
 
         # Create the skeleton of the student data csv file
-        student_db = os.path.join( self.grading_root, self.students_directory, 'students.csv' )
+        student_db = os.path.join( self.grading_root, self.students_directory, self.agg.get_students_db_name() )
         with open( student_db, 'wb' ) as students:
             writer = csv.writer( students, delimiter = ',', quotechar = '|', quoting = csv.QUOTE_MINIMAL )
             writer.writerow( ['No', 'UO ID', 'Duck ID', 'Last Name', 'First Name', 'Email', 'Dir Name', 'Repo'] )
 
         # Create an example assignment directory and configuration files
+        # assignment = Assignment()
         assignment_name = '{}_{}'.format( self.grading_master[:-1], 1 )  # 'assignment1'
-        assignment_config = ConfigParser.SafeConfigParser()
-        assignment_config.add_section( assignment_name )
-#         assignment1_config.set( 'Assignment1', 'no', '1 # insert the assignment number before the # sign' )
-#         assignment1_config.set( 'Assignment1', 'name', 'hello world # insert the assignment name before the # sign' )
-#         assignment1_config.set( 'Assignment1', 'duedate', '6/28/2016 # insert the due date before the # sign. Format mm/dd/yyyy' )
-#         assignment1_config.set( 'Assignment1', 'subdir', 'assignment1 # This is the directory name where files for this assignment is stored' )
-#         assignment1_config.set( 'Assignment1', 'problems', '1 2 # insert the different problem names / numbers of this assignment. Use spaces to separate problems' )
-
-        assignment = Assignment()
-        for key in sorted( assignment.__dict__.keys() )[:-1]:
-            assignment_config.set( assignment_name, key[3:], ' {}'.format( assignment.__dict__[key] ) )
-        # assignment1_config.set( 'assignment1', '_4_gradingroot', self.grading_root )
-
-
-        assignment_path = os.path.join( self.grading_root, self.grading_master, assignment_name )
-        os.mkdir( assignment_path )
-
-        with open( os.path.join( assignment_path, '+_1_{}.cfg'.format( assignment_name ) ), 'wb' ) as configfile:
-            assignment_config.write( configfile )
+        assignment = self.new_assignment( assignment_name )
+        # assignment.new_assignment( self.grading_root, self.grading_master, assignment_name )
 
         # Populate the assignment with the just created assignment configuration file
         assignment.setup_assignment( self.grading_root, self.grading_master, assignment_name )
-        problems = assignment.get_problem_ids()
-
-        # create a temporary Problem object so that we can access
-        # its instance variable names.
-        # temp.__dict__ provides the instances variables of object
-        # temp as instance variable name --> instance variable value
-        prob_config = ConfigParser.SafeConfigParser()
-        for p in sorted( problems ):
-            temp = Problem( p, problems[p] )
-#            prob_config = ConfigParser.SafeConfigParser()
-            section = '{}_problem_{}'.format( assignment_name, p )
-            prob_config.add_section( section )
-            for key in sorted( temp.__dict__.keys() ):
-                prob_config.set( section, key[4:], ' {}'.format( temp.__dict__[key] ) )
-
-        with open( os.path.join( assignment_path, '+_2_{}_problems.cfg'.format( assignment_name ) ), 'wb' ) as configfile:
-            prob_config.write( configfile )
+        assignment.generate_problem_config()
 
         print 'Setting up autograder directory structure completed successfully'
 
 
-    def setup_assignment( self ):
+    ''' Generate a new blank assignment.
+        Creates the directory and the default assignment configuration file '''
+    def new_assignment( self, assignment_name ):
 
-        # # self.config_file = input('Enter the assignment master sub-directory name ')
-        # self.config_file = raw_input('\nEnter the assignment master sub-directory name ')
-        print '\nEnter the assignment master sub-directory name : '
-        self.assignment_master_sub_dir = '{}_{}'.format( self.grading_master[:-1], 1 )  # 'assignment1'
+        # Create an example assignment directory and configuration files
+        assignment = Assignment()
+        assignment.new_assignment( self.grading_root, self.grading_master, assignment_name )
 
-        self.asmnt_loaded = self.asmnt.setup_assignment( self.grading_root, self.grading_master, self.assignment_master_sub_dir )
+        return assignment
+
+
+
+    def setup_assignment( self, assignment_name ):
+
+        # print '\nEnter the assignment master sub-directory name : '
+        # self.assignment_master_sub_dir = '{}_{}'.format( self.grading_master[:-1], 1 )  # 'assignment1'
+
+        self.asmnt_loaded = self.asmnt.setup_assignment( self.grading_root, self.grading_master, assignment_name )
+
+        return self.asmnt_loaded
 
 
     def validate_config( self ):
@@ -187,7 +171,7 @@ class Autograder( object ):
         # This is where all the cloned student repos are stored
         students = os.path.join( self.grading_root, self.students_directory )
         if not os.path.exists( students ):
-            print '\nMaster directory {} does not exist, exit...'.format( students )
+            print '\nStudent directory {} does not exist, exit...'.format( students )
             return False
             # sys.exit()
 
@@ -195,7 +179,7 @@ class Autograder( object ):
         # This is where all grading happens.
         grading = os.path.join( self.grading_root, self.grading_directory )
         if not os.path.exists( grading ):
-            print '\nMaster directory {} does not exist, exit...'.format( grading )
+            print '\nGrading directory {} does not exist, exit...'.format( grading )
             return False
             # sys.exit()
 
@@ -292,28 +276,60 @@ class Autograder( object ):
 
 
 
-
+agg = AgGlobals()
 
 if len( sys.argv ) > 2:
-    ag = Autograder( sys.argv[2] )
     if sys.argv[1] == 'setup':
-        if os.path.exists( sys.argv[2] ):
+        # Setup the initial directory tree for grading one instance of a class
+        # Need to run once at the begining of the semester / term / quater
+        # Command:
+        #    $ python Autograder.py setup <path to autograder configuration file>
+        # Test Parameters
+        #    setup /home/users/manu/Documents/manujinda/uo_classes/4_2016_summer/boyana/autograder_ws/autograder/autograder.cfg
+        ag = Autograder( sys.argv[2] )
+        if ag.created():
             ag.setup_grading_dir_tree()
+
+    elif sys.argv[1] == 'newasmnt':
+        # Create a sub directory for a new assignment / project and provide
+        # skeleton configuration file as a start
+        # Command:
+        #    $ python Autograder.py newasmnt <path to autograder root directory> <assignment / project name>
+        # Test Parameters
+        #    newasmnt /home/users/manu/Documents/manujinda/uo_classes/4_2016_summer/boyana/grading assignment_2
+        ag_cfg = os.path.join( sys.argv[2], agg.get_autograder_cfg_name() )
+        ag = Autograder( ag_cfg )
+        if ag.created():
+            if ag.validate_config():
+                ag.new_assignment( sys.argv[3] )
+
+    elif sys.argv[1] == 'genprob':
+        # Generate blank problem configuration file based on a filled assignment / project configuration file
+        # Command:
+        #     $ python Autograder.py genprob <path to autograder root directory> <assignment / project name>
+        # Test Parameters
+        #    genprob /home/users/manu/Documents/manujinda/uo_classes/4_2016_summer/boyana/grading assignment_2
+        ag_cfg = os.path.join( sys.argv[2], agg.get_autograder_cfg_name() )
+        ag = Autograder( ag_cfg )
+        if ag.created():
+            if ag.validate_config():
+                if ag.setup_assignment( sys.argv[3] ):
+                    ag.gen_prob_config_skel()
+                # ag.setup_problems()
+
     elif sys.argv[1] == 'setasmnt':
+        ag = Autograder( sys.argv[2] )
         if ag.validate_config():
             ag.read_students()
             ag.setup_assignment()
     elif sys.argv[1] == 'update':
+        ag = Autograder( sys.argv[2] )
         if ag.validate_config():
             ag.read_students()
             ag.update_repos()
     elif sys.argv[1] == 'copy':
+        ag = Autograder( sys.argv[2] )
         if ag.validate_config():
             ag.read_students()
             ag.update_repos()
             ag.copy_files_to_grading()
-    elif sys.argv[1] == 'genprob':
-        if ag.validate_config():
-            ag.setup_assignment()
-            ag.gen_prob_config_skel()
-            ag.setup_problems()
