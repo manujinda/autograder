@@ -138,3 +138,7 @@ class Problem( object ):
 
     def get_name( self ):
         return self._02_name
+
+
+    def get_prob_type( self ):
+        return self._03_prob_type

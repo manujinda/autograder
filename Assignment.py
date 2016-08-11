@@ -263,9 +263,10 @@ class Assignment( object ):
     '''
     def check_provided_files( self ):
         files = set()
-        for p in self._7_problems.keys():
-            files.update( set( self._7_problems[p].get_files_provided() ) )
-            # print self._7_problems[p].get_files_provided()
+        for p in self._6_problem_ids.keys():
+            if self._8_problems[p].get_prob_type() == 'prog':
+                files.update( set( self._8_problems[p].get_files_provided() ) )
+                # print self._8_problems[p].get_files_provided()
 
         master = self.get_masterdir()
         for f in files:
@@ -280,8 +281,8 @@ class Assignment( object ):
     '''
     def check_submitted_files( self ):
         files = set()
-        for p in self._7_problems.keys():
-            files.update( set( self._7_problems[p].get_files_submitted() ) )
+        for p in self._6_problem_ids.keys():
+            files.update( set( self._8_problems[p].get_files_submitted() ) )
 
         master = self.get_masterdir()
         for f in files:
