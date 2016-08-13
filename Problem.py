@@ -41,7 +41,7 @@ class Problem( object ):
             #    Output_Location   -      Where the output will be produced. The possible values are:
             #                              stdout    - Output is printed on standard output
             #                              file      - Output is produced in a specific file.
-            self._07_inp_outps = '1:short:stdout 2:long:file ; List the nature of inputs and outputs to test submissions for this programming problem. Format - Input_ID:Input_Lenght:Output_location'
+            self._07_inp_outps = '1:short:stdout 2:long:file 3:cmd:stdout; List the nature of inputs and outputs to test submissions for this programming problem. Format - Input_ID:Input_Lenght:Output_location'
 
             self._09_command_line_options = False
             self._10_student_make_file = False
@@ -142,3 +142,10 @@ class Problem( object ):
 
     def get_prob_type( self ):
         return self._03_prob_type
+
+
+    def get_inp_outps( self ):
+        if self._03_prob_type == 'prog':
+            return self._07_inp_outps
+        else:
+            return {}

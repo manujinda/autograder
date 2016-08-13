@@ -281,13 +281,14 @@ class Autograder( object ):
         if self.asmnt_loaded:
             self.asmnt.check_provided_files()
             self.asmnt.check_submitted_files()
+            self.asmnt.generate_input_config()
 
 agg = AgGlobals()
 
 if len( sys.argv ) > 2:
     if sys.argv[1] == 'setup':
         # Setup the initial directory tree for grading one instance of a class
-        # Need to run once at the begining of the semester / term / quater
+        # Need to run once at the beginning of the semester / term / quater
         # Command:
         #    $ python Autograder.py setup <path to autograder configuration file>
         # Test Parameters

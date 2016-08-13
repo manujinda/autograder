@@ -11,6 +11,7 @@ import os
 import sys
 
 from AgGlobals import AgGlobals
+from Input import Input
 from Problem import Problem
 
 
@@ -40,7 +41,7 @@ class Assignment( object ):
         # self._8_problems = {}
 
         self._99_agg = AgGlobals()
-        self._99_loaded = False
+        self._99_state = self._99_agg.INITIALIZED
 
 
     def __str__( self ):
@@ -128,7 +129,7 @@ class Assignment( object ):
         self._6_problem_ids = temp_prob
 
         print self
-        self._99_loaded = True
+        self._99_state = self._99_agg.LOADED
         return True
 
 
@@ -136,7 +137,7 @@ class Assignment( object ):
     Set up the problems that constitutes this assignment
     '''
     def setup_problems( self ):
-        if self._99_loaded:
+        if self._99_state == self._99_agg.LOADED:
             prob_conf = self.get_prob_config_path()
             section_prefix = '{}_problem_{}'.format( self._5_subdir, {} )
             # Check whether the problem configuration file exists.
@@ -161,8 +162,10 @@ class Assignment( object ):
                     print 'Error: Problem {} - {} is dependent on undefined problems {}.'.format( p, self._8_problems[p].get_name(), depend_set - prob_id_set )
                     return False
 
+            self._99_state = self._99_agg.PROBLEMS_CREATED
             return True
         else:
+            print 'Error: Need to load an assignment configuration before creating Problems'
             return False
 
 
@@ -170,7 +173,7 @@ class Assignment( object ):
     Generate problem configuration files
     '''
     def generate_problem_config( self ):
-        if self._99_loaded:
+        if self._99_state == self._99_agg.LOADED:
             prob_cfg = self.get_prob_config_path()
 
             if os.path.exists( prob_cfg ):
@@ -200,8 +203,10 @@ class Assignment( object ):
                 prob_config.write( configfile )
 
             print 'Setting up problem configuration file skeleton completed successfully'
+            return True
         else:
             print 'Error: Need to load an assignment configuration before generating problem configurations'
+            return False
 
 
     '''
@@ -262,35 +267,92 @@ class Assignment( object ):
     Check provided files in the master directory. If not found create those files
     '''
     def check_provided_files( self ):
-        files = set()
-        for p in self._6_problem_ids.keys():
-            if self._8_problems[p].get_prob_type() == 'prog':
-                files.update( set( self._8_problems[p].get_files_provided() ) )
-                # print self._8_problems[p].get_files_provided()
+        if self._99_state == self._99_agg.LOADED:
+            self.setup_problems()
 
-        master = self.get_masterdir()
-        for f in files:
-            file_path = os.path.join( master, f )
-            if not os.path.exists( file_path ):
-                print 'Provided file {} does not exist in the master directory. Creating...'.format( f )
-                fo = open( file_path, 'a' )
-                fo.close()
+        if self._99_state == self._99_agg.PROBLEMS_CREATED:
+            files = set()
+            for p in self._6_problem_ids.keys():
+                if self._8_problems[p].get_prob_type() == 'prog':
+                    files.update( set( self._8_problems[p].get_files_provided() ) )
+                    # print self._8_problems[p].get_files_provided()
+
+            master = self.get_masterdir()
+            for f in files:
+                file_path = os.path.join( master, f )
+                if not os.path.exists( file_path ):
+                    print 'Provided file {} does not exist in the master directory. Creating...'.format( f )
+                    fo = open( file_path, 'a' )
+                    fo.close()
+
+            return True
+        else:
+            print 'Error: Need to load an assignment configuration before checking "Provided" files for that assignment'
+            return False
 
     '''
     Check submitted files in the master directory. If not create them
     '''
     def check_submitted_files( self ):
-        files = set()
-        for p in self._6_problem_ids.keys():
-            files.update( set( self._8_problems[p].get_files_submitted() ) )
+        if self._99_state == self._99_agg.LOADED:
+            self.setup_problems()
 
-        master = self.get_masterdir()
-        for f in files:
-            file_path = os.path.join( master, f )
-            if not os.path.exists( file_path ):
-                print 'Submitted file {} does not exist in the master directory. Creating...'.format( f )
-                fo = open( file_path, 'a' )
-                fo.close()
+        if self._99_state == self._99_agg.PROBLEMS_CREATED:
+            files = set()
+            for p in self._6_problem_ids.keys():
+                files.update( set( self._8_problems[p].get_files_submitted() ) )
+
+            master = self.get_masterdir()
+            for f in files:
+                file_path = os.path.join( master, f )
+                if not os.path.exists( file_path ):
+                    print 'Submitted file {} does not exist in the master directory. Creating...'.format( f )
+                    fo = open( file_path, 'a' )
+                    fo.close()
+
+            return True
+        else:
+            print 'Error: Need to load an assignment configuration before checking "Submitted" files for that assignment'
+            return False
+
+
+    def generate_input_config( self ):
+        if self._99_state == self._99_agg.LOADED:
+            self.setup_problems()
+
+        if self._99_state == self._99_agg.PROBLEMS_CREATED:
+
+            # Create input output directory
+            in_out_dir = os.path.join( self._4_gradingroot, self._7_grading_master, self._5_subdir, self._99_agg.get_input_output_directory() )
+            if not os.path.exists( in_out_dir ):
+                os.mkdir( in_out_dir )
+
+            input_config = ConfigParser.SafeConfigParser()
+
+            for p in sorted( self._6_problem_ids ):
+                in_out = self._8_problems[p].get_inp_outps()
+
+                for io in sorted( in_out ):
+                    print io, in_out[io]
+                    section = self._99_agg.get_input_section( self._5_subdir, p, io )
+                    input_config.add_section( section )
+
+                    temp_in = Input( in_out[io][0], in_out[io][1] )
+                    for key in sorted( temp_in.__dict__.keys() ):
+                        # Filter only the instances variables that are necessary for the configuration file
+                        if key[0:4] != '_99_':
+                            input_config.set( section, key[3:], ' {}'.format( temp_in.__dict__[key] ) )
+
+                            if in_out[io][0] == 'long':
+                                input_file_path = os.path.join( in_out_dir, self._99_agg.get_input_file_name( self._5_subdir, p, io ) )
+                                input_config.set( section, 'input_file', input_file_path )
+                                fo = open( input_file_path, 'a' )
+                                fo.close()
+
+            cfg_path = os.path.join( in_out_dir, self._99_agg.get_input_cfg_name( self._5_subdir ) )
+            with open( cfg_path, 'wb' ) as configfile:
+                input_config.write( configfile )
+            print 'Success: Input configuration file {} successfully created'.format( cfg_path )
 
 
 
