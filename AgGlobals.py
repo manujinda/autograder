@@ -8,6 +8,30 @@ Global constants and formats that are used across classes of the autograder
 
 class AgGlobals( object ):
 
+    # Autograder Diectory Names
+    STUDENTS_DIRECTORY = 'students'
+    GRADING_DIRECTORY = 'grading'
+
+    # Assignment states
+    INITIALIZED = 0
+    LOADED = 1
+    PROBLEMS_CREATED = 2
+
+    # Problem types
+    PROG = 'prog'  # A programming problem. Student submits a program that can be compiled and run
+    CODE = 'code'  # A coding segment problem. Student submits code segments. Not necessarily complete programs. Cannot compile and run as it is
+    ANS = 'ans'  # A text answer type submission
+    MCQ = 'mcq'  # Multiple choice question
+
+    # Nature of inputs
+    SHORT = 'short'
+    LONG = 'long'
+    CMD = 'cmd'
+
+    # Output location
+    STDOUT = 'stdout'
+    FILE = 'file'
+
     def __init__( self ):
         self.ag_cfg = 'autograder.cfg'
         self.asnmt_cfg = '+_1_{}.cfg'
@@ -22,12 +46,9 @@ class AgGlobals( object ):
         self.input_section_format = '{}_problem_{}_input_{}'
 
         # Assignment states
-        self.INITIALIZED = 0
-        self.LOADED = 1
-        self.PROBLEMS_CREATED = 2
-
-        # Nature of inputs
-
+#         self.INITIALIZED = 0
+#         self.LOADED = 1
+#         self.PROBLEMS_CREATED = 2
 
 
     def get_autograder_cfg_name( self ):

@@ -48,8 +48,8 @@ class Autograder( object ):
         # To get access to autograder global standards such as
         # file naming conventions
         self.agg = AgGlobals()
-        self.students_directory = self.agg.get_students_directory()
-        self.grading_directory = self.agg.get_grading_directory()
+        self.students_directory = AgGlobals.STUDENTS_DIRECTORY  # self.agg.get_students_directory()
+        self.grading_directory = AgGlobals.GRADING_DIRECTORY  # self.agg.get_grading_directory()
         self.asmnt_loaded = False  # Keeps track of whether a valid assignment configuration file has been loaded
 
         self.ag_created = True
@@ -279,8 +279,8 @@ class Autograder( object ):
 
     def generate_files( self ):
         if self.asmnt_loaded:
-            self.asmnt.check_provided_files()
-            self.asmnt.check_submitted_files()
+            self.asmnt.generate_provided_files()
+            self.asmnt.generate_submitted_files()
             self.asmnt.generate_input_config()
 
 agg = AgGlobals()

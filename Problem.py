@@ -22,7 +22,7 @@ class Problem( object ):
         self._03_prob_type = prob_type
         self._04_prob_desc = 'Problem description'
 
-        if self._03_prob_type == 'prog':
+        if self._03_prob_type == AgGlobals.PROG:
             self._05_files_provided = 'provided_1 provided_2 provided_3 ; List the names of the provided files before the ; separated by spaces'
 
             # Describe the nature of the inputs and outputs to be used in grading
@@ -51,7 +51,7 @@ class Problem( object ):
             # -1 means do not timeout
             self._13_timeout = -1
 
-        if self._03_prob_type == 'prog' or self._03_prob_type == 'code':
+        if self._03_prob_type == AgGlobals.PROG or self._03_prob_type == AgGlobals.CODE:
             self._08_language = ''
 
         self._06_files_submitted = 'file_1:alias_1_1:alias_1_2 file_2:alias_2_1 ; List the names of the files students are supposed to submit before the ; separated by spaces. To handle naming errors, for each file a student is supposed to submit you can give a : separated list of aliases'
@@ -85,7 +85,7 @@ class Problem( object ):
         for key in sorted( self.__dict__.keys() ):
             self.__dict__[key] = config.get( section, key[4:] ).strip()
 
-        if self._03_prob_type == 'prog':
+        if self._03_prob_type == AgGlobals.PROG:
             self._05_files_provided = self._05_files_provided.split()
 
             # self._07_inp_outps = '1:short:stdout 2:long:file
@@ -119,7 +119,6 @@ class Problem( object ):
         return True
 
 
-
     def get_files_provided( self ):
         return self._05_files_provided
 
@@ -145,7 +144,7 @@ class Problem( object ):
 
 
     def get_inp_outps( self ):
-        if self._03_prob_type == 'prog':
+        if self._03_prob_type == AgGlobals.PROG:
             return self._07_inp_outps
         else:
             return {}

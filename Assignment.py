@@ -41,7 +41,7 @@ class Assignment( object ):
         # self._8_problems = {}
 
         self._99_agg = AgGlobals()
-        self._99_state = self._99_agg.INITIALIZED
+        self._99_state = AgGlobals.INITIALIZED
 
 
     def __str__( self ):
@@ -129,7 +129,7 @@ class Assignment( object ):
         self._6_problem_ids = temp_prob
 
         print self
-        self._99_state = self._99_agg.LOADED
+        self._99_state = AgGlobals.LOADED
         return True
 
 
@@ -137,7 +137,7 @@ class Assignment( object ):
     Set up the problems that constitutes this assignment
     '''
     def setup_problems( self ):
-        if self._99_state == self._99_agg.LOADED:
+        if self._99_state == AgGlobals.LOADED:
             prob_conf = self.get_prob_config_path()
             section_prefix = '{}_problem_{}'.format( self._5_subdir, {} )
             # Check whether the problem configuration file exists.
@@ -162,7 +162,7 @@ class Assignment( object ):
                     print 'Error: Problem {} - {} is dependent on undefined problems {}.'.format( p, self._8_problems[p].get_name(), depend_set - prob_id_set )
                     return False
 
-            self._99_state = self._99_agg.PROBLEMS_CREATED
+            self._99_state = AgGlobals.PROBLEMS_CREATED
             return True
         else:
             print 'Error: Need to load an assignment configuration before creating Problems'
@@ -173,7 +173,7 @@ class Assignment( object ):
     Generate problem configuration files
     '''
     def generate_problem_config( self ):
-        if self._99_state == self._99_agg.LOADED:
+        if self._99_state == AgGlobals.LOADED:
             prob_cfg = self.get_prob_config_path()
 
             if os.path.exists( prob_cfg ):
@@ -264,13 +264,13 @@ class Assignment( object ):
 
 
     '''
-    Check provided files in the master directory. If not found create those files
+    Create provided files in the assignment master sub directory.
     '''
-    def check_provided_files( self ):
-        if self._99_state == self._99_agg.LOADED:
+    def generate_provided_files( self ):
+        if self._99_state == AgGlobals.LOADED:
             self.setup_problems()
 
-        if self._99_state == self._99_agg.PROBLEMS_CREATED:
+        if self._99_state == AgGlobals.PROBLEMS_CREATED:
             files = set()
             for p in self._6_problem_ids.keys():
                 if self._8_problems[p].get_prob_type() == 'prog':
@@ -291,13 +291,13 @@ class Assignment( object ):
             return False
 
     '''
-    Check submitted files in the master directory. If not create them
+    Create submitted files in the assignment master sub directory.
     '''
-    def check_submitted_files( self ):
-        if self._99_state == self._99_agg.LOADED:
+    def generate_submitted_files( self ):
+        if self._99_state == AgGlobals.LOADED:
             self.setup_problems()
 
-        if self._99_state == self._99_agg.PROBLEMS_CREATED:
+        if self._99_state == AgGlobals.PROBLEMS_CREATED:
             files = set()
             for p in self._6_problem_ids.keys():
                 files.update( set( self._8_problems[p].get_files_submitted() ) )
@@ -317,10 +317,10 @@ class Assignment( object ):
 
 
     def generate_input_config( self ):
-        if self._99_state == self._99_agg.LOADED:
+        if self._99_state == AgGlobals.LOADED:
             self.setup_problems()
 
-        if self._99_state == self._99_agg.PROBLEMS_CREATED:
+        if self._99_state == AgGlobals.PROBLEMS_CREATED:
 
             # Create input output directory
             in_out_dir = os.path.join( self._4_gradingroot, self._7_grading_master, self._5_subdir, self._99_agg.get_input_output_directory() )
@@ -343,7 +343,7 @@ class Assignment( object ):
                         if key[0:4] != '_99_':
                             input_config.set( section, key[3:], ' {}'.format( temp_in.__dict__[key] ) )
 
-                            if in_out[io][0] == 'long':
+                            if in_out[io][0] == AgGlobals.LONG:
                                 input_file_path = os.path.join( in_out_dir, self._99_agg.get_input_file_name( self._5_subdir, p, io ) )
                                 input_config.set( section, 'input_file', input_file_path )
                                 fo = open( input_file_path, 'a' )
