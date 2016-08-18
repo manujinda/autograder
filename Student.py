@@ -5,7 +5,9 @@ Encapsulates a single student
 @author: Manujinda Wathugala
 '''
 
+from AgGlobals import AgGlobals
 from Repository import Repository
+
 
 class Student( object ):
     '''
@@ -17,14 +19,14 @@ class Student( object ):
         '''
         Constructor
         '''
-        self._1_no = data_dict['No']
-        self._2_uoid = data_dict['UO ID']
-        self._3_duckid = data_dict['Duck ID']
-        self._4_last_name = data_dict['Last Name']
-        self._5_first_name = data_dict['First Name']
-        self._6_email = data_dict['Email']
-        self._7_dirname = data_dict['Dir Name']
-        self._8_repo = Repository( data_dict['Repo'] )
+        self._1_no = data_dict[ AgGlobals.STUDENT_DB_FIED_NO ]
+        self._2_uoid = data_dict[ AgGlobals.STUDENT_DB_FIED_UOID ]
+        self._3_duckid = data_dict[ AgGlobals.STUDENT_DB_FIED_DUCKID ]
+        self._4_last_name = data_dict[ AgGlobals.STUDENT_DB_FIED_LNAME ]
+        self._5_first_name = data_dict[ AgGlobals.STUDENT_DB_FIED_FNAME ]
+        self._6_email = data_dict[ AgGlobals.STUDENT_DB_FIED_EMAIL ]
+        self._7_dirname = data_dict[ AgGlobals.STUDENT_DB_FIED_DIR_NAME ]
+        self._8_repo = Repository( data_dict[ AgGlobals.STUDENT_DB_FIED_REPO ] )
 
     def __str__( self ):
         desc = ''

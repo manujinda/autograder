@@ -21,9 +21,9 @@ class Assignment( object ):
         Has a common due date.
     """
     def __init__( self ):
-        self._1_asnmt_no = '1 ; insert the assignment number before the ; sign'
-        self._2_name = 'hello world ; insert the assignment name before the ; sign'
-        self._3_duedate = '6/28/2016 ; insert the due date before the ; sign. Format mm/dd/yyyy'  # datetime.date( 2016, 6, 28 )
+        self._1_asnmt_no = AgGlobals.ASSIGNMENT_INIT_NO
+        self._2_name = AgGlobals.ASSIGNMENT_INIT_NAME
+        self._3_duedate = AgGlobals.ASSIGNMENT_INIT_DUE_DATE
         # self._4_gradingroot = ''
 
         # This is the sub-directory in which each student submits his/her
@@ -34,13 +34,12 @@ class Assignment( object ):
         # self._5_subdir = 'assignment1 ; This is the directory name where files for this assignment is stored'
 
         # IDs of problems that comprises this assignment
-        self._6_problem_ids = '1:prog 2:code 3:ans 4:mcq ; insert the different problem names / numbers of this assignment followed by problem type separated by a :. Use spaces to separate problems'  # []
+        self._6_problem_ids = AgGlobals.ASSIGNMENT_INIT_PROBLEM_IDS
 
         # ID --> Problem mapping. Problem is an object of class Problem
         # Each Problem encapsulated the details of that problem.
         # self._8_problems = {}
 
-        self._99_agg = AgGlobals()
         self._99_state = AgGlobals.INITIALIZED
 
 
@@ -69,7 +68,7 @@ class Assignment( object ):
                 if key[0:4] != '_99_':
                     assignment_config.set( assignment_name, key[3:], ' {}'.format( self.__dict__[key] ) )
 
-            cfg_path = os.path.join( assignment_master_sub_dir, self._99_agg.get_asmt_cfg_name( assignment_name ) )
+            cfg_path = os.path.join( assignment_master_sub_dir, AgGlobals.get_asmt_cfg_name( assignment_name ) )
             with open( cfg_path, 'wb' ) as configfile:
                 assignment_config.write( configfile )
             print 'Success: Blank assignment {} successfully created'.format( assignment_name )
@@ -91,7 +90,7 @@ class Assignment( object ):
     def setup_assignment( self, grading_root, grading_master, assignment_master_sub_dir ):
 
         # config_file = os.path.join( grading_root, grading_master, assignment_master_sub_dir, '+_1_{}.cfg'.format( assignment_master_sub_dir ) )
-        config_file = os.path.join( grading_root, grading_master, assignment_master_sub_dir, self._99_agg.get_asmt_cfg_name( assignment_master_sub_dir ) )
+        config_file = os.path.join( grading_root, grading_master, assignment_master_sub_dir, AgGlobals.get_asmt_cfg_name( assignment_master_sub_dir ) )
 
         # Check whether the assignment configuration file exists.
         if not os.path.exists( config_file ):
@@ -106,18 +105,11 @@ class Assignment( object ):
                 self.__dict__[key] = config.get( assignment_master_sub_dir, key[3:] ).strip()
 
         # self._1_asnmt_no = int( self._1_asnmt_no )
-        self._3_duedate = datetime.datetime.strptime( self._3_duedate, '%m/%d/%Y' )
+        self._3_duedate = datetime.datetime.strptime( self._3_duedate, AgGlobals.ASSIGNMENT_CFG_DUE_DATE_FORMAT )
 
         self._4_gradingroot = grading_root
         self._5_subdir = assignment_master_sub_dir
         self._7_grading_master = grading_master
-
-#         self._6_problem_ids = self._6_problem_ids.split()
-#         temp_prob = {}
-#         for p in self._6_problem_ids:
-#             q = p.split( ':' )
-#             temp_prob[q[0]] = q[1]
-#         self._6_problem_ids = temp_prob
 
         problems = AgGlobals.parse_config_line( self._6_problem_ids )
         temp_prob = {}
@@ -139,7 +131,7 @@ class Assignment( object ):
     def setup_problems( self ):
         if self._99_state == AgGlobals.LOADED:
             prob_conf = self.get_prob_config_path()
-            section_prefix = '{}_problem_{}'.format( self._5_subdir, {} )
+            # section_prefix = '{}_problem_{}'.format( self._5_subdir, '{}' )
             # Check whether the problem configuration file exists.
             if not os.path.exists( prob_conf ):
                 print '\nProblem configuration file {} does not exist, exit...'.format( prob_conf )
@@ -152,7 +144,8 @@ class Assignment( object ):
             for p in sorted( self._6_problem_ids ):
                 self._8_problems[p] = Problem( p, self._6_problem_ids[p] )
 
-                self._8_problems[p].setup_problem( prob_conf, section_prefix.format( p ) )
+                # self._8_problems[p].setup_problem( prob_conf, section_prefix.format( p ) )
+                self._8_problems[p].setup_problem( prob_conf, AgGlobals.get_problem_section( self._5_subdir, p ) )
 
             # Check problem dependencies
             prob_id_set = set( self._6_problem_ids )
@@ -177,7 +170,7 @@ class Assignment( object ):
             prob_cfg = self.get_prob_config_path()
 
             if os.path.exists( prob_cfg ):
-                print 'Error: Problem configuration file {} already exisits. Cannot overwrite. Exit...'.format( prob_cfg )
+                print 'Error: Problem configuration file {} already exists. Cannot overwrite. Exit...'.format( prob_cfg )
                 sys.exit()
 
             # asgnmt_root = os.path.join( self._4_gradingroot, 'assignments', self._5_subdir )
@@ -194,7 +187,7 @@ class Assignment( object ):
                 # temp as instance variable name --> instance variable value
                 temp = Problem( p, self._6_problem_ids[p] )
                 # section = '{}_problem_{}'.format( self._5_subdir, p )
-                section = self._99_agg.get_problem_section( self._5_subdir, p )
+                section = AgGlobals.get_problem_section( self._5_subdir, p )
                 prob_config.add_section( section )
                 for key in sorted( temp.__dict__.keys() ):
                     prob_config.set( section, key[4:], ' {}'.format( temp.__dict__[key] ) )
@@ -215,7 +208,7 @@ class Assignment( object ):
     '''
     def get_prob_config_path( self ):
         # return os.path.join( self.get_masterdir(), '+_2_{}_problems.cfg'.format( self._5_subdir ) )
-        return os.path.join( self.get_masterdir(), self._99_agg.get_prob_cfg_name( self._5_subdir ) )
+        return os.path.join( self.get_masterdir(), AgGlobals.get_prob_cfg_name( self._5_subdir ) )
 
 
     '''
@@ -273,7 +266,7 @@ class Assignment( object ):
         if self._99_state == AgGlobals.PROBLEMS_CREATED:
             files = set()
             for p in self._6_problem_ids.keys():
-                if self._8_problems[p].get_prob_type() == 'prog':
+                if self._8_problems[p].get_prob_type() == AgGlobals.PROG:
                     files.update( set( self._8_problems[p].get_files_provided() ) )
                     # print self._8_problems[p].get_files_provided()
 
@@ -323,7 +316,7 @@ class Assignment( object ):
         if self._99_state == AgGlobals.PROBLEMS_CREATED:
 
             # Create input output directory
-            in_out_dir = os.path.join( self._4_gradingroot, self._7_grading_master, self._5_subdir, self._99_agg.get_input_output_directory() )
+            in_out_dir = os.path.join( self._4_gradingroot, self._7_grading_master, self._5_subdir, AgGlobals.INPUT_OUTPUT_DIRECTORY )
             if not os.path.exists( in_out_dir ):
                 os.mkdir( in_out_dir )
 
@@ -334,7 +327,7 @@ class Assignment( object ):
 
                 for io in sorted( in_out ):
                     print io, in_out[io]
-                    section = self._99_agg.get_input_section( self._5_subdir, p, io )
+                    section = AgGlobals.get_input_section( self._5_subdir, p, io )
                     input_config.add_section( section )
 
                     temp_in = Input( in_out[io][0], in_out[io][1] )
@@ -344,12 +337,12 @@ class Assignment( object ):
                             input_config.set( section, key[3:], ' {}'.format( temp_in.__dict__[key] ) )
 
                             if in_out[io][0] == AgGlobals.LONG:
-                                input_file_path = os.path.join( in_out_dir, self._99_agg.get_input_file_name( self._5_subdir, p, io ) )
+                                input_file_path = os.path.join( in_out_dir, AgGlobals.get_input_file_name( self._5_subdir, p, io ) )
                                 input_config.set( section, 'input_file', input_file_path )
                                 fo = open( input_file_path, 'a' )
                                 fo.close()
 
-            cfg_path = os.path.join( in_out_dir, self._99_agg.get_input_cfg_name( self._5_subdir ) )
+            cfg_path = os.path.join( in_out_dir, AgGlobals.get_input_cfg_name( self._5_subdir ) )
             with open( cfg_path, 'wb' ) as configfile:
                 input_config.write( configfile )
             print 'Success: Input configuration file {} successfully created'.format( cfg_path )

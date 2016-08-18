@@ -35,19 +35,16 @@ class Autograder( object ):
         config.read( self.config_file )
 
         # All the grading for a particular offering of a particular class happens under this director
-        self.grading_root = config.get( 'Autograder Setup', 'grading_root' )
+        self.grading_root = config.get( AgGlobals.AUTOGRADER_CFG_SECTION, AgGlobals.AUTOGRADER_CFG_GRADING_ROOT )
 
         # This is where all the supplied files / solutions etc are kept for each project / assignment.
         # For each project / assignment, there is a separate directory in this directory
-        self.grading_master = config.get( 'Autograder Setup', 'grading_master' )
+        self.grading_master = config.get( AgGlobals.AUTOGRADER_CFG_SECTION, AgGlobals.AUTOGRADER_CFG_GRADING_MASTER )
 
         self.students = []
 
         self.asmnt = Assignment()
 
-        # To get access to autograder global standards such as
-        # file naming conventions
-        self.agg = AgGlobals()
         self.students_directory = AgGlobals.STUDENTS_DIRECTORY  # self.agg.get_students_directory()
         self.grading_directory = AgGlobals.GRADING_DIRECTORY  # self.agg.get_grading_directory()
         self.asmnt_loaded = False  # Keeps track of whether a valid assignment configuration file has been loaded
@@ -85,19 +82,17 @@ class Autograder( object ):
         os.mkdir( os.path.join( self.grading_root, self.grading_directory ) )
 
         # Copy the autograder configuration file to autograder directory for later usage
-        shutil.copy2( self.config_file, os.path.join( self.grading_root, self.agg.get_autograder_cfg_name() ) )
+        shutil.copy2( self.config_file, os.path.join( self.grading_root, AgGlobals.AUTOGRADER_CFG_NAME ) )
 
         # Create the skeleton of the student data csv file
-        student_db = os.path.join( self.grading_root, self.students_directory, self.agg.get_students_db_name() )
+        student_db = os.path.join( self.grading_root, self.students_directory, AgGlobals.STUDENT_DB )
         with open( student_db, 'wb' ) as students:
             writer = csv.writer( students, delimiter = ',', quotechar = '|', quoting = csv.QUOTE_MINIMAL )
-            writer.writerow( ['No', 'UO ID', 'Duck ID', 'Last Name', 'First Name', 'Email', 'Dir Name', 'Repo'] )
+            writer.writerow( AgGlobals.STUDENT_DB_FIEDLS )
 
         # Create an example assignment directory and configuration files
-        # assignment = Assignment()
         assignment_name = '{}_{}'.format( self.grading_master[:-1], 1 )  # 'assignment1'
         assignment = self.new_assignment( assignment_name )
-        # assignment.new_assignment( self.grading_root, self.grading_master, assignment_name )
 
         # Populate the assignment with the just created assignment configuration file
         assignment.setup_assignment( self.grading_root, self.grading_master, assignment_name )
@@ -190,7 +185,7 @@ class Autograder( object ):
         if not self.validate_config():
             sys.exit()
 
-        students = os.path.join( self.grading_root, self.students_directory, 'students.csv' )
+        students = os.path.join( self.grading_root, self.students_directory, AgGlobals.STUDENT_DB )
 
         if not os.path.exists( students ):
             print '\nStudnt data file {} does not exist, exit...'.format( students )
@@ -283,7 +278,7 @@ class Autograder( object ):
             self.asmnt.generate_submitted_files()
             self.asmnt.generate_input_config()
 
-agg = AgGlobals()
+
 
 if len( sys.argv ) > 2:
     if sys.argv[1] == 'setup':
@@ -304,7 +299,7 @@ if len( sys.argv ) > 2:
         #    $ python Autograder.py newasmnt <path to autograder root directory> <assignment / project name>
         # Test Parameters
         #    newasmnt /home/users/manu/Documents/manujinda/uo_classes/4_2016_summer/boyana/grading assignment_2
-        ag_cfg = os.path.join( sys.argv[2], agg.get_autograder_cfg_name() )
+        ag_cfg = os.path.join( sys.argv[2], AgGlobals.AUTOGRADER_CFG_NAME )
         ag = Autograder( ag_cfg )
         if ag.created():
             if ag.validate_config():
@@ -316,7 +311,7 @@ if len( sys.argv ) > 2:
         #     $ python Autograder.py genprob <path to autograder root directory> <assignment / project name>
         # Test Parameters
         #    genprob /home/users/manu/Documents/manujinda/uo_classes/4_2016_summer/boyana/grading assignment_2
-        ag_cfg = os.path.join( sys.argv[2], agg.get_autograder_cfg_name() )
+        ag_cfg = os.path.join( sys.argv[2], AgGlobals.AUTOGRADER_CFG_NAME )
         ag = Autograder( ag_cfg )
         if ag.created():
             if ag.validate_config():
@@ -331,7 +326,7 @@ if len( sys.argv ) > 2:
         #     $ python Autograder.py genfiles <path to autograder root directory> <assignment / project name>
         # Test Parameters
         #    genfiles /home/users/manu/Documents/manujinda/uo_classes/4_2016_summer/boyana/grading assignment_2
-        ag_cfg = os.path.join( sys.argv[2], agg.get_autograder_cfg_name() )
+        ag_cfg = os.path.join( sys.argv[2], AgGlobals.AUTOGRADER_CFG_NAME )
         ag = Autograder( ag_cfg )
         if ag.created():
             if ag.validate_config():

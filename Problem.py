@@ -18,12 +18,12 @@ class Problem( object ):
 
     def __init__( self, no, prob_type ):
         self._01_prob_no = no
-        self._02_name = 'Problem name'
+        self._02_name = AgGlobals.PROBLEM_INIT_NAME
         self._03_prob_type = prob_type
-        self._04_prob_desc = 'Problem description'
+        self._04_prob_desc = AgGlobals.PROBLEM_INIT_DESCRIPTION
 
         if self._03_prob_type == AgGlobals.PROG:
-            self._05_files_provided = 'provided_1 provided_2 provided_3 ; List the names of the provided files before the ; separated by spaces'
+            self._05_files_provided = AgGlobals.PROBLEM_INIT_FILES_PRVIDED
 
             # Describe the nature of the inputs and outputs to be used in grading
             # this programming problem.
@@ -41,25 +41,25 @@ class Problem( object ):
             #    Output_Location   -      Where the output will be produced. The possible values are:
             #                              stdout    - Output is printed on standard output
             #                              file      - Output is produced in a specific file.
-            self._07_inp_outps = '1:short:stdout 2:long:file 3:cmd:stdout; List the nature of inputs and outputs to test submissions for this programming problem. Format - Input_ID:Input_Lenght:Output_location'
+            self._07_inp_outps = AgGlobals.PROBLEM_INIT_INP_OUTPS  # '1:short:stdout 2:long:file 3:cmd:stdout ; List the nature of inputs and outputs to test submissions for this programming problem. Format - Input_ID:Input_Lenght:Output_location'
 
-            self._09_command_line_options = False
-            self._10_student_make_file = False
-            self._11_make_targs = []
+            self._09_command_line_options = AgGlobals.PROBLEM_INIT_COMMAND_LINE_OPTIONS
+            self._10_student_make_file = AgGlobals.PROBLEM_INIT_STUDENT_MAKE_FILE
+            self._11_make_targs = AgGlobals.PROBLEM_INIT_MAKE_TARGS
 
             # Timeout interval to decide infinite loop
             # -1 means do not timeout
-            self._13_timeout = -1
+            self._13_timeout = AgGlobals.PROBLEM_INIT_TIMEOUT
 
         if self._03_prob_type == AgGlobals.PROG or self._03_prob_type == AgGlobals.CODE:
-            self._08_language = ''
+            self._08_language = AgGlobals.PROBLEM_INIT_LANGUAGE
 
-        self._06_files_submitted = 'file_1:alias_1_1:alias_1_2 file_2:alias_2_1 ; List the names of the files students are supposed to submit before the ; separated by spaces. To handle naming errors, for each file a student is supposed to submit you can give a : separated list of aliases'
+        self._06_files_submitted = AgGlobals.PROBLEM_INIT_FILES_SUBMITTED
 
         # self._12_scores = []
 
         # self._14_depends_on = ' ; Problem numbers of other problems that this problem is dependent on. These problems should be specified prior to this problem'
-        self._14_depends_on = ''
+        self._14_depends_on = AgGlobals.PROBLEM_INIT_DEPENDS_ON
 
 
     def __str__( self ):
