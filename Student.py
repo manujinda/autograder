@@ -37,11 +37,13 @@ class Student( object ):
     def get_dir( self, index_len ):
         # If index_len = 3, this creates a string of the form:
         # {:3}_{}
-        ret = '{}{}{}_{}'.format( '{:0>', index_len, '}', '{}' )
+        # ret = '{}{}{}_{}'.format( '{:0>', index_len, '}', '{}' )
 
         # Use the format string created above to format the student
         # directory name appropriately
-        return ret.format( self._1_no, self._7_dirname )
+        # return ret.format( self._1_no, self._7_dirname )
+
+        return AgGlobals.get_student_dir_name( index_len, self._1_no, self._7_dirname )
 
     def get_index( self ):
         return '{}'.format( self._1_no )

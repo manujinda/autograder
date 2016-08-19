@@ -5,6 +5,7 @@ Created on Aug 12, 2016
 
 To encapsulate a test input to a program
 '''
+from AgGlobals import AgGlobals
 
 class Input( object ):
     '''
@@ -25,10 +26,10 @@ class Input( object ):
 
         # if nature of the input is cmdline or short, the actual input is specified
         # else the path the the file where this input is stored is specified.
-        if self._1_nature == 'cmd' or self._1_nature == 'short':
-            self._2_input = ' ; Enter actual input before the ;. Keep a space between the actual input and the ;.'
+        if self._1_nature == AgGlobals.INPUT_NATURE_CMD or self._1_nature == AgGlobals.INPUT_NATURE_SHORT:
+            self._2_input = AgGlobals.INPUT_INIT_INPUT
         else:
-            self._2_input_file = ''
+            self._2_input_file = AgGlobals.INPUT_INIT_INPUT_FILE
 
         # The place where the output is produced.
         # stdout - Standard output
@@ -36,11 +37,11 @@ class Input( object ):
         self._3_output = output  # 'stdout ; specify before the ;. values: stdout, file'
 
         # If output is produced in a file, the required file name is specified here
-        if self._3_output == 'file':
-            self._4_out_file = ' ; Enter the required output file name before the ;. Keep a space between the actual input and the ;.'
+        if self._3_output == AgGlobals.OUTPUT_TO_FILE:
+            self._4_out_file = AgGlobals.INPUT_INIT_OUTPUT_FILE
 
         # The percentage the student output should match the reference output and
         # the amount of marks granted if student output achieves that level.
         # Format: a list of matching_%:marks
         # 0 means no matching at all and 100 means perfect matching.
-        self._5_marks = '0:0 50:80 100:100 ; Specify the different degrees to withc the student output should match the reference output and the marks granted'
+        self._5_marks = AgGlobals.INPUT_INIT_MARKS

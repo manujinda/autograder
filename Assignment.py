@@ -266,7 +266,7 @@ class Assignment( object ):
         if self._99_state == AgGlobals.PROBLEMS_CREATED:
             files = set()
             for p in self._6_problem_ids.keys():
-                if self._8_problems[p].get_prob_type() == AgGlobals.PROG:
+                if self._8_problems[p].get_prob_type() == AgGlobals.PROBLEM_TYPE_PROG:
                     files.update( set( self._8_problems[p].get_files_provided() ) )
                     # print self._8_problems[p].get_files_provided()
 
@@ -336,7 +336,7 @@ class Assignment( object ):
                         if key[0:4] != '_99_':
                             input_config.set( section, key[3:], ' {}'.format( temp_in.__dict__[key] ) )
 
-                            if in_out[io][0] == AgGlobals.LONG:
+                            if in_out[io][0] == AgGlobals.INPUT_NATURE_LONG:
                                 input_file_path = os.path.join( in_out_dir, AgGlobals.get_input_file_name( self._5_subdir, p, io ) )
                                 input_config.set( section, 'input_file', input_file_path )
                                 fo = open( input_file_path, 'a' )

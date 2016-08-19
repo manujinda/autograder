@@ -39,10 +39,10 @@ class AgGlobals( object ):
     PROBLEM_CFG_FORMAT = '+_2_{}_problems.cfg'  # Format for problems of an assignment / project configuration file name. E.g. +_2_Assignment_1_problems.cfg
     PROBLEM_CFG_SECTION_FORMAT = '{}_problem_{}'  # Format for the section name in configuration file for a specific problem in the problem configuration file. E.g. Assignment_1_problem_2
     # Problem types
-    PROG = 'prog'  # A programming problem. Student submits a program that can be compiled and run
-    CODE = 'code'  # A coding segment problem. Student submits code segments. Not necessarily complete programs. Cannot compile and run as it is
-    ANS = 'ans'  # A text answer type submission
-    MCQ = 'mcq'  # Multiple choice question
+    PROBLEM_TYPE_PROG = 'prog'  # A programming problem. Student submits a program that can be compiled and run
+    PROBLEM_TYPE_CODE = 'code'  # A coding segment problem. Student submits code segments. Not necessarily complete programs. Cannot compile and run as it is
+    PROBLEM_TYPE_ANS = 'ans'  # A text answer type submission
+    PROBLEM_TYPE_MCQ = 'mcq'  # Multiple choice question
 
     # Problem object initial values.
     # These values are chosen this way to automatically generate a meaningful problem configuration file with comments.
@@ -63,12 +63,19 @@ class AgGlobals( object ):
     INPUT_CFG_SECTION_FORMAT = '{}_problem_{}_input_{}'  # Format for the section name in configuration file for a specific input to a problem. E.g. Assignment_1_problem_2_input_1
     INPUT_FILE_NAME_FORMAT = '{}_input_problem_{}_{}.txt'  # Format for the file name that holds a single set of inputs for a single run of a program. Used when the input to be provided is lengthy. E.g. 2_input_problem_1_Assignment_1.txt
     # Nature of inputs
-    SHORT = 'short'  # Short single line inputs provided when the program prompts for them. These inputs are described in the input configuration file itself.
-    LONG = 'long'  # Multi-line input that are fed into the program at a single prompt or several prompts. These inputs are described in separate files one for each set of inputs. The input configuration file only records the link to the file that holds the actual input.
-    CMD = 'cmd'  # Command-line input. Described in the input configuration file itself.
+    INPUT_NATURE_SHORT = 'short'  # Short single line inputs provided when the program prompts for them. These inputs are described in the input configuration file itself.
+    INPUT_NATURE_LONG = 'long'  # Multi-line input that are fed into the program at a single prompt or several prompts. These inputs are described in separate files one for each set of inputs. The input configuration file only records the link to the file that holds the actual input.
+    INPUT_NATURE_CMD = 'cmd'  # Command-line input. Described in the input configuration file itself.
     # Output location
-    STDOUT = 'stdout'  # Output is printed on standard output.
-    FILE = 'file'  # Output is produced in a specific file.
+    OUTPUT_TO_STDOUT = 'stdout'  # Output is printed on standard output.
+    OUTPUT_TO_FILE = 'file'  # Output is produced in a specific file.
+
+    # Input object initial values.
+    # These values are chosen this way to automatically generate a meaningful problem configuration file with comments.
+    INPUT_INIT_INPUT = ' ; Enter actual input before the ;. Keep a space between the actual input and the ;.'
+    INPUT_INIT_INPUT_FILE = ''
+    INPUT_INIT_OUTPUT_FILE = ' ; Enter the required output file name before the ;. Keep a space between the actual input and the ;.'
+    INPUT_INIT_MARKS = '0:0 50:80 100:100 ; Specify the different degrees to with the student output should match the reference output and the marks granted'
 
     # Student details database / table and its fields
     STUDENT_DB = 'students.csv'  # The file name for the student details. This is stored in the STUDENTS_DIRECTORY of the autograder dierctory tree.
@@ -128,4 +135,14 @@ class AgGlobals( object ):
             ll.append( p.split( ':' ) )
 
         return ll
+
+    @classmethod
+    def get_student_dir_name( cls, index_len, no, name ):
+        # If index_len = 3, this creates a string of the form:
+        # {:3}_{}
+        ret = '{}{}{}_{}'.format( '{:0>', index_len, '}', '{}' )
+
+        # Use the format string created above to format the student
+        # directory name appropriately
+        return ret.format( no, name )
 

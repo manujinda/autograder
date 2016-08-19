@@ -22,7 +22,7 @@ class Problem( object ):
         self._03_prob_type = prob_type
         self._04_prob_desc = AgGlobals.PROBLEM_INIT_DESCRIPTION
 
-        if self._03_prob_type == AgGlobals.PROG:
+        if self._03_prob_type == AgGlobals.PROBLEM_TYPE_PROG:
             self._05_files_provided = AgGlobals.PROBLEM_INIT_FILES_PRVIDED
 
             # Describe the nature of the inputs and outputs to be used in grading
@@ -51,7 +51,7 @@ class Problem( object ):
             # -1 means do not timeout
             self._13_timeout = AgGlobals.PROBLEM_INIT_TIMEOUT
 
-        if self._03_prob_type == AgGlobals.PROG or self._03_prob_type == AgGlobals.CODE:
+        if self._03_prob_type == AgGlobals.PROBLEM_TYPE_PROG or self._03_prob_type == AgGlobals.PROBLEM_TYPE_CODE:
             self._08_language = AgGlobals.PROBLEM_INIT_LANGUAGE
 
         self._06_files_submitted = AgGlobals.PROBLEM_INIT_FILES_SUBMITTED
@@ -85,7 +85,7 @@ class Problem( object ):
         for key in sorted( self.__dict__.keys() ):
             self.__dict__[key] = config.get( section, key[4:] ).strip()
 
-        if self._03_prob_type == AgGlobals.PROG:
+        if self._03_prob_type == AgGlobals.PROBLEM_TYPE_PROG:
             self._05_files_provided = self._05_files_provided.split()
 
             # self._07_inp_outps = '1:short:stdout 2:long:file
@@ -144,7 +144,7 @@ class Problem( object ):
 
 
     def get_inp_outps( self ):
-        if self._03_prob_type == AgGlobals.PROG:
+        if self._03_prob_type == AgGlobals.PROBLEM_TYPE_PROG:
             return self._07_inp_outps
         else:
             return {}
