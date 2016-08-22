@@ -40,7 +40,7 @@ class Assignment( object ):
         # Each Problem encapsulated the details of that problem.
         # self._8_problems = {}
 
-        self._99_state = AgGlobals.INITIALIZED
+        self._99_state = AgGlobals.ASSIGNMENT_STATE_INITIALIZED
 
 
     def __str__( self ):
@@ -121,7 +121,7 @@ class Assignment( object ):
         self._6_problem_ids = temp_prob
 
         print self
-        self._99_state = AgGlobals.LOADED
+        self._99_state = AgGlobals.ASSIGNMENT_STATE_LOADED
         return True
 
 
@@ -129,7 +129,7 @@ class Assignment( object ):
     Set up the problems that constitutes this assignment
     '''
     def setup_problems( self ):
-        if self._99_state == AgGlobals.LOADED:
+        if self._99_state == AgGlobals.ASSIGNMENT_STATE_LOADED:
             prob_conf = self.get_prob_config_path()
             # section_prefix = '{}_problem_{}'.format( self._5_subdir, '{}' )
             # Check whether the problem configuration file exists.
@@ -155,7 +155,7 @@ class Assignment( object ):
                     print 'Error: Problem {} - {} is dependent on undefined problems {}.'.format( p, self._8_problems[p].get_name(), depend_set - prob_id_set )
                     return False
 
-            self._99_state = AgGlobals.PROBLEMS_CREATED
+            self._99_state = AgGlobals.ASSIGNMENT_STATE_PROBLEMS_CREATED
             return True
         else:
             print 'Error: Need to load an assignment configuration before creating Problems'
@@ -166,7 +166,7 @@ class Assignment( object ):
     Generate problem configuration files
     '''
     def generate_problem_config( self ):
-        if self._99_state == AgGlobals.LOADED:
+        if self._99_state == AgGlobals.ASSIGNMENT_STATE_LOADED:
             prob_cfg = self.get_prob_config_path()
 
             if os.path.exists( prob_cfg ):
@@ -260,10 +260,10 @@ class Assignment( object ):
     Create provided files in the assignment master sub directory.
     '''
     def generate_provided_files( self ):
-        if self._99_state == AgGlobals.LOADED:
+        if self._99_state == AgGlobals.ASSIGNMENT_STATE_LOADED:
             self.setup_problems()
 
-        if self._99_state == AgGlobals.PROBLEMS_CREATED:
+        if self._99_state == AgGlobals.ASSIGNMENT_STATE_PROBLEMS_CREATED:
             files = set()
             for p in self._6_problem_ids.keys():
                 if self._8_problems[p].get_prob_type() == AgGlobals.PROBLEM_TYPE_PROG:
@@ -287,10 +287,10 @@ class Assignment( object ):
     Create submitted files in the assignment master sub directory.
     '''
     def generate_submitted_files( self ):
-        if self._99_state == AgGlobals.LOADED:
+        if self._99_state == AgGlobals.ASSIGNMENT_STATE_LOADED:
             self.setup_problems()
 
-        if self._99_state == AgGlobals.PROBLEMS_CREATED:
+        if self._99_state == AgGlobals.ASSIGNMENT_STATE_PROBLEMS_CREATED:
             files = set()
             for p in self._6_problem_ids.keys():
                 files.update( set( self._8_problems[p].get_files_submitted() ) )
@@ -310,10 +310,10 @@ class Assignment( object ):
 
 
     def generate_input_config( self ):
-        if self._99_state == AgGlobals.LOADED:
+        if self._99_state == AgGlobals.ASSIGNMENT_STATE_LOADED:
             self.setup_problems()
 
-        if self._99_state == AgGlobals.PROBLEMS_CREATED:
+        if self._99_state == AgGlobals.ASSIGNMENT_STATE_PROBLEMS_CREATED:
 
             # Create input output directory
             in_out_dir = os.path.join( self._4_gradingroot, self._7_grading_master, self._5_subdir, AgGlobals.INPUT_OUTPUT_DIRECTORY )
@@ -336,11 +336,72 @@ class Assignment( object ):
                         if key[0:4] != '_99_':
                             input_config.set( section, key[3:], ' {}'.format( temp_in.__dict__[key] ) )
 
-                            if in_out[io][0] == AgGlobals.INPUT_NATURE_LONG:
-                                input_file_path = os.path.join( in_out_dir, AgGlobals.get_input_file_name( self._5_subdir, p, io ) )
-                                input_config.set( section, 'input_file', input_file_path )
-                                fo = open( input_file_path, 'a' )
-                                fo.close()
+                    if in_out[io][0] == AgGlobals.INPUT_NATURE_LONG:
+                        input_file_path = os.path.join( in_out_dir, AgGlobals.get_input_file_name( self._5_subdir, p, io ) )
+                        input_config.set( section, 'input_file', input_file_path )
+                        fo = open( input_file_path, 'a' )
+                        fo.close()
+
+            cfg_path = os.path.join( in_out_dir, AgGlobals.get_input_cfg_name( self._5_subdir ) )
+            with open( cfg_path, 'wb' ) as configfile:
+                input_config.write( configfile )
+            print 'Success: Input configuration file {} successfully created'.format( cfg_path )
+
+
+    '''
+    Compile files.
+    '''
+    def compile( self ):
+        if self._99_state == AgGlobals.ASSIGNMENT_STATE_LOADED:
+            self.setup_problems()
+
+        if self._99_state == AgGlobals.ASSIGNMENT_STATE_PROBLEMS_CREATED:
+            # files = set()
+            os.chdir( self.get_masterdir() )
+            for p in self._6_problem_ids.keys():
+                self._8_problems[p].compile()
+
+    '''
+    Link
+    '''
+    def link( self ):
+        if self._99_state == AgGlobals.ASSIGNMENT_STATE_LOADED:
+            self.setup_problems()
+
+        if self._99_state == AgGlobals.ASSIGNMENT_STATE_PROBLEMS_CREATED:
+            # files = set()
+            os.chdir( self.get_masterdir() )
+            for p in self._6_problem_ids.keys():
+                self._8_problems[p].link()
+
+
+    def generate_outputs( self ):
+        if self._99_state == AgGlobals.ASSIGNMENT_STATE_LOADED:
+            self.setup_problems()
+
+        if self._99_state == AgGlobals.ASSIGNMENT_STATE_PROBLEMS_CREATED:
+
+            in_out_dir = os.path.join( self._4_gradingroot, self._7_grading_master, self._5_subdir, AgGlobals.INPUT_OUTPUT_DIRECTORY )
+
+            input_config = ConfigParser.SafeConfigParser()
+
+            for p in sorted( self._6_problem_ids ):
+                in_out = self._8_problems[p].get_inp_outps()
+
+                for io in sorted( in_out ):
+                    section = AgGlobals.get_input_section( self._5_subdir, p, io )
+
+                    temp_in = Input( in_out[io][0], in_out[io][1] )
+                    for key in sorted( temp_in.__dict__.keys() ):
+                        # Filter only the instances variables that are necessary for the configuration file
+                        if key[0:4] != '_99_':
+                            input_config.set( section, key[3:], ' {}'.format( temp_in.__dict__[key] ) )
+
+                    if in_out[io][0] == AgGlobals.INPUT_NATURE_LONG:
+                        input_file_path = os.path.join( in_out_dir, AgGlobals.get_input_file_name( self._5_subdir, p, io ) )
+                        input_config.set( section, 'input_file', input_file_path )
+                        fo = open( input_file_path, 'a' )
+                        fo.close()
 
             cfg_path = os.path.join( in_out_dir, AgGlobals.get_input_cfg_name( self._5_subdir ) )
             with open( cfg_path, 'wb' ) as configfile:

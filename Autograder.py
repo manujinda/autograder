@@ -279,6 +279,19 @@ class Autograder( object ):
             self.asmnt.generate_input_config()
 
 
+    def compile( self ):
+        if self.asmnt_loaded:
+            self.asmnt.compile()
+
+
+    def link( self ):
+        if self.asmnt_loaded:
+            self.asmnt.compile()
+            self.asmnt.link()
+
+
+
+
 
 if len( sys.argv ) > 2:
     if sys.argv[1] == 'setup':
@@ -333,6 +346,37 @@ if len( sys.argv ) > 2:
                 if ag.setup_assignment( sys.argv[3] ):
                     if ag.setup_problems():
                         ag.generate_files()
+
+    elif sys.argv[1] == 'compile':
+        # Compile program files belonging to this assignment / project
+        # Assignment and its problems must be complete before running this command
+        # Command:
+        #     $ python Autograder.py compile <path to autograder root directory> <assignment / project name>
+        # Test Parameters
+        #    compile /home/users/manu/Documents/manujinda/uo_classes/4_2016_summer/boyana/grading assignment_2
+        ag_cfg = os.path.join( sys.argv[2], AgGlobals.AUTOGRADER_CFG_NAME )
+        ag = Autograder( ag_cfg )
+        if ag.created():
+            if ag.validate_config():
+                if ag.setup_assignment( sys.argv[3] ):
+                    if ag.setup_problems():
+                        ag.compile()
+
+    elif sys.argv[1] == 'link':
+        # Link object files belonging to this assignment / project
+        # Assignment and its problems must be compiled before running this command
+        # Command:
+        #     $ python Autograder.py link <path to autograder root directory> <assignment / project name>
+        # Test Parameters
+        #    link /home/users/manu/Documents/manujinda/uo_classes/4_2016_summer/boyana/grading assignment_2
+        ag_cfg = os.path.join( sys.argv[2], AgGlobals.AUTOGRADER_CFG_NAME )
+        ag = Autograder( ag_cfg )
+        if ag.created():
+            if ag.validate_config():
+                if ag.setup_assignment( sys.argv[3] ):
+                    if ag.setup_problems():
+                        ag.link()
+
 
     elif sys.argv[1] == 'setasmnt':
         ag = Autograder( sys.argv[2] )

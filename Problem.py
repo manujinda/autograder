@@ -6,9 +6,11 @@ Encapsulates a single problem
 '''
 import ConfigParser
 import os
+import re
 import sys
 
 from AgGlobals import AgGlobals
+from Command import Command
 
 
 class Problem( object ):
@@ -32,7 +34,6 @@ class Problem( object ):
             #    Input_ID:Input_Lenght:Output_location
             #    Input_ID          -      A unique identifier to identify a single and complete set of inputs to a since execution of the program
             #    Input_Length      -      How long the input is and the nature of the input. Possible values are:
-            #                              cmd    - command-line input. Described in the input configuration file itself.
             #                              short  - short single line inputs provided when the program prompts for them.
             #                                       These inputs are described in the input configuration file itself.
             #                              long   - multi-line input that are fed into the program at a single prompt or several prompts
@@ -41,7 +42,8 @@ class Problem( object ):
             #    Output_Location   -      Where the output will be produced. The possible values are:
             #                              stdout    - Output is printed on standard output
             #                              file      - Output is produced in a specific file.
-            self._07_inp_outps = AgGlobals.PROBLEM_INIT_INP_OUTPS  # '1:short:stdout 2:long:file 3:cmd:stdout ; List the nature of inputs and outputs to test submissions for this programming problem. Format - Input_ID:Input_Lenght:Output_location'
+            #                              both      - Part of the output is to stdout and part to a file
+            self._07_inp_outps = AgGlobals.PROBLEM_INIT_INP_OUTPS  # '1:short:stdout 2:long:file 3:long:both ; List the nature of inputs and outputs to test submissions for this programming problem. Format - Input_ID:Input_Lenght:Output_location'
 
             self._09_command_line_options = AgGlobals.PROBLEM_INIT_COMMAND_LINE_OPTIONS
             self._10_student_make_file = AgGlobals.PROBLEM_INIT_STUDENT_MAKE_FILE
@@ -60,6 +62,8 @@ class Problem( object ):
 
         # self._14_depends_on = ' ; Problem numbers of other problems that this problem is dependent on. These problems should be specified prior to this problem'
         self._14_depends_on = AgGlobals.PROBLEM_INIT_DEPENDS_ON
+
+        self._99_state = AgGlobals.PROBLEM_STATE_INITIALIZED
 
 
     def __str__( self ):
@@ -83,10 +87,12 @@ class Problem( object ):
         config.read( config_file )
 
         for key in sorted( self.__dict__.keys() ):
-            self.__dict__[key] = config.get( section, key[4:] ).strip()
+            if key[0:4] != '_99_':
+                self.__dict__[key] = config.get( section, key[4:] ).strip()
 
         if self._03_prob_type == AgGlobals.PROBLEM_TYPE_PROG:
             self._05_files_provided = self._05_files_provided.split()
+            self._99_compiled = False
 
             # self._07_inp_outps = '1:short:stdout 2:long:file
             in_out = AgGlobals.parse_config_line( self._07_inp_outps )
@@ -115,6 +121,7 @@ class Problem( object ):
             print 'Error: Problem {} - {} is dependent on itself. Exiting...'.format( self._01_prob_no, self._02_name )
             sys.exit()
 
+        self._99_state = AgGlobals.PROBLEM_STATE_LOADED
         print self
         return True
 
@@ -148,3 +155,67 @@ class Problem( object ):
             return self._07_inp_outps
         else:
             return {}
+
+
+    def compile( self ):
+        if self._03_prob_type == AgGlobals.PROBLEM_TYPE_PROG and self._99_state == AgGlobals.PROBLEM_STATE_LOADED:
+            compile_success = 0
+            if self._08_language in ['c', 'C', 'cpp', 'CPP']:
+                # Cleanup
+                # os.system( 'make clean' )
+                retcode, out, err = Command( 'make clean' ).run()
+                # retcode, out, err = Command( './main 4 5' ).run( inputs = '5' )
+
+                print 'return: ', retcode
+                print 'output: ', out
+                print 'error: ', err
+
+                source_pattern = re.compile( '^([_a-zA-Z0-9]+)\.(?:c|C|cpp|CPP)$' )
+
+                for f in self._06_files_submitted:
+                    # print f[0]
+                    source_file = source_pattern.match( f[0] )
+                    if source_file:
+                        # print source_file.group( 1 )
+
+                        cmd = 'make {}.o'.format( source_file.group( 1 ) )
+                        retcode, out, err = Command( cmd ).run()
+
+                        print retcode
+                        print out
+                        print err
+
+                        compile_success += retcode
+
+                        # warning = warning_pattern.match( err )
+                        if err.find( 'warning' ) >= 0:
+                            print '**** Warnings present ****'
+
+                if compile_success == 0:
+                    self._99_state = AgGlobals.PROBLEM_STATE_COMPILED
+
+        return self._99_state == AgGlobals.PROBLEM_STATE_COMPILED
+
+
+    def link( self ):
+        # self._99_linked = False
+        if self._03_prob_type == AgGlobals.PROBLEM_TYPE_PROG and self._99_state == AgGlobals.PROBLEM_STATE_COMPILED:
+            link_success = 0
+            if self._08_language in ['c', 'C', 'cpp', 'CPP']:
+                cmd = 'make {}'.format( self._11_make_targs )
+                retcode, out, err = Command( cmd ).run()
+
+                print retcode
+                print out
+                print err
+
+                link_success += retcode
+
+                # warning = warning_pattern.match( err )
+                if err.find( 'warning' ) >= 0:
+                    print '**** Warnings present ****'
+
+                # self._99_linked = ( link_success == 0 )
+                self._99_state = AgGlobals.PROBLEM_STATE_LINKED
+
+        return self._99_state == AgGlobals.PROBLEM_STATE_LINKED

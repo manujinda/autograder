@@ -24,9 +24,9 @@ class AgGlobals( object ):
     ASSIGNMENT_CFG_DUE_DATE_FORMAT = '%m/%d/%Y'  # This should match the format provided in ASSIGNMENT_INIT_DUE_DATE
 
     # Different states of an assignment / project
-    INITIALIZED = 0
-    LOADED = 1
-    PROBLEMS_CREATED = 2
+    ASSIGNMENT_STATE_INITIALIZED = 0
+    ASSIGNMENT_STATE_LOADED = 1
+    ASSIGNMENT_STATE_PROBLEMS_CREATED = 2
 
     # Assignment object initial values.
     # These values are chosen this way to automatically generate a meaningful assignment / project configuration file with comments.
@@ -50,13 +50,19 @@ class AgGlobals( object ):
     PROBLEM_INIT_DESCRIPTION = 'Problem description'
     PROBLEM_INIT_FILES_PRVIDED = 'provided_1 provided_2 provided_3 ; List the names of the provided files before the ; separated by spaces'
     PROBLEM_INIT_FILES_SUBMITTED = 'file_1:alias_1_1:alias_1_2 file_2:alias_2_1 ; List the names of the files students are supposed to submit before the ; separated by spaces. To handle naming errors, for each file a student is supposed to submit you can give a : separated list of aliases'
-    PROBLEM_INIT_INP_OUTPS = '1:short:stdout 2:long:file 3:cmd:stdout ; List the nature of inputs and outputs to test submissions for this programming problem. Format - Input_ID:Input_Lenght:Output_location'
+    PROBLEM_INIT_INP_OUTPS = '1:short:stdout 2:long:file 3:long:both ; List the nature of inputs and outputs to test submissions for this programming problem. Format - Input_ID:Input_Lenght:Output_location'
     PROBLEM_INIT_COMMAND_LINE_OPTIONS = False
     PROBLEM_INIT_STUDENT_MAKE_FILE = False
     PROBLEM_INIT_MAKE_TARGS = []
     PROBLEM_INIT_TIMEOUT = -1  # Timeout interval to decide infinite loop. # -1 means do not timeout
     PROBLEM_INIT_LANGUAGE = ''
     PROBLEM_INIT_DEPENDS_ON = ''
+
+    # Different states of a problem
+    PROBLEM_STATE_INITIALIZED = 10
+    PROBLEM_STATE_LOADED = 11
+    PROBLEM_STATE_COMPILED = 12
+    PROBLEM_STATE_LINKED = 13
 
     # Input output configuration file names
     INPUT_CFG_FORMAT = '+_3_{}_inputs.cfg'  # Format for test inputs for a program assignment configuration file name. E.g. +_3_Assignment_1_inputs.cfg
@@ -69,10 +75,12 @@ class AgGlobals( object ):
     # Output location
     OUTPUT_TO_STDOUT = 'stdout'  # Output is printed on standard output.
     OUTPUT_TO_FILE = 'file'  # Output is produced in a specific file.
+    OUTPUT_TO_BOTH = 'both'  # Produce some output in stdout and some in file
 
     # Input object initial values.
     # These values are chosen this way to automatically generate a meaningful problem configuration file with comments.
     INPUT_INIT_INPUT = ' ; Enter actual input before the ;. Keep a space between the actual input and the ;.'
+    INPUT_INIT_CMD_LINE_INPUT = '  ; Enter command line input'
     INPUT_INIT_INPUT_FILE = ''
     INPUT_INIT_OUTPUT_FILE = ' ; Enter the required output file name before the ;. Keep a space between the actual input and the ;.'
     INPUT_INIT_MARKS = '0:0 50:80 100:100 ; Specify the different degrees to with the student output should match the reference output and the marks granted'
