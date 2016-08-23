@@ -17,17 +17,15 @@ class Input( object ):
     classdocs
     '''
 
-
     def __init__( self, nature, output ):
         '''
         Constructor
         '''
         # The nature (how long and the stage at which the input is provided) of the input
-        # cmd - Command line input
         # short - Short input. Typically single line. Input is specified inline in the input configuration file itself.
         #         Multi-line inputs can be specified using '\n' to denote line breaks
         # long - Long inputs. Typically multi_lined. Input is specified in a seperate file.
-        self._1_nature = nature  # 'short ; specify before the ;. values: cmdline, short, long'
+        self._1_nature = nature  # 'short ; specify before the ;. values: short, long'
 
         self._2_cmd_line_input = AgGlobals.INPUT_INIT_CMD_LINE_INPUT
 
@@ -55,6 +53,10 @@ class Input( object ):
         self._6_marks = AgGlobals.INPUT_INIT_MARKS
 
 
+    def __str__( self ):
+        return AgGlobals.string_of( self, 3 )
+
+
     '''
     Read input configuration file and populate the instance variables
     '''
@@ -72,5 +74,30 @@ class Input( object ):
             if key[0:4] != '_99_':
                 self.__dict__[key] = config.get( section, key[3:] ).strip()
 
+        if self._1_nature == AgGlobals.INPUT_NATURE_LONG:
+            # Check whether the file containing actual input exists
+            if not os.path.exists( self._3_input_file ):
+                print 'Error: File {} containing input does not exists. Exit...'.format( self._3_input_file )
+                sys.exit()
+
+            inp = open( self._3_input_file, 'r' )
+            self._3_input = inp.read()
+            inp.close()
+
+        temp_marks = AgGlobals.parse_config_line( self._6_marks )
+        self._6_marks = {}
+        for mark in temp_marks:
+            self._6_marks[mark[0]] = mark[1]
+
+        print self
+
         return True
+
+
+    def get_cmd_line_input( self ):
+        return self._2_cmd_line_input
+
+
+    def get_inputs( self ):
+        return self._3_input
 

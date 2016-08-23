@@ -24,9 +24,9 @@ class AgGlobals( object ):
     ASSIGNMENT_CFG_DUE_DATE_FORMAT = '%m/%d/%Y'  # This should match the format provided in ASSIGNMENT_INIT_DUE_DATE
 
     # Different states of an assignment / project
-    ASSIGNMENT_STATE_INITIALIZED = 0
-    ASSIGNMENT_STATE_LOADED = 1
-    ASSIGNMENT_STATE_PROBLEMS_CREATED = 2
+    ASSIGNMENT_STATE_INITIALIZED = 10
+    ASSIGNMENT_STATE_LOADED = 11
+    ASSIGNMENT_STATE_PROBLEMS_CREATED = 12
 
     # Assignment object initial values.
     # These values are chosen this way to automatically generate a meaningful assignment / project configuration file with comments.
@@ -59,10 +59,11 @@ class AgGlobals( object ):
     PROBLEM_INIT_DEPENDS_ON = ''
 
     # Different states of a problem
-    PROBLEM_STATE_INITIALIZED = 10
-    PROBLEM_STATE_LOADED = 11
-    PROBLEM_STATE_COMPILED = 12
-    PROBLEM_STATE_LINKED = 13
+    PROBLEM_STATE_INITIALIZED = 1
+    PROBLEM_STATE_LOADED = 2
+    PROBLEM_STATE_COMPILED = 4
+    PROBLEM_STATE_LINKED = 8
+    PROBLEM_STATE_INPUTS_LOADED = 16
 
     # Input output configuration file names
     INPUT_CFG_FORMAT = '+_3_{}_inputs.cfg'  # Format for test inputs for a program assignment configuration file name. E.g. +_3_Assignment_1_inputs.cfg
@@ -71,11 +72,13 @@ class AgGlobals( object ):
     # Nature of inputs
     INPUT_NATURE_SHORT = 'short'  # Short single line inputs provided when the program prompts for them. These inputs are described in the input configuration file itself.
     INPUT_NATURE_LONG = 'long'  # Multi-line input that are fed into the program at a single prompt or several prompts. These inputs are described in separate files one for each set of inputs. The input configuration file only records the link to the file that holds the actual input.
-    INPUT_NATURE_CMD = 'cmd'  # Command-line input. Described in the input configuration file itself.
+    # INPUT_NATURE_CMD = 'cmd'  # Command-line input. Described in the input configuration file itself.
     # Output location
     OUTPUT_TO_STDOUT = 'stdout'  # Output is printed on standard output.
     OUTPUT_TO_FILE = 'file'  # Output is produced in a specific file.
     OUTPUT_TO_BOTH = 'both'  # Produce some output in stdout and some in file
+
+    OUTPUT_FILE_NAME_FORMAT = '{}_output_problem_{}_{}.txt'  # Format for the file name that holds the output for a single set of inputs for a single run of a program. E.g. 2_output_problem_1_Assignment_1.txt
 
     # Input object initial values.
     # These values are chosen this way to automatically generate a meaningful problem configuration file with comments.
@@ -120,6 +123,11 @@ class AgGlobals( object ):
 
 
     @classmethod
+    def get_output_file_name( cls, assignment_name, problem_id, input_id ):
+        return AgGlobals.OUTPUT_FILE_NAME_FORMAT.format( input_id, problem_id, assignment_name )
+
+
+    @classmethod
     def get_problem_section( cls, assignment_name, problem_id ):
         return AgGlobals.PROBLEM_CFG_SECTION_FORMAT.format( assignment_name, problem_id )
 
@@ -153,4 +161,12 @@ class AgGlobals( object ):
         # Use the format string created above to format the student
         # directory name appropriately
         return ret.format( no, name )
+
+    @classmethod
+    def string_of( cls, my_class, skip_chars = 0 ):
+        desc = ''
+        for key in sorted( my_class.__dict__.keys() ):
+            if key[0:4] != '_99_':
+                desc += '{} > {} \n'.format( key[skip_chars:], my_class.__dict__[key] )
+        return desc
 

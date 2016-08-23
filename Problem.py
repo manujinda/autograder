@@ -11,6 +11,7 @@ import sys
 
 from AgGlobals import AgGlobals
 from Command import Command
+from Input import Input
 
 
 class Problem( object ):
@@ -67,11 +68,11 @@ class Problem( object ):
 
 
     def __str__( self ):
-        desc = ''
-        for f in sorted( self.__dict__.keys() ):
-            desc += '{} > {} \n'.format( f[4:], self.__dict__[f] )
-        return desc
-        # return '{} {}'.format( self._01_prob_no, self._02_name )
+#         desc = ''
+#         for f in sorted( self.__dict__.keys() ):
+#             desc += '{} > {} \n'.format( f[4:], self.__dict__[f] )
+#         return desc
+        return AgGlobals.string_of( self, 4 )
 
     '''
     Read problem configuration file and populate the instance variables
@@ -110,6 +111,8 @@ class Problem( object ):
             # self._07_inp_outps is a dictionary with the format:
             #    input_id -> ( Input_Length, Output_Location )
             self._07_inp_outps = temp_io
+
+            self._13_timeout = int( self._13_timeout )
 
         # self._06_files_submitted = 'file_1:alias_1_1:alias_1_2 file_2:alias_2_1 ; List the names of the files students are supposed to submit before the ; separated by spaces. To handle naming errors, for each file a student is supposed to submit you can give a : separated list of aliases'
         # This is a list of lists with all the submitted file names and their file name aliases.
@@ -157,8 +160,48 @@ class Problem( object ):
             return {}
 
 
-    def compile( self ):
+    def generate_input_config( self, assignment, in_out_dir, cfg ):
         if self._03_prob_type == AgGlobals.PROBLEM_TYPE_PROG and self._99_state == AgGlobals.PROBLEM_STATE_LOADED:
+            for io in sorted( self._07_inp_outps ):
+                print io, self._07_inp_outps[io]
+                section = AgGlobals.get_input_section( assignment, self._01_prob_no, io )
+                cfg.add_section( section )
+
+                temp_in = Input( self._07_inp_outps[io][0], self._07_inp_outps[io][1] )
+                for key in sorted( temp_in.__dict__.keys() ):
+                    # Filter only the instances variables that are necessary for the configuration file
+                    if key[0:4] != '_99_':
+                        cfg.set( section, key[3:], ' {}'.format( temp_in.__dict__[key] ) )
+
+                if self._07_inp_outps[io][0] == AgGlobals.INPUT_NATURE_LONG:
+                    input_file_path = os.path.join( in_out_dir, AgGlobals.get_input_file_name( assignment, self._01_prob_no, io ) )
+                    cfg.set( section, 'input_file', input_file_path )
+                    fo = open( input_file_path, 'a' )
+                    fo.close()
+
+
+    def load_input( self, assignment, input_conf ):
+        if self._03_prob_type == AgGlobals.PROBLEM_TYPE_PROG and self._99_state & AgGlobals.PROBLEM_STATE_LOADED == AgGlobals.PROBLEM_STATE_LOADED:
+            # Check whether the input configuration file exists.
+            if not os.path.exists( input_conf ):
+                print '\Input configuration file {} does not exist, exit...'.format( input_conf )
+                sys.exit()
+
+            self._99_inputs = {}
+
+            for io in sorted( self._07_inp_outps ):
+                self._99_inputs[io] = Input( self._07_inp_outps[io][0], self._07_inp_outps[io][1] )
+
+                section = AgGlobals.get_input_section( assignment, self._01_prob_no, io )
+                self._99_inputs[io].load_input( input_conf, section )
+
+            self._99_state |= AgGlobals.PROBLEM_STATE_INPUTS_LOADED
+
+        return self._99_state & AgGlobals.PROBLEM_STATE_INPUTS_LOADED == AgGlobals.PROBLEM_STATE_INPUTS_LOADED
+
+
+    def compile( self ):
+        if self._03_prob_type == AgGlobals.PROBLEM_TYPE_PROG and self._99_state & AgGlobals.PROBLEM_STATE_LOADED == AgGlobals.PROBLEM_STATE_LOADED:
             compile_success = 0
             if self._08_language in ['c', 'C', 'cpp', 'CPP']:
                 # Cleanup
@@ -192,14 +235,15 @@ class Problem( object ):
                             print '**** Warnings present ****'
 
                 if compile_success == 0:
-                    self._99_state = AgGlobals.PROBLEM_STATE_COMPILED
+                    # self._99_state = AgGlobals.PROBLEM_STATE_COMPILED
+                    self._99_state |= AgGlobals.PROBLEM_STATE_COMPILED
 
-        return self._99_state == AgGlobals.PROBLEM_STATE_COMPILED
+        return self._99_state & AgGlobals.PROBLEM_STATE_COMPILED == AgGlobals.PROBLEM_STATE_COMPILED
 
 
     def link( self ):
         # self._99_linked = False
-        if self._03_prob_type == AgGlobals.PROBLEM_TYPE_PROG and self._99_state == AgGlobals.PROBLEM_STATE_COMPILED:
+        if self._03_prob_type == AgGlobals.PROBLEM_TYPE_PROG and self._99_state & AgGlobals.PROBLEM_STATE_COMPILED == AgGlobals.PROBLEM_STATE_COMPILED:
             link_success = 0
             if self._08_language in ['c', 'C', 'cpp', 'CPP']:
                 cmd = 'make {}'.format( self._11_make_targs )
@@ -216,6 +260,27 @@ class Problem( object ):
                     print '**** Warnings present ****'
 
                 # self._99_linked = ( link_success == 0 )
-                self._99_state = AgGlobals.PROBLEM_STATE_LINKED
+                # self._99_state = AgGlobals.PROBLEM_STATE_LINKED
+                self._99_state |= AgGlobals.PROBLEM_STATE_LINKED
 
-        return self._99_state == AgGlobals.PROBLEM_STATE_LINKED
+        return self._99_state & AgGlobals.PROBLEM_STATE_LINKED == AgGlobals.PROBLEM_STATE_LINKED
+
+
+    def generate_output( self, assignment, in_out_dir ):
+        if self._03_prob_type == AgGlobals.PROBLEM_TYPE_PROG:
+            # Check whether the program has been successfully compiled, linked and inputs has been loaded
+            if self._99_state & ( AgGlobals.PROBLEM_STATE_LINKED | AgGlobals.PROBLEM_STATE_INPUTS_LOADED ) == AgGlobals.PROBLEM_STATE_LINKED | AgGlobals.PROBLEM_STATE_INPUTS_LOADED:
+                for io in sorted( self._99_inputs ):
+                    cmd = './{} {}'.format( self._11_make_targs, self._99_inputs[io].get_cmd_line_input() )
+                    retcode, out, err = Command( cmd ).run( self._99_inputs[io].get_inputs(), self._13_timeout )
+                    print retcode
+                    print out
+                    print err
+
+                    if retcode == 0:
+                        output_file_path = os.path.join( in_out_dir, AgGlobals.get_output_file_name( assignment, self._01_prob_no, io ) )
+                        fo = open( output_file_path, 'w' )
+                        fo.write( out )
+                        fo.close()
+                    else:
+                        print 'Error Running: {}'.format( cmd )

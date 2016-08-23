@@ -9,6 +9,39 @@ This chages rapidly. Not a part of the main project. This is just my playground 
 import ConfigParser
 import sys
 
+# Bitwise operations
+x = ( 1 << 3 )
+print x
+y = 2
+z = x | y
+print z & x
+w = 4
+print w & z
+
+if z & x == x:
+    print 'x is set'
+
+inp = 1
+comp = 2
+other = 4
+
+state = inp | comp | other
+print state
+print state & ( inp | other )
+print inp | other
+if state & ( inp | other ) == inp | other:
+    print 'good'
+
+sys.exit( 0 )
+
+# Reading a text file at once
+inp = open( 'sandbox.py', 'r' )
+f = inp.read()
+print f
+
+sys.exit()
+
+# Playing with parsing a : seperated string.
 def parse_config_line( line ):
     parts = line.split()
     ll = []

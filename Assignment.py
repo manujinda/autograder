@@ -44,11 +44,12 @@ class Assignment( object ):
 
 
     def __str__( self ):
-        desc = ''
-        for key in sorted( self.__dict__.keys() ):  # [:-1]:
-            if key[0:4] != '_99_':
-                desc += '{} > {} \n'.format( key[3:], self.__dict__[key] )
-        return desc
+#         desc = ''
+#         for key in sorted( self.__dict__.keys() ):  # [:-1]:
+#             if key[0:4] != '_99_':
+#                 desc += '{} > {} \n'.format( key[3:], self.__dict__[key] )
+#         return desc
+        return AgGlobals.string_of( self, 3 )
 
 
     ''' Generate a new blank assignment.
@@ -308,8 +309,8 @@ class Assignment( object ):
             print 'Error: Need to load an assignment configuration before checking "Submitted" files for that assignment'
             return False
 
-
-    def generate_input_config( self ):
+    ''' Delete later '''
+    def generate_input_config2( self ):
         if self._99_state == AgGlobals.ASSIGNMENT_STATE_LOADED:
             self.setup_problems()
 
@@ -348,65 +349,126 @@ class Assignment( object ):
             print 'Success: Input configuration file {} successfully created'.format( cfg_path )
 
 
+    def generate_input_config( self ):
+        if self._99_state == AgGlobals.ASSIGNMENT_STATE_LOADED:
+            self.setup_problems()
+
+        if self._99_state == AgGlobals.ASSIGNMENT_STATE_PROBLEMS_CREATED:
+
+            # Create input output directory
+            in_out_dir = os.path.join( self._4_gradingroot, self._7_grading_master, self._5_subdir, AgGlobals.INPUT_OUTPUT_DIRECTORY )
+            if not os.path.exists( in_out_dir ):
+                os.mkdir( in_out_dir )
+
+            input_config = ConfigParser.SafeConfigParser()
+
+            for p in sorted( self._6_problem_ids ):
+                self._8_problems[p].generate_input_config( self._5_subdir, in_out_dir, input_config )
+
+            cfg_path = os.path.join( in_out_dir, AgGlobals.get_input_cfg_name( self._5_subdir ) )
+            with open( cfg_path, 'wb' ) as configfile:
+                input_config.write( configfile )
+
+            print 'Success: Input configuration file {} successfully created'.format( cfg_path )
+
+
+    def load_input( self ):
+        success = False
+        if self._99_state == AgGlobals.ASSIGNMENT_STATE_LOADED:
+            self.setup_problems()
+
+        if self._99_state == AgGlobals.ASSIGNMENT_STATE_PROBLEMS_CREATED:
+
+            cfg_path = os.path.join( self._4_gradingroot, self._7_grading_master, self._5_subdir, AgGlobals.INPUT_OUTPUT_DIRECTORY, AgGlobals.get_input_cfg_name( self._5_subdir ) )
+
+            if not os.path.exists( cfg_path ):
+                print '\Input configuration file {} does not exist, exit...'.format( cfg_path )
+                sys.exit()
+
+            success = True
+            for p in sorted( self._6_problem_ids ):
+                success = success and self._8_problems[p].load_input( self._5_subdir, cfg_path )
+
+            print 'Success: Loading inputs'
+            return success
+
+
     '''
     Compile files.
     '''
     def compile( self ):
+        success = False
         if self._99_state == AgGlobals.ASSIGNMENT_STATE_LOADED:
             self.setup_problems()
 
         if self._99_state == AgGlobals.ASSIGNMENT_STATE_PROBLEMS_CREATED:
             # files = set()
             os.chdir( self.get_masterdir() )
+            success = True
             for p in self._6_problem_ids.keys():
-                self._8_problems[p].compile()
+                success = success and self._8_problems[p].compile()
+
+        return success
 
     '''
     Link
     '''
     def link( self ):
+        success = False
         if self._99_state == AgGlobals.ASSIGNMENT_STATE_LOADED:
             self.setup_problems()
 
         if self._99_state == AgGlobals.ASSIGNMENT_STATE_PROBLEMS_CREATED:
             # files = set()
             os.chdir( self.get_masterdir() )
+            success = True
             for p in self._6_problem_ids.keys():
-                self._8_problems[p].link()
+                success = success and self._8_problems[p].link()
+
+        return success
 
 
-    def generate_outputs( self ):
+    def generate_output( self ):
         if self._99_state == AgGlobals.ASSIGNMENT_STATE_LOADED:
             self.setup_problems()
 
         if self._99_state == AgGlobals.ASSIGNMENT_STATE_PROBLEMS_CREATED:
 
+            # Create input output directory
             in_out_dir = os.path.join( self._4_gradingroot, self._7_grading_master, self._5_subdir, AgGlobals.INPUT_OUTPUT_DIRECTORY )
-
-            input_config = ConfigParser.SafeConfigParser()
+            if not os.path.exists( in_out_dir ):
+                os.mkdir( in_out_dir )
 
             for p in sorted( self._6_problem_ids ):
-                in_out = self._8_problems[p].get_inp_outps()
+                self._8_problems[p].generate_output( self._5_subdir, in_out_dir )
 
-                for io in sorted( in_out ):
-                    section = AgGlobals.get_input_section( self._5_subdir, p, io )
+            print 'Success: Generating Reference Outputs'
 
-                    temp_in = Input( in_out[io][0], in_out[io][1] )
-                    for key in sorted( temp_in.__dict__.keys() ):
-                        # Filter only the instances variables that are necessary for the configuration file
-                        if key[0:4] != '_99_':
-                            input_config.set( section, key[3:], ' {}'.format( temp_in.__dict__[key] ) )
 
-                    if in_out[io][0] == AgGlobals.INPUT_NATURE_LONG:
-                        input_file_path = os.path.join( in_out_dir, AgGlobals.get_input_file_name( self._5_subdir, p, io ) )
-                        input_config.set( section, 'input_file', input_file_path )
-                        fo = open( input_file_path, 'a' )
-                        fo.close()
-
-            cfg_path = os.path.join( in_out_dir, AgGlobals.get_input_cfg_name( self._5_subdir ) )
-            with open( cfg_path, 'wb' ) as configfile:
-                input_config.write( configfile )
-            print 'Success: Input configuration file {} successfully created'.format( cfg_path )
+#     def load_inputs( self ):
+#         if self._99_state == AgGlobals.ASSIGNMENT_STATE_LOADED:
+#             self.setup_problems()
+#
+#         if self._99_state == AgGlobals.ASSIGNMENT_STATE_PROBLEMS_CREATED:
+#
+#             in_out_dir = os.path.join( self._4_gradingroot, self._7_grading_master, self._5_subdir, AgGlobals.INPUT_OUTPUT_DIRECTORY )
+#
+#             input_conf = os.path.join( in_out_dir, AgGlobals.get_input_cfg_name( self._5_subdir ) )
+#
+#             if not os.path.exists( input_conf ):
+#                 print '\nProblem configuration file {} does not exist, exit...'.format( input_conf )
+#                 sys.exit()
+#
+#             for p in sorted( self._6_problem_ids ):
+#                 in_out = self._8_problems[p].get_inp_outps()
+#
+#                 for io in sorted( in_out ):
+#                     section = AgGlobals.get_input_section( self._5_subdir, p, io )
+#
+#                     temp_in = Input( in_out[io][0], in_out[io][1] )
+#                     temp_in.load_input( input_conf, section )
+#
+#             print 'Success: Inputs successfully loaded'
 
 
 

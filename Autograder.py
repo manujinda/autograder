@@ -279,17 +279,31 @@ class Autograder( object ):
             self.asmnt.generate_input_config()
 
 
+    def load_input( self ):
+        if self.asmnt_loaded:
+            return self.asmnt.load_input()
+        return False
+
+
     def compile( self ):
         if self.asmnt_loaded:
-            self.asmnt.compile()
+            return self.asmnt.compile()
+        return False
 
 
     def link( self ):
         if self.asmnt_loaded:
-            self.asmnt.compile()
-            self.asmnt.link()
+            if self.asmnt.compile():
+                return self.asmnt.link()
+        return False
 
 
+    def generate_output( self ):
+        if self.asmnt_loaded:
+            if self.asmnt.compile():
+                if self.asmnt.link() and self.asmnt.load_input():
+                    return self.asmnt.generate_output()
+        return False
 
 
 
@@ -347,6 +361,21 @@ if len( sys.argv ) > 2:
                     if ag.setup_problems():
                         ag.generate_files()
 
+    elif sys.argv[1] == 'lodinp':
+        # Load test inputs to each of the programming problems
+        # Assignment and its problems must be complete before running this command
+        # Command:
+        #     $ python Autograder.py lodinp <path to autograder root directory> <assignment / project name>
+        # Test Parameters
+        #    lodinp /home/users/manu/Documents/manujinda/uo_classes/4_2016_summer/boyana/grading assignment_2
+        ag_cfg = os.path.join( sys.argv[2], AgGlobals.AUTOGRADER_CFG_NAME )
+        ag = Autograder( ag_cfg )
+        if ag.created():
+            if ag.validate_config():
+                if ag.setup_assignment( sys.argv[3] ):
+                    if ag.setup_problems():
+                        ag.load_input()
+
     elif sys.argv[1] == 'compile':
         # Compile program files belonging to this assignment / project
         # Assignment and its problems must be complete before running this command
@@ -376,6 +405,22 @@ if len( sys.argv ) > 2:
                 if ag.setup_assignment( sys.argv[3] ):
                     if ag.setup_problems():
                         ag.link()
+
+
+    elif sys.argv[1] == 'genout':
+        # Generate reference outputs for test input
+        # Assignment and its problems must be compiled before running this command
+        # Command:
+        #     $ python Autograder.py genout <path to autograder root directory> <assignment / project name>
+        # Test Parameters
+        #    genout /home/users/manu/Documents/manujinda/uo_classes/4_2016_summer/boyana/grading assignment_2
+        ag_cfg = os.path.join( sys.argv[2], AgGlobals.AUTOGRADER_CFG_NAME )
+        ag = Autograder( ag_cfg )
+        if ag.created():
+            if ag.validate_config():
+                if ag.setup_assignment( sys.argv[3] ):
+                    if ag.setup_problems():
+                        ag.generate_output()
 
 
     elif sys.argv[1] == 'setasmnt':

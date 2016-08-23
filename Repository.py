@@ -7,6 +7,7 @@ A class to encapsulate a version control repository such as Git
 import os
 import re
 import subprocess
+from AgGlobals import AgGlobals
 
 
 class Repository( object ):
@@ -50,10 +51,11 @@ class Repository( object ):
 
 
     def __str__( self ):
-        desc = ''
-        for f in sorted( self.__dict__.keys() ):
-            desc += '{} > {} \n'.format( f, self.__dict__[f] )
-        return desc
+#         desc = ''
+#         for f in sorted( self.__dict__.keys() ):
+#             desc += '{} > {} \n'.format( f, self.__dict__[f] )
+#         return desc
+        return AgGlobals.string_of( self )
 
     def clone( self, path = '' ):
         '''
