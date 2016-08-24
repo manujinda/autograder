@@ -69,7 +69,7 @@ class Input( object ):
 
         config = ConfigParser.SafeConfigParser()
         config.read( config_file )
-
+        print self
         for key in sorted( self.__dict__.keys() ):
             if key[0:4] != '_99_':
                 self.__dict__[key] = config.get( section, key[3:] ).strip()
@@ -83,6 +83,9 @@ class Input( object ):
             inp = open( self._3_input_file, 'r' )
             self._3_input = inp.read()
             inp.close()
+
+        if self._4_output != AgGlobals.OUTPUT_TO_STDOUT:
+            self._5_out_file = self._5_out_file.split()
 
         temp_marks = AgGlobals.parse_config_line( self._6_marks )
         self._6_marks = {}
@@ -101,3 +104,9 @@ class Input( object ):
     def get_inputs( self ):
         return self._3_input
 
+
+    def get_output_files_generated( self ):
+        if self._4_output != AgGlobals.OUTPUT_TO_STDOUT:
+            return self._5_out_file
+        else:
+            return []

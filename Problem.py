@@ -266,7 +266,7 @@ class Problem( object ):
         return self._99_state & AgGlobals.PROBLEM_STATE_LINKED == AgGlobals.PROBLEM_STATE_LINKED
 
 
-    def generate_output( self, assignment, in_out_dir ):
+    def generate_output2( self, assignment, in_out_dir ):
         if self._03_prob_type == AgGlobals.PROBLEM_TYPE_PROG:
             # Check whether the program has been successfully compiled, linked and inputs has been loaded
             if self._99_state & ( AgGlobals.PROBLEM_STATE_LINKED | AgGlobals.PROBLEM_STATE_INPUTS_LOADED ) == AgGlobals.PROBLEM_STATE_LINKED | AgGlobals.PROBLEM_STATE_INPUTS_LOADED:
@@ -284,3 +284,22 @@ class Problem( object ):
                         fo.close()
                     else:
                         print 'Error Running: {}'.format( cmd )
+
+
+    def generate_output( self, assignment, in_out_dir ):
+        if self._03_prob_type == AgGlobals.PROBLEM_TYPE_PROG:
+            # Check whether the program has been successfully compiled, linked and inputs has been loaded
+            if self._99_state & ( AgGlobals.PROBLEM_STATE_LINKED | AgGlobals.PROBLEM_STATE_INPUTS_LOADED ) == AgGlobals.PROBLEM_STATE_LINKED | AgGlobals.PROBLEM_STATE_INPUTS_LOADED:
+                for io in sorted( self._99_inputs ):
+                    output_file_path = os.path.join( in_out_dir, AgGlobals.get_output_file_name( assignment, self._01_prob_no, io ) )
+                    fo = open( output_file_path, 'w' )
+                    cmd = '../{} {}'.format( self._11_make_targs, self._99_inputs[io].get_cmd_line_input() )
+                    retcode, out, err = Command( cmd ).run( self._99_inputs[io].get_inputs(), self._13_timeout, fo, in_out_dir )
+                    fo.close()
+                    print retcode
+                    print out
+                    print err
+
+                    for out_file in self._99_inputs[io].get_output_files_generated():
+                        cmd = 'mv {0} {1}_{0}'.format( out_file, AgGlobals.get_output_file_name( assignment, self._01_prob_no, io ) )
+                        retcode, out, err = Command( cmd ).run( cwd = in_out_dir )

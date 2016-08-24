@@ -68,7 +68,8 @@ class AgGlobals( object ):
     # Input output configuration file names
     INPUT_CFG_FORMAT = '+_3_{}_inputs.cfg'  # Format for test inputs for a program assignment configuration file name. E.g. +_3_Assignment_1_inputs.cfg
     INPUT_CFG_SECTION_FORMAT = '{}_problem_{}_input_{}'  # Format for the section name in configuration file for a specific input to a problem. E.g. Assignment_1_problem_2_input_1
-    INPUT_FILE_NAME_FORMAT = '{}_input_problem_{}_{}.txt'  # Format for the file name that holds a single set of inputs for a single run of a program. Used when the input to be provided is lengthy. E.g. 2_input_problem_1_Assignment_1.txt
+    # INPUT_FILE_NAME_FORMAT = '{}_input_problem_{}_{}.txt'  # Format for the file name that holds a single set of inputs for a single run of a program. Used when the input to be provided is lengthy. E.g. 2_input_problem_1_Assignment_1.txt
+    INPUT_FILE_NAME_FORMAT = 'io_{}_problem_{}_{}_input.txt'  # Format for the file name that holds a single set of inputs for a single run of a program. Used when the input to be provided is lengthy. E.g. io_Assignment_1_problem_1_2_input.txt
     # Nature of inputs
     INPUT_NATURE_SHORT = 'short'  # Short single line inputs provided when the program prompts for them. These inputs are described in the input configuration file itself.
     INPUT_NATURE_LONG = 'long'  # Multi-line input that are fed into the program at a single prompt or several prompts. These inputs are described in separate files one for each set of inputs. The input configuration file only records the link to the file that holds the actual input.
@@ -78,7 +79,8 @@ class AgGlobals( object ):
     OUTPUT_TO_FILE = 'file'  # Output is produced in a specific file.
     OUTPUT_TO_BOTH = 'both'  # Produce some output in stdout and some in file
 
-    OUTPUT_FILE_NAME_FORMAT = '{}_output_problem_{}_{}.txt'  # Format for the file name that holds the output for a single set of inputs for a single run of a program. E.g. 2_output_problem_1_Assignment_1.txt
+    # OUTPUT_FILE_NAME_FORMAT = '{}_output_problem_{}_{}.txt'  # Format for the file name that holds the output for a single set of inputs for a single run of a program. E.g. 2_output_problem_1_Assignment_1.txt
+    OUTPUT_FILE_NAME_FORMAT = 'io_{}_problem_{}_{}_output.txt'  # Format for the file name that holds the output for a single set of inputs for a single run of a program. E.g. io_Assignment_1_problem_1_2_output.txt
 
     # Input object initial values.
     # These values are chosen this way to automatically generate a meaningful problem configuration file with comments.
@@ -119,12 +121,12 @@ class AgGlobals( object ):
 
     @classmethod
     def get_input_file_name( cls, assignment_name, problem_id, input_id ):
-        return AgGlobals.INPUT_FILE_NAME_FORMAT.format( input_id, problem_id, assignment_name )
+        return AgGlobals.INPUT_FILE_NAME_FORMAT.format( assignment_name, problem_id, input_id )
 
 
     @classmethod
     def get_output_file_name( cls, assignment_name, problem_id, input_id ):
-        return AgGlobals.OUTPUT_FILE_NAME_FORMAT.format( input_id, problem_id, assignment_name )
+        return AgGlobals.OUTPUT_FILE_NAME_FORMAT.format( assignment_name, problem_id, input_id )
 
 
     @classmethod

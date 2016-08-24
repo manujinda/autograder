@@ -42,7 +42,7 @@ class Command( object ):
         return self.process.returncode, out, err
 
 
-    def run( self, inputs = '', timeout = -1, cwd = None, shell = True, kill_tree = True, env = None ):
+    def run( self, inputs = '', timeout = -1, output = PIPE, cwd = None, shell = True, kill_tree = True, env = None ):
         '''
         Run a command with a timeout after which it will be forcibly killed.
         '''
@@ -53,16 +53,16 @@ class Command( object ):
         stdout = ''
         stderr = ''
 
-        p = Popen( self.cmd, shell = shell, cwd = cwd, stdin = PIPE, stdout = PIPE, stderr = PIPE, env = env )
+        p = Popen( self.cmd, shell = shell, cwd = cwd, stdin = PIPE, stdout = output, stderr = PIPE, env = env )
 
-        if inputs: p.stdin.write( inputs )
+        # if inputs: p.stdin.write( inputs )
 
         if timeout != -1:
             signal( SIGALRM, alarm_handler )
             alarm( timeout )
 
         try:
-            stdout, stderr = p.communicate()
+            stdout, stderr = p.communicate( inputs )
 
             if timeout != -1:
                 alarm( 0 )
