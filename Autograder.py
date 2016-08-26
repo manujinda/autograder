@@ -2,6 +2,7 @@
     autograder.py
     Combines everything and performs autograding of a single project / assignemnt
 """
+from ConfigParser import NoSectionError
 import ConfigParser
 import csv
 import os
@@ -34,12 +35,20 @@ class Autograder( object ):
         config = ConfigParser.SafeConfigParser()
         config.read( self.config_file )
 
-        # All the grading for a particular offering of a particular class happens under this director
-        self.grading_root = config.get( AgGlobals.AUTOGRADER_CFG_SECTION, AgGlobals.AUTOGRADER_CFG_GRADING_ROOT )
+        try:
+            # All the grading for a particular offering of a particular class happens under this director
+            self.grading_root = config.get( AgGlobals.AUTOGRADER_CFG_SECTION, AgGlobals.AUTOGRADER_CFG_GRADING_ROOT )
 
-        # This is where all the supplied files / solutions etc are kept for each project / assignment.
-        # For each project / assignment, there is a separate directory in this directory
-        self.grading_master = config.get( AgGlobals.AUTOGRADER_CFG_SECTION, AgGlobals.AUTOGRADER_CFG_GRADING_MASTER )
+            # This is where all the supplied files / solutions etc are kept for each project / assignment.
+            # For each project / assignment, there is a separate directory in this directory
+            self.grading_master = config.get( AgGlobals.AUTOGRADER_CFG_SECTION, AgGlobals.AUTOGRADER_CFG_GRADING_MASTER )
+        except ConfigParser.NoSectionError as no_sec_err:
+            print 'Error: {} in autograder configuration file {}. Exiting...'.format( no_sec_err, self.config_file )
+            sys.exit()
+        except ConfigParser.NoOptionError as no_op_err:
+            print 'Error: {} in autograder configuration file {}. Exiting...'.format( no_op_err, self.config_file )
+            sys.exit()
+
 
         self.students = []
 
@@ -429,7 +438,14 @@ if len( sys.argv ) > 2:
             ag.read_students()
             ag.setup_assignment()
     elif sys.argv[1] == 'update':
-        ag = Autograder( sys.argv[2] )
+        # Clone / update student repositories into local hard disk
+        # Prior to this a grading root directory structure should be in place
+        # Command:
+        #    $ python Autograder.py update <path to autograder root directory>
+        # Test Parameters
+        #    update /home/users/manu/Documents/manujinda/uo_classes/4_2016_summer/boyana/grading
+        ag_cfg = os.path.join( sys.argv[2], AgGlobals.AUTOGRADER_CFG_NAME )
+        ag = Autograder( ag_cfg )
         if ag.validate_config():
             ag.read_students()
             ag.update_repos()

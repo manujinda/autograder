@@ -101,9 +101,16 @@ class Assignment( object ):
         config = ConfigParser.SafeConfigParser()
         config.read( config_file )
 
-        for key in sorted( self.__dict__.keys() ):  # [:-1]:
-            if key[0:4] != '_99_':
-                self.__dict__[key] = config.get( assignment_master_sub_dir, key[3:] ).strip()
+        try:
+            for key in sorted( self.__dict__.keys() ):  # [:-1]:
+                if key[0:4] != '_99_':
+                    self.__dict__[key] = config.get( assignment_master_sub_dir, key[3:] ).strip()
+        except ConfigParser.NoSectionError as no_sec_err:
+            print 'Error: {} in assignment configuration file {}. Exiting...'.format( no_sec_err, config_file )
+            sys.exit()
+        except ConfigParser.NoOptionError as no_op_err:
+            print 'Error: {} in assignment configuration file {}. Exiting...'.format( no_op_err, config_file )
+            sys.exit()
 
         # self._1_asnmt_no = int( self._1_asnmt_no )
         self._3_duedate = datetime.datetime.strptime( self._3_duedate, AgGlobals.ASSIGNMENT_CFG_DUE_DATE_FORMAT )

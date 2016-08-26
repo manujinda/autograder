@@ -70,9 +70,17 @@ class Input( object ):
         config = ConfigParser.SafeConfigParser()
         config.read( config_file )
         print self
-        for key in sorted( self.__dict__.keys() ):
-            if key[0:4] != '_99_':
-                self.__dict__[key] = config.get( section, key[3:] ).strip()
+
+        try:
+            for key in sorted( self.__dict__.keys() ):
+                if key[0:4] != '_99_':
+                    self.__dict__[key] = config.get( section, key[3:] ).strip()
+        except ConfigParser.NoSectionError as no_sec_err:
+            print 'Error: {} in input configuration file {}. Exiting...'.format( no_sec_err, config_file )
+            sys.exit()
+        except ConfigParser.NoOptionError as no_op_err:
+            print 'Error: {} in input configuration file {}. Exiting...'.format( no_op_err, config_file )
+            sys.exit()
 
         if self._1_nature == AgGlobals.INPUT_NATURE_LONG:
             # Check whether the file containing actual input exists

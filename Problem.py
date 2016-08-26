@@ -87,9 +87,16 @@ class Problem( object ):
         config = ConfigParser.SafeConfigParser()
         config.read( config_file )
 
-        for key in sorted( self.__dict__.keys() ):
-            if key[0:4] != '_99_':
-                self.__dict__[key] = config.get( section, key[4:] ).strip()
+        try:
+            for key in sorted( self.__dict__.keys() ):
+                if key[0:4] != '_99_':
+                    self.__dict__[key] = config.get( section, key[4:] ).strip()
+        except ConfigParser.NoSectionError as no_sec_err:
+            print 'Error: {} in problem configuration file {}. Exiting...'.format( no_sec_err, config_file )
+            sys.exit()
+        except ConfigParser.NoOptionError as no_op_err:
+            print 'Error: {} in problem configuration file {}. Exiting...'.format( no_op_err, config_file )
+            sys.exit()
 
         if self._03_prob_type == AgGlobals.PROBLEM_TYPE_PROG:
             self._05_files_provided = self._05_files_provided.split()
