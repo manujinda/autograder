@@ -2,8 +2,8 @@
     autograder.py
     Combines everything and performs autograding of a single project / assignemnt
 """
-from ConfigParser import NoSectionError
 import ConfigParser
+from __builtin__ import True
 import csv
 import os
 import shutil
@@ -59,11 +59,13 @@ class Autograder( object ):
         self.asmnt_loaded = False  # Keeps track of whether a valid assignment configuration file has been loaded
 
         self.ag_created = True
+        self.ag_state = AgGlobals.AG_STATE_CREATED
 
 
 
     def created( self ):
-        return self.ag_created
+        # return self.ag_created
+        return self.ag_state & AgGlobals.AG_STATE_CREATED == AgGlobals.AG_STATE_CREATED
 
 
     # @classmethod
@@ -129,6 +131,9 @@ class Autograder( object ):
 
         self.asmnt_loaded = self.asmnt.load_assignment( self.grading_root, self.grading_master, assignment_name )
 
+        if self.asmnt_loaded:
+            self.ag_state |= AgGlobals.AG_STATE_ASSIGNMENT_LOADED
+
         return self.asmnt_loaded
 
 
@@ -187,6 +192,7 @@ class Autograder( object ):
             return False
             # sys.exit()
 
+        self.ag_state |= AgGlobals.AG_STATE_CONFIGURATION_CHECKED
         return True
 
 
@@ -207,6 +213,7 @@ class Autograder( object ):
                 self.students.append( stud )
                 # print '{}\n'.format( stud )
                 # self.check_student_directory( stud )
+
 
 
 #     def clone_repos( self ):
@@ -241,6 +248,7 @@ class Autograder( object ):
                 stud.pull_student_repo( stud_dir )
 
 
+
     '''
     Copying files from cloned student repos to student grading folders.
     At the moment I'm making use of git itself to do the job. I clone the
@@ -256,14 +264,15 @@ class Autograder( object ):
             stud.copy_student_repo( source, destination, stud.get_dir( index_len ) )
 
 
-    def check_student_directory( self, student ):
-        try:
-            stud_dir = os.path.join( self.asmnt.gradingroot, student.get_dir() )
-            if not os.path.exists( stud_dir ):
-                print '\nStudnt directory {} for {} does not exist, creating it...'.format( student.get_dir(), student.get_name() )
-                os.mkdir( stud_dir )
-        except AttributeError:
-            print '\nInput parameter should be of type Student'
+    # # !! Needs update.. student.get_dir() has been changed to get_dir(index_len)
+#     def check_student_directory( self, student ):
+#         try:
+#             stud_dir = os.path.join( self.asmnt.gradingroot, student.get_dir() )
+#             if not os.path.exists( stud_dir ):
+#                 print '\nStudnt directory {} for {} does not exist, creating it...'.format( student.get_dir(), student.get_name() )
+#                 os.mkdir( stud_dir )
+#         except AttributeError:
+#             print '\nInput parameter should be of type Student'
 
 
     '''
@@ -276,7 +285,11 @@ class Autograder( object ):
 
     def load_problems( self ):
         if self.asmnt_loaded:
-            return self.asmnt.load_problems()
+            result = self.asmnt.load_problems()
+            if result:
+                self.ag_state |= AgGlobals.AG_STATE_PROBLEMS_LOADED
+
+            return result
 
         return False
 
@@ -290,20 +303,35 @@ class Autograder( object ):
 
     def load_input( self ):
         if self.asmnt_loaded:
-            return self.asmnt.load_input()
+            result = self.asmnt.load_input()
+            if result:
+                self.ag_state |= AgGlobals.AG_STATE_INPUTS_LOADED
+
+            return result
+
         return False
 
 
     def compile( self ):
         if self.asmnt_loaded:
-            return self.asmnt.compile()
+            result = self.asmnt.compile()
+            if result:
+                self.ag_state |= AgGlobals.AG_STATE_COMPILED
+
+            return result
+
         return False
 
 
     def link( self ):
         if self.asmnt_loaded:
             if self.asmnt.compile():
-                return self.asmnt.link()
+                result = self.asmnt.link()
+                if result:
+                    self.ag_state |= AgGlobals.AG_STATE_LINKED
+
+                return result
+
         return False
 
 
@@ -311,8 +339,21 @@ class Autograder( object ):
         if self.asmnt_loaded:
             if self.asmnt.compile():
                 if self.asmnt.link() and self.asmnt.load_input():
-                    return self.asmnt.generate_output()
+                    result = self.asmnt.generate_output()
+                    if result:
+                        self.ag_state |= AgGlobals.AG_STATE_OUTPUTS_GENERATED
+
+                    return result
+
         return False
+
+
+#     def correct_submitted_file_names( self ):
+#         if len( self.students ) > 0:
+#             index_len = len( '{}'.format( self.students[-1].get_index() ) )
+#             for stud in self.students:
+#                 directory = os.path.join( self.grading_root, self.grading_directory, stud.get_dir( index_len ), self.asmnt. )
+#                 stud.copy_student_repo( source, destination,  )
 
 
 

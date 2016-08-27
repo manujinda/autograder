@@ -19,6 +19,17 @@ class AgGlobals( object ):
     AUTOGRADER_CFG_GRADING_ROOT = 'grading_root'  # The directory name for the autograder directory tree is stored under key in the config file. Everything autograder cares for gradeing is stored within a directory with this name
     AUTOGRADER_CFG_GRADING_MASTER = 'grading_master'  # The directory name for the directory where all the assignment / project details are stored is provided under this key in the config file. It is suggested to give this directory a meaningful name like 'Assignments' or 'Projects'
 
+    # Autograder States
+    AG_STATE_CREATED = 1
+    AG_STATE_CONFIGURATION_CHECKED = 2
+    AG_STATE_ASSIGNMENT_LOADED = 4
+    AG_STATE_PROBLEMS_LOADED = 8
+    AG_STATE_INPUTS_LOADED = 16
+    AG_STATE_COMPILED = 32
+    AG_STATE_LINKED = 64
+    AG_STATE_OUTPUTS_GENERATED = 128
+    AG_STATE_FILE_NAMES_CORRECTED = 256
+
     # Assignment / project configuration file name and formats
     ASSIGNMENT_CFG_FORMAT = '+_1_{}.cfg'  # Format for the assignment / project configuration file name. E.g. +_1_Assignment_1.cfg
     ASSIGNMENT_CFG_DUE_DATE_FORMAT = '%m/%d/%Y'  # This should match the format provided in ASSIGNMENT_INIT_DUE_DATE
