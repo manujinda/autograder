@@ -88,7 +88,7 @@ class Assignment( object ):
     Problem configuration file skeletons so that they can be filled with
     appropriate data to be used during the auto grading
     '''
-    def setup_assignment( self, grading_root, grading_master, assignment_master_sub_dir ):
+    def load_assignment( self, grading_root, grading_master, assignment_master_sub_dir ):
 
         # config_file = os.path.join( grading_root, grading_master, assignment_master_sub_dir, '+_1_{}.cfg'.format( assignment_master_sub_dir ) )
         config_file = os.path.join( grading_root, grading_master, assignment_master_sub_dir, AgGlobals.get_asmt_cfg_name( assignment_master_sub_dir ) )
@@ -136,7 +136,7 @@ class Assignment( object ):
     '''
     Set up the problems that constitutes this assignment
     '''
-    def setup_problems( self ):
+    def load_problems( self ):
         if self._99_state == AgGlobals.ASSIGNMENT_STATE_LOADED:
             prob_conf = self.get_prob_config_path()
             # section_prefix = '{}_problem_{}'.format( self._5_subdir, '{}' )
@@ -152,8 +152,7 @@ class Assignment( object ):
             for p in sorted( self._6_problem_ids ):
                 self._8_problems[p] = Problem( p, self._6_problem_ids[p] )
 
-                # self._8_problems[p].setup_problem( prob_conf, section_prefix.format( p ) )
-                self._8_problems[p].setup_problem( prob_conf, AgGlobals.get_problem_section( self._5_subdir, p ) )
+                self._8_problems[p].load_problem( prob_conf, AgGlobals.get_problem_section( self._5_subdir, p ) )
 
             # Check problem dependencies
             prob_id_set = set( self._6_problem_ids )
@@ -269,7 +268,7 @@ class Assignment( object ):
     '''
     def generate_provided_files( self ):
         if self._99_state == AgGlobals.ASSIGNMENT_STATE_LOADED:
-            self.setup_problems()
+            self.load_problems()
 
         if self._99_state == AgGlobals.ASSIGNMENT_STATE_PROBLEMS_CREATED:
             files = set()
@@ -296,7 +295,7 @@ class Assignment( object ):
     '''
     def generate_submitted_files( self ):
         if self._99_state == AgGlobals.ASSIGNMENT_STATE_LOADED:
-            self.setup_problems()
+            self.load_problems()
 
         if self._99_state == AgGlobals.ASSIGNMENT_STATE_PROBLEMS_CREATED:
             files = set()
@@ -319,7 +318,7 @@ class Assignment( object ):
     ''' Delete later '''
     def generate_input_config2( self ):
         if self._99_state == AgGlobals.ASSIGNMENT_STATE_LOADED:
-            self.setup_problems()
+            self.load_problems()
 
         if self._99_state == AgGlobals.ASSIGNMENT_STATE_PROBLEMS_CREATED:
 
@@ -358,7 +357,7 @@ class Assignment( object ):
 
     def generate_input_config( self ):
         if self._99_state == AgGlobals.ASSIGNMENT_STATE_LOADED:
-            self.setup_problems()
+            self.load_problems()
 
         if self._99_state == AgGlobals.ASSIGNMENT_STATE_PROBLEMS_CREATED:
 
@@ -382,7 +381,7 @@ class Assignment( object ):
     def load_input( self ):
         success = False
         if self._99_state == AgGlobals.ASSIGNMENT_STATE_LOADED:
-            self.setup_problems()
+            self.load_problems()
 
         if self._99_state == AgGlobals.ASSIGNMENT_STATE_PROBLEMS_CREATED:
 
@@ -406,7 +405,7 @@ class Assignment( object ):
     def compile( self ):
         success = False
         if self._99_state == AgGlobals.ASSIGNMENT_STATE_LOADED:
-            self.setup_problems()
+            self.load_problems()
 
         if self._99_state == AgGlobals.ASSIGNMENT_STATE_PROBLEMS_CREATED:
             # files = set()
@@ -423,7 +422,7 @@ class Assignment( object ):
     def link( self ):
         success = False
         if self._99_state == AgGlobals.ASSIGNMENT_STATE_LOADED:
-            self.setup_problems()
+            self.load_problems()
 
         if self._99_state == AgGlobals.ASSIGNMENT_STATE_PROBLEMS_CREATED:
             # files = set()
@@ -437,7 +436,7 @@ class Assignment( object ):
 
     def generate_output( self ):
         if self._99_state == AgGlobals.ASSIGNMENT_STATE_LOADED:
-            self.setup_problems()
+            self.load_problems()
 
         if self._99_state == AgGlobals.ASSIGNMENT_STATE_PROBLEMS_CREATED:
 
@@ -454,7 +453,7 @@ class Assignment( object ):
 
 #     def load_inputs( self ):
 #         if self._99_state == AgGlobals.ASSIGNMENT_STATE_LOADED:
-#             self.setup_problems()
+#             self.load_problems()
 #
 #         if self._99_state == AgGlobals.ASSIGNMENT_STATE_PROBLEMS_CREATED:
 #

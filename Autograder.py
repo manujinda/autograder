@@ -104,7 +104,7 @@ class Autograder( object ):
         assignment = self.new_assignment( assignment_name )
 
         # Populate the assignment with the just created assignment configuration file
-        assignment.setup_assignment( self.grading_root, self.grading_master, assignment_name )
+        assignment.load_assignment( self.grading_root, self.grading_master, assignment_name )
         assignment.generate_problem_config()
 
         print 'Setting up autograder directory structure completed successfully'
@@ -122,12 +122,12 @@ class Autograder( object ):
 
 
 
-    def setup_assignment( self, assignment_name ):
+    def load_assignment( self, assignment_name ):
 
         # print '\nEnter the assignment master sub-directory name : '
         # self.assignment_master_sub_dir = '{}_{}'.format( self.grading_master[:-1], 1 )  # 'assignment1'
 
-        self.asmnt_loaded = self.asmnt.setup_assignment( self.grading_root, self.grading_master, assignment_name )
+        self.asmnt_loaded = self.asmnt.load_assignment( self.grading_root, self.grading_master, assignment_name )
 
         return self.asmnt_loaded
 
@@ -274,9 +274,9 @@ class Autograder( object ):
             self.asmnt.generate_problem_config()
 
 
-    def setup_problems( self ):
+    def load_problems( self ):
         if self.asmnt_loaded:
-            return self.asmnt.setup_problems()
+            return self.asmnt.load_problems()
 
         return False
 
@@ -351,9 +351,9 @@ if len( sys.argv ) > 2:
         ag = Autograder( ag_cfg )
         if ag.created():
             if ag.validate_config():
-                if ag.setup_assignment( sys.argv[3] ):
+                if ag.load_assignment( sys.argv[3] ):
                     ag.gen_prob_config_skel()
-                # ag.setup_problems()
+                # ag.load_problems()
 
     elif sys.argv[1] == 'genfiles':
         # Generate blank files described in the Assignment / Project. The configuration files for the
@@ -366,8 +366,8 @@ if len( sys.argv ) > 2:
         ag = Autograder( ag_cfg )
         if ag.created():
             if ag.validate_config():
-                if ag.setup_assignment( sys.argv[3] ):
-                    if ag.setup_problems():
+                if ag.load_assignment( sys.argv[3] ):
+                    if ag.load_problems():
                         ag.generate_files()
 
     elif sys.argv[1] == 'lodinp':
@@ -381,8 +381,8 @@ if len( sys.argv ) > 2:
         ag = Autograder( ag_cfg )
         if ag.created():
             if ag.validate_config():
-                if ag.setup_assignment( sys.argv[3] ):
-                    if ag.setup_problems():
+                if ag.load_assignment( sys.argv[3] ):
+                    if ag.load_problems():
                         ag.load_input()
 
     elif sys.argv[1] == 'compile':
@@ -396,8 +396,8 @@ if len( sys.argv ) > 2:
         ag = Autograder( ag_cfg )
         if ag.created():
             if ag.validate_config():
-                if ag.setup_assignment( sys.argv[3] ):
-                    if ag.setup_problems():
+                if ag.load_assignment( sys.argv[3] ):
+                    if ag.load_problems():
                         ag.compile()
 
     elif sys.argv[1] == 'link':
@@ -411,8 +411,8 @@ if len( sys.argv ) > 2:
         ag = Autograder( ag_cfg )
         if ag.created():
             if ag.validate_config():
-                if ag.setup_assignment( sys.argv[3] ):
-                    if ag.setup_problems():
+                if ag.load_assignment( sys.argv[3] ):
+                    if ag.load_problems():
                         ag.link()
 
 
@@ -427,8 +427,8 @@ if len( sys.argv ) > 2:
         ag = Autograder( ag_cfg )
         if ag.created():
             if ag.validate_config():
-                if ag.setup_assignment( sys.argv[3] ):
-                    if ag.setup_problems():
+                if ag.load_assignment( sys.argv[3] ):
+                    if ag.load_problems():
                         ag.generate_output()
 
 
@@ -436,7 +436,7 @@ if len( sys.argv ) > 2:
         ag = Autograder( sys.argv[2] )
         if ag.validate_config():
             ag.read_students()
-            ag.setup_assignment()
+            ag.load_assignment()
     elif sys.argv[1] == 'update':
         # Clone / update student repositories into local hard disk
         # Prior to this a grading root directory structure should be in place

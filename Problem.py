@@ -77,7 +77,7 @@ class Problem( object ):
     '''
     Read problem configuration file and populate the instance variables
     '''
-    def setup_problem( self, config_file, section ):
+    def load_problem( self, config_file, section ):
 
         # Check whether the problem configuration file exists.
         if not os.path.exists( config_file ):
