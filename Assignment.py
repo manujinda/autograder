@@ -253,7 +253,17 @@ class Assignment( object ):
     problem configuration files, template answer files.
     '''
     def get_masterdir( self ):
-        return os.path.join( self._4_gradingroot, self._7_grading_master, self._5_subdir )
+        if self._99_state == AgGlobals.ASSIGNMENT_STATE_LOADED:
+            return os.path.join( self._4_gradingroot, self._7_grading_master, self._5_subdir )
+        else:
+            return ''
+
+
+    def get_assignment_sub_dir( self ):
+        if self._99_state == AgGlobals.ASSIGNMENT_STATE_LOADED:
+            return self._5_subdir
+        else:
+            return ''
 
 
     def get_problem_ids( self ):
