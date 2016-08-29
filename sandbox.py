@@ -8,6 +8,24 @@ This chages rapidly. Not a part of the main project. This is just my playground 
 '''
 import ConfigParser
 import sys
+from AgGlobals import AgGlobals
+
+# dictionaries and sets
+
+d = {1:set( [1, 2, 3] ), 2:set( [5, 6] )}
+print d
+print d[1]
+current = d.get( 3, set() )
+current.update( [] )
+print current
+# new_set = d.get( 3, set() )
+# print new_set
+# new_set.update( set[2, 3] )
+# print new_set
+
+
+sys.exit( 0 )
+
 
 # Bitwise operations
 x = ( 1 << 3 )
@@ -31,6 +49,10 @@ print state & ( inp | other )
 print inp | other
 if state & ( inp | other ) == inp | other:
     print 'good'
+
+print AgGlobals.set_flags( 2, 4, 8 )
+
+print AgGlobals.is_flags_set( state, inp, 8 )
 
 sys.exit( 0 )
 
