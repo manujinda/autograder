@@ -148,6 +148,10 @@ class Problem( object ):
         return files_submitted
 
 
+    def get_files_submitted_with_aliases( self ):
+        return self._06_files_submitted
+
+
     def get_dependencies( self ):
         return set( self._14_depends_on )
 

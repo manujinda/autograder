@@ -58,6 +58,6 @@ class Student( object ):
     def pull_student_repo( self, local_path = '' ):
         self._8_repo.pull( local_path )
 
-    def copy_student_repo( self, source, destination, student ):
-        self._8_repo.copy( source, destination, student )
+    def copy_student_repo( self, source, destination, index_len ):
+        self._8_repo.copy( source, destination, self.get_dir( index_len ) )
 

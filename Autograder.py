@@ -11,6 +11,7 @@ import sys
 
 from AgGlobals import AgGlobals
 from Assignment import Assignment
+from Command import Command
 from Problem import Problem  # Just to access its instance variables to generate a sample configuration file
 from Repository import Repository
 from Student import Student
@@ -206,6 +207,7 @@ class Autograder( object ):
             print '\nStudnt data file {} does not exist, exit...'.format( students )
             sys.exit()
 
+        self.students = []
         with open( students ) as student_db:
             reader = csv.DictReader( student_db )
             for row in reader:
@@ -214,7 +216,7 @@ class Autograder( object ):
                 # print '{}\n'.format( stud )
                 # self.check_student_directory( stud )
 
-
+        return len( self.students ) > 0
 
 #     def clone_repos( self ):
 #         # When student database is sorted in the ascending order of  student index numbers
@@ -256,12 +258,62 @@ class Autograder( object ):
     If this has any bad implications I'd have to copy files using
     OS file copy utilities.
     '''
-    def copy_files_to_grading( self ):
-        index_len = len( '{}'.format( self.students[-1].get_index() ) )
-        source = os.path.join( self.grading_root, self.students_directory )
-        destination = os.path.join( self.grading_root, self.grading_directory )
-        for stud in self.students:
-            stud.copy_student_repo( source, destination, stud.get_dir( index_len ) )
+    def copy_files_for_grading( self ):
+        # If students are loaded and problems are loaded
+        if len( self.students ) > 0 and AgGlobals.is_flags_set( self.ag_state, AgGlobals.AG_STATE_PROBLEMS_LOADED ) :
+            print 'start copying'
+            # Get a dictionary of submitted file names and their aliases
+            # submitted_file_name --> set(alias1, alias2, ...)
+            file_aliases = self.asmnt.get_files_submitted_with_aliases()
+
+            # Length of the longest student index. This is used to insert
+            # leading 0's in the student directory name
+            index_len = len( '{}'.format( self.students[-1].get_index() ) )
+
+            # This is the path for the students directory
+            source = os.path.join( self.grading_root, self.students_directory )
+
+            # This is the path for the grading directory
+            destination = os.path.join( self.grading_root, self.grading_directory )
+
+            # For each student
+            for stud in self.students:
+
+                # Copy all the student submitted files from student directory in students dierctory
+                # to a directory with the same name in the grading directory
+                stud.copy_student_repo( source, destination, index_len )
+
+                # Path for the student's directory in the grading directory
+                stud_dir_path = os.path.join( destination, stud.get_dir( index_len ) )
+
+                # For each file student is supposed to submit
+                for file_submitted in file_aliases:
+
+                    # The path for that file in the student's directory in the grading directory
+                    file_path = os.path.join( stud_dir_path, file_submitted )
+
+                    # If student has not submitted a file with the exact name
+                    if not os.path.exists( file_path ):
+
+                        # Check whether the student has submitted a file that matches an alias
+                        # Alias could be a misspelled file name or a shorten file name
+                        found = False
+                        for file_alias in file_aliases[file_submitted]:
+                            file_alias_path = os.path.join( stud_dir_path, file_alias )
+
+                            # A file that matches an alias exists.
+                            # Student might have submitted this file thinking he/she is submitting
+                            # the file he/she is supposed to submit
+                            if os.path.exists( file_alias_path ):
+                                found = True
+                                # Rename the file. Might want to do this only when we provide the make file
+                                cmd = 'mv {} {}'.format( file_alias, file_submitted )
+                                retcode, out, err = Command( cmd ).run( cwd = stud_dir_path )
+                                print cmd
+                                break
+
+                        if not found:
+                            print 'Error: Student {} has not submitted file {}'.format( stud.get_name(), file_submitted )
 
 
     # # !! Needs update.. student.get_dir() has been changed to get_dir(index_len)
@@ -289,6 +341,7 @@ class Autograder( object ):
             if result:
                 self.ag_state |= AgGlobals.AG_STATE_PROBLEMS_LOADED
 
+            # print self.asmnt.get_files_submitted_with_aliases()
             return result
 
         return False
@@ -342,6 +395,7 @@ class Autograder( object ):
                     result = self.asmnt.generate_output()
                     if result:
                         self.ag_state |= AgGlobals.AG_STATE_OUTPUTS_GENERATED
+                        # self.ag_state = AgGlobals.set_flags( self.ag_state, AgGlobals.AG_STATE_OUTPUTS_GENERATED )
 
                     return result
 
@@ -473,6 +527,23 @@ if len( sys.argv ) > 2:
                         ag.generate_output()
 
 
+    elif sys.argv[1] == 'grading':
+        # Perform grading
+        # Students, Assignment and its problems must be loaded before running this command
+        # Command:
+        #     $ python Autograder.py grading <path to autograder root directory> <assignment / project name>
+        # Test Parameters
+        #    grading /home/users/manu/Documents/manujinda/uo_classes/4_2016_summer/boyana/grading assignment_2
+        ag_cfg = os.path.join( sys.argv[2], AgGlobals.AUTOGRADER_CFG_NAME )
+        ag = Autograder( ag_cfg )
+        if ag.created():
+            if ag.validate_config():
+                if ag.load_assignment( sys.argv[3] ):
+                    if ag.load_problems():
+                        if ag.read_students():
+                            ag.copy_files_for_grading()
+
+
     elif sys.argv[1] == 'setasmnt':
         ag = Autograder( sys.argv[2] )
         if ag.validate_config():
@@ -495,4 +566,4 @@ if len( sys.argv ) > 2:
         if ag.validate_config():
             ag.read_students()
             ag.update_repos()
-            ag.copy_files_to_grading()
+            ag.copy_files_for_grading()

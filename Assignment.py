@@ -162,7 +162,7 @@ class Assignment( object ):
                     print 'Error: Problem {} - {} is dependent on undefined problems {}.'.format( p, self._8_problems[p].get_name(), depend_set - prob_id_set )
                     return False
 
-            self._99_state = AgGlobals.ASSIGNMENT_STATE_PROBLEMS_CREATED
+            self._99_state = AgGlobals.ASSIGNMENT_STATE_PROBLEMS_LOADED
             return True
         else:
             print 'Error: Need to load an assignment configuration before creating Problems'
@@ -267,10 +267,27 @@ class Assignment( object ):
 
 
     def get_problem_ids( self ):
-        if self._99_loaded:
+        if self._99_state == AgGlobals.ASSIGNMENT_STATE_LOADED:
             return self._6_problem_ids
         else:
             return {}
+
+
+    def get_files_submitted_with_aliases( self ):
+        if self._99_state == AgGlobals.ASSIGNMENT_STATE_LOADED:
+            self.load_problems()
+
+        glob_f_dict = {}
+        if self._99_state == AgGlobals.ASSIGNMENT_STATE_PROBLEMS_LOADED:
+            for p in self._6_problem_ids.keys():
+                for prob_f_list in self._8_problems[p].get_files_submitted_with_aliases():
+                    if not prob_f_list[0] in glob_f_dict.keys():
+                        glob_f_dict[prob_f_list[0]] = set( prob_f_list[1:] )
+                    else:
+                        glob_f_dict[prob_f_list[0]].update( set( prob_f_list[1:] ) )
+
+        return glob_f_dict
+
 
 
     '''
@@ -280,7 +297,7 @@ class Assignment( object ):
         if self._99_state == AgGlobals.ASSIGNMENT_STATE_LOADED:
             self.load_problems()
 
-        if self._99_state == AgGlobals.ASSIGNMENT_STATE_PROBLEMS_CREATED:
+        if self._99_state == AgGlobals.ASSIGNMENT_STATE_PROBLEMS_LOADED:
             files = set()
             for p in self._6_problem_ids.keys():
                 if self._8_problems[p].get_prob_type() == AgGlobals.PROBLEM_TYPE_PROG:
@@ -300,6 +317,7 @@ class Assignment( object ):
             print 'Error: Need to load an assignment configuration before checking "Provided" files for that assignment'
             return False
 
+
     '''
     Create submitted files in the assignment master sub directory.
     '''
@@ -307,7 +325,7 @@ class Assignment( object ):
         if self._99_state == AgGlobals.ASSIGNMENT_STATE_LOADED:
             self.load_problems()
 
-        if self._99_state == AgGlobals.ASSIGNMENT_STATE_PROBLEMS_CREATED:
+        if self._99_state == AgGlobals.ASSIGNMENT_STATE_PROBLEMS_LOADED:
             files = set()
             for p in self._6_problem_ids.keys():
                 files.update( set( self._8_problems[p].get_files_submitted() ) )
@@ -325,12 +343,13 @@ class Assignment( object ):
             print 'Error: Need to load an assignment configuration before checking "Submitted" files for that assignment'
             return False
 
+
     ''' Delete later '''
     def generate_input_config2( self ):
         if self._99_state == AgGlobals.ASSIGNMENT_STATE_LOADED:
             self.load_problems()
 
-        if self._99_state == AgGlobals.ASSIGNMENT_STATE_PROBLEMS_CREATED:
+        if self._99_state == AgGlobals.ASSIGNMENT_STATE_PROBLEMS_LOADED:
 
             # Create input output directory
             in_out_dir = os.path.join( self._4_gradingroot, self._7_grading_master, self._5_subdir, AgGlobals.INPUT_OUTPUT_DIRECTORY )
@@ -369,7 +388,7 @@ class Assignment( object ):
         if self._99_state == AgGlobals.ASSIGNMENT_STATE_LOADED:
             self.load_problems()
 
-        if self._99_state == AgGlobals.ASSIGNMENT_STATE_PROBLEMS_CREATED:
+        if self._99_state == AgGlobals.ASSIGNMENT_STATE_PROBLEMS_LOADED:
 
             # Create input output directory
             in_out_dir = os.path.join( self._4_gradingroot, self._7_grading_master, self._5_subdir, AgGlobals.INPUT_OUTPUT_DIRECTORY )
@@ -393,7 +412,7 @@ class Assignment( object ):
         if self._99_state == AgGlobals.ASSIGNMENT_STATE_LOADED:
             self.load_problems()
 
-        if self._99_state == AgGlobals.ASSIGNMENT_STATE_PROBLEMS_CREATED:
+        if self._99_state == AgGlobals.ASSIGNMENT_STATE_PROBLEMS_LOADED:
 
             cfg_path = os.path.join( self._4_gradingroot, self._7_grading_master, self._5_subdir, AgGlobals.INPUT_OUTPUT_DIRECTORY, AgGlobals.get_input_cfg_name( self._5_subdir ) )
 
@@ -417,7 +436,7 @@ class Assignment( object ):
         if self._99_state == AgGlobals.ASSIGNMENT_STATE_LOADED:
             self.load_problems()
 
-        if self._99_state == AgGlobals.ASSIGNMENT_STATE_PROBLEMS_CREATED:
+        if self._99_state == AgGlobals.ASSIGNMENT_STATE_PROBLEMS_LOADED:
             # files = set()
             os.chdir( self.get_masterdir() )
             success = True
@@ -434,7 +453,7 @@ class Assignment( object ):
         if self._99_state == AgGlobals.ASSIGNMENT_STATE_LOADED:
             self.load_problems()
 
-        if self._99_state == AgGlobals.ASSIGNMENT_STATE_PROBLEMS_CREATED:
+        if self._99_state == AgGlobals.ASSIGNMENT_STATE_PROBLEMS_LOADED:
             # files = set()
             os.chdir( self.get_masterdir() )
             success = True
@@ -448,7 +467,7 @@ class Assignment( object ):
         if self._99_state == AgGlobals.ASSIGNMENT_STATE_LOADED:
             self.load_problems()
 
-        if self._99_state == AgGlobals.ASSIGNMENT_STATE_PROBLEMS_CREATED:
+        if self._99_state == AgGlobals.ASSIGNMENT_STATE_PROBLEMS_LOADED:
 
             # Create input output directory
             in_out_dir = os.path.join( self._4_gradingroot, self._7_grading_master, self._5_subdir, AgGlobals.INPUT_OUTPUT_DIRECTORY )
@@ -465,7 +484,7 @@ class Assignment( object ):
 #         if self._99_state == AgGlobals.ASSIGNMENT_STATE_LOADED:
 #             self.load_problems()
 #
-#         if self._99_state == AgGlobals.ASSIGNMENT_STATE_PROBLEMS_CREATED:
+#         if self._99_state == AgGlobals.ASSIGNMENT_STATE_PROBLEMS_LOADED:
 #
 #             in_out_dir = os.path.join( self._4_gradingroot, self._7_grading_master, self._5_subdir, AgGlobals.INPUT_OUTPUT_DIRECTORY )
 #
