@@ -37,7 +37,7 @@ class AgGlobals( object ):
     # Different states of an assignment / project
     ASSIGNMENT_STATE_INITIALIZED = 10
     ASSIGNMENT_STATE_LOADED = 11
-    ASSIGNMENT_STATE_PROBLEMS_CREATED = 12
+    ASSIGNMENT_STATE_PROBLEMS_LOADED = 12
 
     # Assignment object initial values.
     # These values are chosen this way to automatically generate a meaningful assignment / project configuration file with comments.
@@ -168,7 +168,7 @@ class AgGlobals( object ):
     @classmethod
     def get_student_dir_name( cls, index_len, no, name ):
         # If index_len = 3, this creates a string of the form:
-        # {:3}_{}
+        # {:0>3}_{}
         ret = '{}{}{}_{}'.format( '{:0>', index_len, '}', '{}' )
 
         # Use the format string created above to format the student
@@ -183,3 +183,38 @@ class AgGlobals( object ):
                 desc += '{} > {} \n'.format( key[skip_chars:], my_class.__dict__[key] )
         return desc
 
+
+    '''
+        Sets particular bits of an integer
+    '''
+    @classmethod
+    def set_flags( cls, var, *flags ):
+
+        # print '{:0>10b}'.format( var )
+
+        for f in flags:
+            var |= f
+
+        # print '{:0>10b}'.format( var )
+
+        return var
+
+
+    '''
+        Checks whether particular bits of an integer is set.
+        Returns true only if all the bits are set
+    '''
+    @classmethod
+    def is_flags_set( cls, var, *flags ):
+        if len( flags ):
+
+            check_for = 0
+            for f in flags:
+                check_for |= f
+
+            # print '{:0>10b}'.format( var )
+            # print '{:0>10b}'.format( check_for )
+
+            return var & check_for == check_for
+
+        return False
