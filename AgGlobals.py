@@ -201,6 +201,22 @@ class AgGlobals( object ):
 
 
     '''
+        Clears particular bits of an integer
+    '''
+    @classmethod
+    def clear_flags( cls, var, *flags ):
+
+        # print '{:0>10b}'.format( var )
+
+        for f in flags:
+            var &= ~f
+
+        # print '{:0>10b}'.format( var )
+
+        return var
+
+
+    '''
         Checks whether particular bits of an integer is set.
         Returns true only if all the bits are set
     '''

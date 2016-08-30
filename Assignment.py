@@ -6,6 +6,7 @@ Encapsulates a single project / assignment / homework
 '''
 
 import ConfigParser
+from __builtin__ import True
 import datetime
 import os
 import sys
@@ -128,8 +129,8 @@ class Assignment( object ):
         #    problem_id -> problem_type
         self._6_problem_ids = temp_prob
 
-        print self
-        self._99_state = AgGlobals.ASSIGNMENT_STATE_LOADED
+        # print self
+        self._99_state = AgGlobals.set_flags( self._99_state, AgGlobals.ASSIGNMENT_STATE_LOADED )
         return True
 
 
@@ -137,7 +138,7 @@ class Assignment( object ):
     Set up the problems that constitutes this assignment
     '''
     def load_problems( self ):
-        if self._99_state == AgGlobals.ASSIGNMENT_STATE_LOADED:
+        if AgGlobals.is_flags_set( self._99_state, AgGlobals.ASSIGNMENT_STATE_LOADED ):
             prob_conf = self.get_prob_config_path()
             # section_prefix = '{}_problem_{}'.format( self._5_subdir, '{}' )
             # Check whether the problem configuration file exists.
@@ -162,10 +163,11 @@ class Assignment( object ):
                     print 'Error: Problem {} - {} is dependent on undefined problems {}.'.format( p, self._8_problems[p].get_name(), depend_set - prob_id_set )
                     return False
 
-            self._99_state = AgGlobals.ASSIGNMENT_STATE_PROBLEMS_LOADED
+            self._99_state = AgGlobals.set_flags( self._99_state, AgGlobals.ASSIGNMENT_STATE_PROBLEMS_LOADED )
+            # print 'Loading success::::: {}'.format( self.get_masterdir() )
             return True
         else:
-            print 'Error: Need to load an assignment configuration before creating Problems'
+            print 'Error: Need to load an assignment configuration before loading Problems'
             return False
 
 
@@ -173,7 +175,7 @@ class Assignment( object ):
     Generate problem configuration files
     '''
     def generate_problem_config( self ):
-        if self._99_state == AgGlobals.ASSIGNMENT_STATE_LOADED:
+        if AgGlobals.is_flags_set( self._99_state, AgGlobals.ASSIGNMENT_STATE_LOADED ):
             prob_cfg = self.get_prob_config_path()
 
             if os.path.exists( prob_cfg ):
@@ -214,7 +216,6 @@ class Assignment( object ):
     where this assignment is comprised of
     '''
     def get_prob_config_path( self ):
-        # return os.path.join( self.get_masterdir(), '+_2_{}_problems.cfg'.format( self._5_subdir ) )
         return os.path.join( self.get_masterdir(), AgGlobals.get_prob_cfg_name( self._5_subdir ) )
 
 
@@ -253,36 +254,68 @@ class Assignment( object ):
     problem configuration files, template answer files.
     '''
     def get_masterdir( self ):
-        if self._99_state == AgGlobals.ASSIGNMENT_STATE_LOADED:
+        if AgGlobals.is_flags_set( self._99_state, AgGlobals.ASSIGNMENT_STATE_LOADED ):
             return os.path.join( self._4_gradingroot, self._7_grading_master, self._5_subdir )
         else:
             return ''
 
 
     def get_assignment_sub_dir( self ):
-        if self._99_state == AgGlobals.ASSIGNMENT_STATE_LOADED:
+        if AgGlobals.is_flags_set( self._99_state, AgGlobals.ASSIGNMENT_STATE_LOADED ):
             return self._5_subdir
         else:
             return ''
 
 
     def get_problem_ids( self ):
-        if self._99_state == AgGlobals.ASSIGNMENT_STATE_LOADED:
+        if AgGlobals.is_flags_set( self._99_state, AgGlobals.ASSIGNMENT_STATE_LOADED ):
             return self._6_problem_ids
         else:
             return {}
 
 
-    def get_files_submitted_with_aliases( self ):
-        if self._99_state == AgGlobals.ASSIGNMENT_STATE_LOADED:
-            self.load_problems()
+    def is_problems_loaded( self ):
 
+        # Both the assignment and problems are loaded
+        if AgGlobals.is_flags_set( self._99_state, AgGlobals.ASSIGNMENT_STATE_LOADED, AgGlobals.ASSIGNMENT_STATE_PROBLEMS_LOADED ):
+            return True
+
+        # Only the assignment is loaded
+        if AgGlobals.is_flags_set( self._99_state, AgGlobals.ASSIGNMENT_STATE_LOADED ):
+            # Try loading problems
+            return self.load_problems()
+
+        return False
+
+
+    '''
+        Accumulate all the file names student is supposed to submit and their possible aliases
+        for each problem in this assignment / project into a dictionary of the form
+        submitted_file_name --> set( [ alias1, alias2, ... ] )
+        and return that dictionary
+    '''
+    def get_files_submitted_with_aliases( self ):
+        # A dictionary of submitted file names and their aliases
+        # submitted_file_name --> set(alias1, alias2, ...)
         glob_f_dict = {}
-        if self._99_state == AgGlobals.ASSIGNMENT_STATE_PROBLEMS_LOADED:
+
+        # If problems are loaded
+        if self.is_problems_loaded():
+            # For each problem
             for p in self._6_problem_ids.keys():
+
+                # Get the list of lists of file names and their aliases student should submit and
+                # for the list of each file and its aliases - The 1st element is the file name and
+                # the following names are the aliases
                 for prob_f_list in self._8_problems[p].get_files_submitted_with_aliases():
+
+                    # If this file has not been added to the list of all files student should
+                    # submit for this assignment add that file and its aliases to the dictionary
                     if not prob_f_list[0] in glob_f_dict.keys():
                         glob_f_dict[prob_f_list[0]] = set( prob_f_list[1:] )
+
+                    # If this file has already been added as part of another problem in this assignment
+                    # add any additional aliases if present to the list of aliases of that file
                     else:
                         glob_f_dict[prob_f_list[0]].update( set( prob_f_list[1:] ) )
 
@@ -291,13 +324,36 @@ class Assignment( object ):
 
 
     '''
+        Accumulate all the provided files for each problem in this assignment
+        into a single set and return that set
+    '''
+    def get_provided_files_set( self ):
+
+        # A set of provided file names
+        provided_files = set()
+
+        # If problems are loaded
+        if self.is_problems_loaded():
+
+            # For each problem
+            for p in self._6_problem_ids.keys():
+
+                # If this is a programming type project
+                if self._8_problems[p].get_prob_type() == AgGlobals.PROBLEM_TYPE_PROG:
+
+                    # Get the list of provided files for this problem and update the global
+                    # set of provided files for this whole assignment / project
+                    provided_files.update( set( self._8_problems[p].get_files_provided() ) )
+
+        return provided_files
+
+
+    '''
     Create provided files in the assignment master sub directory.
     '''
     def generate_provided_files( self ):
-        if self._99_state == AgGlobals.ASSIGNMENT_STATE_LOADED:
-            self.load_problems()
-
-        if self._99_state == AgGlobals.ASSIGNMENT_STATE_PROBLEMS_LOADED:
+        # If problems are loaded
+        if self.is_problems_loaded():
             files = set()
             for p in self._6_problem_ids.keys():
                 if self._8_problems[p].get_prob_type() == AgGlobals.PROBLEM_TYPE_PROG:
@@ -322,10 +378,8 @@ class Assignment( object ):
     Create submitted files in the assignment master sub directory.
     '''
     def generate_submitted_files( self ):
-        if self._99_state == AgGlobals.ASSIGNMENT_STATE_LOADED:
-            self.load_problems()
-
-        if self._99_state == AgGlobals.ASSIGNMENT_STATE_PROBLEMS_LOADED:
+        # If problems are loaded
+        if self.is_problems_loaded():
             files = set()
             for p in self._6_problem_ids.keys():
                 files.update( set( self._8_problems[p].get_files_submitted() ) )
@@ -346,10 +400,8 @@ class Assignment( object ):
 
     ''' Delete later '''
     def generate_input_config2( self ):
-        if self._99_state == AgGlobals.ASSIGNMENT_STATE_LOADED:
-            self.load_problems()
-
-        if self._99_state == AgGlobals.ASSIGNMENT_STATE_PROBLEMS_LOADED:
+        # If problems are loaded
+        if self.is_problems_loaded():
 
             # Create input output directory
             in_out_dir = os.path.join( self._4_gradingroot, self._7_grading_master, self._5_subdir, AgGlobals.INPUT_OUTPUT_DIRECTORY )
@@ -385,10 +437,8 @@ class Assignment( object ):
 
 
     def generate_input_config( self ):
-        if self._99_state == AgGlobals.ASSIGNMENT_STATE_LOADED:
-            self.load_problems()
-
-        if self._99_state == AgGlobals.ASSIGNMENT_STATE_PROBLEMS_LOADED:
+        # If problems are loaded
+        if self.is_problems_loaded():
 
             # Create input output directory
             in_out_dir = os.path.join( self._4_gradingroot, self._7_grading_master, self._5_subdir, AgGlobals.INPUT_OUTPUT_DIRECTORY )
@@ -409,10 +459,8 @@ class Assignment( object ):
 
     def load_input( self ):
         success = False
-        if self._99_state == AgGlobals.ASSIGNMENT_STATE_LOADED:
-            self.load_problems()
-
-        if self._99_state == AgGlobals.ASSIGNMENT_STATE_PROBLEMS_LOADED:
+        # If problems are loaded
+        if self.is_problems_loaded():
 
             cfg_path = os.path.join( self._4_gradingroot, self._7_grading_master, self._5_subdir, AgGlobals.INPUT_OUTPUT_DIRECTORY, AgGlobals.get_input_cfg_name( self._5_subdir ) )
 
@@ -431,51 +479,48 @@ class Assignment( object ):
     '''
     Compile files.
     '''
-    def compile( self ):
+    def compile( self, cwd = '' ):
         success = False
-        if self._99_state == AgGlobals.ASSIGNMENT_STATE_LOADED:
-            self.load_problems()
-
-        if self._99_state == AgGlobals.ASSIGNMENT_STATE_PROBLEMS_LOADED:
-            # files = set()
-            os.chdir( self.get_masterdir() )
+        # If problems are loaded
+        if self.is_problems_loaded():
+            # os.chdir( self.get_masterdir() )
+            if not cwd:
+                cwd = self.get_masterdir()
             success = True
             for p in self._6_problem_ids.keys():
-                success = success and self._8_problems[p].compile()
+                success = success and self._8_problems[p].compile( cwd )
 
         return success
 
     '''
     Link
     '''
-    def link( self ):
+    def link( self, cwd = '' ):
         success = False
-        if self._99_state == AgGlobals.ASSIGNMENT_STATE_LOADED:
-            self.load_problems()
-
-        if self._99_state == AgGlobals.ASSIGNMENT_STATE_PROBLEMS_LOADED:
-            # files = set()
-            os.chdir( self.get_masterdir() )
+        # If problems are loaded
+        if self.is_problems_loaded():
+            # os.chdir( self.get_masterdir() )
+            if not cwd:
+                cwd = self.get_masterdir()
             success = True
             for p in self._6_problem_ids.keys():
-                success = success and self._8_problems[p].link()
+                success = success and self._8_problems[p].link( cwd )
 
         return success
 
 
-    def generate_output( self ):
-        if self._99_state == AgGlobals.ASSIGNMENT_STATE_LOADED:
-            self.load_problems()
-
-        if self._99_state == AgGlobals.ASSIGNMENT_STATE_PROBLEMS_LOADED:
+    def generate_output( self, cwd = '' ):
+        # If problems are loaded
+        if self.is_problems_loaded():
 
             # Create input output directory
-            in_out_dir = os.path.join( self._4_gradingroot, self._7_grading_master, self._5_subdir, AgGlobals.INPUT_OUTPUT_DIRECTORY )
-            if not os.path.exists( in_out_dir ):
-                os.mkdir( in_out_dir )
+            if not cwd:
+                cwd = os.path.join( self._4_gradingroot, self._7_grading_master, self._5_subdir, AgGlobals.INPUT_OUTPUT_DIRECTORY )
+            if not os.path.exists( cwd ):
+                os.mkdir( cwd )
 
             for p in sorted( self._6_problem_ids ):
-                self._8_problems[p].generate_output( self._5_subdir, in_out_dir )
+                self._8_problems[p].generate_output( self._5_subdir, cwd )
 
             print 'Success: Generating Reference Outputs'
 

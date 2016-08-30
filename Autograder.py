@@ -21,7 +21,7 @@ class Autograder( object ):
 
     def __init__( self, config_file ):
 
-        self.ag_created = False
+        # self.ag_created = False
 
         '''
             Read the autograder configuration file and populate grading root
@@ -57,16 +57,16 @@ class Autograder( object ):
 
         self.students_directory = AgGlobals.STUDENTS_DIRECTORY  # self.agg.get_students_directory()
         self.grading_directory = AgGlobals.GRADING_DIRECTORY  # self.agg.get_grading_directory()
-        self.asmnt_loaded = False  # Keeps track of whether a valid assignment configuration file has been loaded
+        # self.asmnt_loaded = False  # Keeps track of whether a valid assignment configuration file has been loaded
 
-        self.ag_created = True
+        # self.ag_created = True
         self.ag_state = AgGlobals.AG_STATE_CREATED
 
 
 
     def created( self ):
         # return self.ag_created
-        return self.ag_state & AgGlobals.AG_STATE_CREATED == AgGlobals.AG_STATE_CREATED
+        return AgGlobals.is_flags_set( self.ag_state, AgGlobals.AG_STATE_CREATED )
 
 
     # @classmethod
@@ -130,12 +130,12 @@ class Autograder( object ):
         # print '\nEnter the assignment master sub-directory name : '
         # self.assignment_master_sub_dir = '{}_{}'.format( self.grading_master[:-1], 1 )  # 'assignment1'
 
-        self.asmnt_loaded = self.asmnt.load_assignment( self.grading_root, self.grading_master, assignment_name )
+        if self.asmnt.load_assignment( self.grading_root, self.grading_master, assignment_name ):
+            self.ag_state = AgGlobals.set_flags( self.ag_state, AgGlobals.AG_STATE_ASSIGNMENT_LOADED )
 
-        if self.asmnt_loaded:
-            self.ag_state |= AgGlobals.AG_STATE_ASSIGNMENT_LOADED
+            return True
 
-        return self.asmnt_loaded
+        return False
 
 
     def validate_config( self ):
@@ -193,7 +193,7 @@ class Autograder( object ):
             return False
             # sys.exit()
 
-        self.ag_state |= AgGlobals.AG_STATE_CONFIGURATION_CHECKED
+        self.ag_state = AgGlobals.set_flags( self.ag_state, AgGlobals.AG_STATE_CONFIGURATION_CHECKED )
         return True
 
 
@@ -258,17 +258,9 @@ class Autograder( object ):
     If this has any bad implications I'd have to copy files using
     OS file copy utilities.
     '''
-    def copy_files_for_grading( self ):
+    def do_grading( self ):
         # If students are loaded and problems are loaded
-        if len( self.students ) > 0 and AgGlobals.is_flags_set( self.ag_state, AgGlobals.AG_STATE_PROBLEMS_LOADED ) :
-            print 'start copying'
-            # Get a dictionary of submitted file names and their aliases
-            # submitted_file_name --> set(alias1, alias2, ...)
-            file_aliases = self.asmnt.get_files_submitted_with_aliases()
-
-            # Length of the longest student index. This is used to insert
-            # leading 0's in the student directory name
-            index_len = len( '{}'.format( self.students[-1].get_index() ) )
+        if len( self.students ) > 0 and AgGlobals.is_flags_set( self.ag_state, AgGlobals.AG_STATE_ASSIGNMENT_LOADED, AgGlobals.AG_STATE_PROBLEMS_LOADED, AgGlobals.AG_STATE_INPUTS_LOADED ) :
 
             # This is the path for the students directory
             source = os.path.join( self.grading_root, self.students_directory )
@@ -276,15 +268,51 @@ class Autograder( object ):
             # This is the path for the grading directory
             destination = os.path.join( self.grading_root, self.grading_directory )
 
+            # Length of the longest student index. This is used to insert
+            # leading 0's in the student directory name
+            index_len = len( '{}'.format( self.students[-1].get_index() ) )
+
+            # Get a dictionary of submitted file names and their aliases
+            # submitted_file_name --> set(alias1, alias2, ...)
+            file_aliases = self.asmnt.get_files_submitted_with_aliases()
+
+            # Get the assignment / project master sub directory
+            asmnt_master_sub_dir = self.asmnt.get_masterdir()
+
+            # Get a set of all the provided file names for this assignment / project
+            provided_files = self.asmnt.get_provided_files_set()
+
+            # Create a list of paths to all the provided files in the assignment master sub directory
+            provided_file_paths = []
+            for pf in provided_files:
+
+                # Generate the file path for this provided file
+                pf_path = os.path.join( asmnt_master_sub_dir, pf )
+
+                # Check whether this file exists in the assignment master sub directory
+                if os.path.exists( pf_path ):
+                    provided_file_paths.append( pf_path )
+
+                # If this file does not exists, we cannot proceed with the grading
+                else:
+                    print 'Error: Provided file {} does not exist. Cannot proceed with grading. Exit...'.format( pf_path )
+                    sys.exit( 1 )
+
             # For each student
             for stud in self.students:
 
-                # Copy all the student submitted files from student directory in students dierctory
+                # Copy all the student submitted files from student directory in students directory
                 # to a directory with the same name in the grading directory
                 stud.copy_student_repo( source, destination, index_len )
 
                 # Path for the student's directory in the grading directory
-                stud_dir_path = os.path.join( destination, stud.get_dir( index_len ) )
+                stud_dir_path = os.path.join( destination, stud.get_dir( index_len ), self.asmnt.get_assignment_sub_dir() )
+
+                # Check whether student has created a directory with the proper name in his or her
+                # repository to upload files for this assignment / project
+                if not os.path.exists( stud_dir_path ):
+                    print 'Error: Student {} does not have the assigmnent directory {} in the repository.'.format( stud.get_name(), stud_dir_path )
+                    continue
 
                 # For each file student is supposed to submit
                 for file_submitted in file_aliases:
@@ -315,6 +343,21 @@ class Autograder( object ):
                         if not found:
                             print 'Error: Student {} has not submitted file {}'.format( stud.get_name(), file_submitted )
 
+                # Copy the provided files into student's directory in the grading directory
+                for pf_path in provided_file_paths:
+                    cmd = 'cp {} .'.format( pf_path )
+                    retcode, out, err = Command( cmd ).run( cwd = stud_dir_path )
+
+                # Compile student submission
+                self.asmnt.compile( stud_dir_path )
+
+                # Link student submissions
+                self.asmnt.link( stud_dir_path )
+
+                # Run student program and generate output for test input
+                output_dir = os.path.join( stud_dir_path, AgGlobals.INPUT_OUTPUT_DIRECTORY )
+                self.asmnt.generate_output( output_dir )
+
 
     # # !! Needs update.. student.get_dir() has been changed to get_dir(index_len)
 #     def check_student_directory( self, student ):
@@ -331,15 +374,15 @@ class Autograder( object ):
     If a valid assignment configuration file has been loaded, this will generate necessary problem configuration file
     '''
     def gen_prob_config_skel( self ):
-        if self.asmnt_loaded:
+        if AgGlobals.is_flags_set( self.ag_state, AgGlobals.AG_STATE_ASSIGNMENT_LOADED ):
             self.asmnt.generate_problem_config()
 
 
     def load_problems( self ):
-        if self.asmnt_loaded:
+        if AgGlobals.is_flags_set( self.ag_state, AgGlobals.AG_STATE_ASSIGNMENT_LOADED ):
             result = self.asmnt.load_problems()
             if result:
-                self.ag_state |= AgGlobals.AG_STATE_PROBLEMS_LOADED
+                self.ag_state = AgGlobals.set_flags( self.ag_state, AgGlobals.AG_STATE_PROBLEMS_LOADED )
 
             # print self.asmnt.get_files_submitted_with_aliases()
             return result
@@ -348,56 +391,52 @@ class Autograder( object ):
 
 
     def generate_files( self ):
-        if self.asmnt_loaded:
+        if AgGlobals.is_flags_set( self.ag_state, AgGlobals.AG_STATE_ASSIGNMENT_LOADED ):
             self.asmnt.generate_provided_files()
             self.asmnt.generate_submitted_files()
             self.asmnt.generate_input_config()
 
 
     def load_input( self ):
-        if self.asmnt_loaded:
-            result = self.asmnt.load_input()
-            if result:
-                self.ag_state |= AgGlobals.AG_STATE_INPUTS_LOADED
+        if AgGlobals.is_flags_set( self.ag_state, AgGlobals.AG_STATE_ASSIGNMENT_LOADED ):
+        # if self.asmnt_loaded:
+            if self.asmnt.load_input():
+                self.ag_state = AgGlobals.set_flags( self.ag_state, AgGlobals.AG_STATE_INPUTS_LOADED )
 
-            return result
+                return True
 
         return False
 
 
     def compile( self ):
-        if self.asmnt_loaded:
-            result = self.asmnt.compile()
-            if result:
-                self.ag_state |= AgGlobals.AG_STATE_COMPILED
+        if AgGlobals.is_flags_set( self.ag_state, AgGlobals.AG_STATE_ASSIGNMENT_LOADED ):
+            if self.asmnt.compile():
+                self.ag_state = AgGlobals.set_flags( self.ag_state, AgGlobals.AG_STATE_COMPILED )
 
-            return result
+                return True
 
         return False
 
 
     def link( self ):
-        if self.asmnt_loaded:
+        if AgGlobals.is_flags_set( self.ag_state, AgGlobals.AG_STATE_ASSIGNMENT_LOADED ):
             if self.asmnt.compile():
-                result = self.asmnt.link()
-                if result:
-                    self.ag_state |= AgGlobals.AG_STATE_LINKED
+                if self.asmnt.link():
+                    self.ag_state = AgGlobals.set_flags( self.ag_state, AgGlobals.AG_STATE_LINKED )
 
-                return result
+                    return True
 
         return False
 
 
     def generate_output( self ):
-        if self.asmnt_loaded:
+        if AgGlobals.is_flags_set( self.ag_state, AgGlobals.AG_STATE_ASSIGNMENT_LOADED ):
             if self.asmnt.compile():
                 if self.asmnt.link() and self.asmnt.load_input():
-                    result = self.asmnt.generate_output()
-                    if result:
-                        self.ag_state |= AgGlobals.AG_STATE_OUTPUTS_GENERATED
-                        # self.ag_state = AgGlobals.set_flags( self.ag_state, AgGlobals.AG_STATE_OUTPUTS_GENERATED )
+                    if self.asmnt.generate_output():
+                        self.ag_state = AgGlobals.set_flags( self.ag_state, AgGlobals.AG_STATE_OUTPUTS_GENERATED )
 
-                    return result
+                        return True
 
         return False
 
@@ -541,7 +580,8 @@ if len( sys.argv ) > 2:
                 if ag.load_assignment( sys.argv[3] ):
                     if ag.load_problems():
                         if ag.read_students():
-                            ag.copy_files_for_grading()
+                            if ag.load_input():
+                                ag.do_grading()
 
 
     elif sys.argv[1] == 'setasmnt':

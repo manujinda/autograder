@@ -79,6 +79,8 @@ class Problem( object ):
     '''
     def load_problem( self, config_file, section ):
 
+        self._99_state = AgGlobals.clear_flags( self._99_state, AgGlobals.PROBLEM_STATE_LOADED )
+
         # Check whether the problem configuration file exists.
         if not os.path.exists( config_file ):
             print '\nProblem configuration file {} does not exist, exit...'.format( config_file )
@@ -131,8 +133,8 @@ class Problem( object ):
             print 'Error: Problem {} - {} is dependent on itself. Exiting...'.format( self._01_prob_no, self._02_name )
             sys.exit()
 
-        self._99_state = AgGlobals.PROBLEM_STATE_LOADED
-        print self
+        self._99_state = AgGlobals.set_flags( self._99_state, AgGlobals.PROBLEM_STATE_LOADED )
+        # print self
         return True
 
 
@@ -172,7 +174,7 @@ class Problem( object ):
 
 
     def generate_input_config( self, assignment, in_out_dir, cfg ):
-        if self._03_prob_type == AgGlobals.PROBLEM_TYPE_PROG and self._99_state == AgGlobals.PROBLEM_STATE_LOADED:
+        if self._03_prob_type == AgGlobals.PROBLEM_TYPE_PROG and AgGlobals.is_flags_set( self._99_state, AgGlobals.PROBLEM_STATE_LOADED ):
             for io in sorted( self._07_inp_outps ):
                 print io, self._07_inp_outps[io]
                 section = AgGlobals.get_input_section( assignment, self._01_prob_no, io )
@@ -192,8 +194,9 @@ class Problem( object ):
 
 
     def load_input( self, assignment, input_conf ):
-        if self._03_prob_type == AgGlobals.PROBLEM_TYPE_PROG and self._99_state & AgGlobals.PROBLEM_STATE_LOADED == AgGlobals.PROBLEM_STATE_LOADED:
+        if self._03_prob_type == AgGlobals.PROBLEM_TYPE_PROG and AgGlobals.is_flags_set( self._99_state, AgGlobals.PROBLEM_STATE_LOADED ):
             # Check whether the input configuration file exists.
+            self._99_state = AgGlobals.clear_flags( self._99_state, AgGlobals.PROBLEM_STATE_INPUTS_LOADED )
             if not os.path.exists( input_conf ):
                 print '\Input configuration file {} does not exist, exit...'.format( input_conf )
                 sys.exit()
@@ -206,18 +209,22 @@ class Problem( object ):
                 section = AgGlobals.get_input_section( assignment, self._01_prob_no, io )
                 self._99_inputs[io].load_input( input_conf, section )
 
-            self._99_state |= AgGlobals.PROBLEM_STATE_INPUTS_LOADED
+            self._99_state = AgGlobals.set_flags( self._99_state, AgGlobals.PROBLEM_STATE_INPUTS_LOADED )
 
-        return self._99_state & AgGlobals.PROBLEM_STATE_INPUTS_LOADED == AgGlobals.PROBLEM_STATE_INPUTS_LOADED
+            return True
+
+        return False
 
 
-    def compile( self ):
-        if self._03_prob_type == AgGlobals.PROBLEM_TYPE_PROG and self._99_state & AgGlobals.PROBLEM_STATE_LOADED == AgGlobals.PROBLEM_STATE_LOADED:
+    def compile( self, cwd ):
+        if self._03_prob_type == AgGlobals.PROBLEM_TYPE_PROG and AgGlobals.is_flags_set( self._99_state, AgGlobals.PROBLEM_STATE_LOADED ):
+        # if self._03_prob_type == AgGlobals.PROBLEM_TYPE_PROG and self._99_state & AgGlobals.PROBLEM_STATE_LOADED == AgGlobals.PROBLEM_STATE_LOADED:
+            self._99_state = AgGlobals.clear_flags( self._99_state, AgGlobals.PROBLEM_STATE_COMPILED )
             compile_success = 0
             if self._08_language in ['c', 'C', 'cpp', 'CPP']:
                 # Cleanup
                 # os.system( 'make clean' )
-                retcode, out, err = Command( 'make clean' ).run()
+                retcode, out, err = Command( 'make clean' ).run( cwd = cwd )
                 # retcode, out, err = Command( './main 4 5' ).run( inputs = '5' )
 
                 print 'return: ', retcode
@@ -233,7 +240,7 @@ class Problem( object ):
                         # print source_file.group( 1 )
 
                         cmd = 'make {}.o'.format( source_file.group( 1 ) )
-                        retcode, out, err = Command( cmd ).run()
+                        retcode, out, err = Command( cmd ).run( cwd = cwd )
 
                         print retcode
                         print out
@@ -247,18 +254,19 @@ class Problem( object ):
 
                 if compile_success == 0:
                     # self._99_state = AgGlobals.PROBLEM_STATE_COMPILED
-                    self._99_state |= AgGlobals.PROBLEM_STATE_COMPILED
+                    self._99_state = AgGlobals.set_flags( self._99_state, AgGlobals.PROBLEM_STATE_COMPILED )
 
-        return self._99_state & AgGlobals.PROBLEM_STATE_COMPILED == AgGlobals.PROBLEM_STATE_COMPILED
+        return AgGlobals.is_flags_set( self._99_state, AgGlobals.PROBLEM_STATE_COMPILED )
 
 
-    def link( self ):
+    def link( self, cwd ):
         # self._99_linked = False
-        if self._03_prob_type == AgGlobals.PROBLEM_TYPE_PROG and self._99_state & AgGlobals.PROBLEM_STATE_COMPILED == AgGlobals.PROBLEM_STATE_COMPILED:
+        if self._03_prob_type == AgGlobals.PROBLEM_TYPE_PROG and AgGlobals.is_flags_set( self._99_state, AgGlobals.PROBLEM_STATE_COMPILED ):
+            self._99_state = AgGlobals.clear_flags( self._99_state, AgGlobals.PROBLEM_STATE_LINKED )
             link_success = 0
             if self._08_language in ['c', 'C', 'cpp', 'CPP']:
                 cmd = 'make {}'.format( self._11_make_targs )
-                retcode, out, err = Command( cmd ).run()
+                retcode, out, err = Command( cmd ).run( cwd = cwd )
 
                 print retcode
                 print out
@@ -272,9 +280,10 @@ class Problem( object ):
 
                 # self._99_linked = ( link_success == 0 )
                 # self._99_state = AgGlobals.PROBLEM_STATE_LINKED
-                self._99_state |= AgGlobals.PROBLEM_STATE_LINKED
+                if link_success == 0:
+                    self._99_state = AgGlobals.set_flags( self._99_state, AgGlobals.PROBLEM_STATE_LINKED )
 
-        return self._99_state & AgGlobals.PROBLEM_STATE_LINKED == AgGlobals.PROBLEM_STATE_LINKED
+        return AgGlobals.is_flags_set( self._99_state, AgGlobals.PROBLEM_STATE_LINKED )
 
 
     def generate_output2( self, assignment, in_out_dir ):
@@ -299,8 +308,10 @@ class Problem( object ):
 
     def generate_output( self, assignment, in_out_dir ):
         if self._03_prob_type == AgGlobals.PROBLEM_TYPE_PROG:
+            print '{:0>10b}'.format( self._99_state )
             # Check whether the program has been successfully compiled, linked and inputs has been loaded
-            if self._99_state & ( AgGlobals.PROBLEM_STATE_LINKED | AgGlobals.PROBLEM_STATE_INPUTS_LOADED ) == AgGlobals.PROBLEM_STATE_LINKED | AgGlobals.PROBLEM_STATE_INPUTS_LOADED:
+            if AgGlobals.is_flags_set( self._99_state, AgGlobals.PROBLEM_STATE_LINKED, AgGlobals.PROBLEM_STATE_INPUTS_LOADED ):
+            # if self._99_state & ( AgGlobals.PROBLEM_STATE_LINKED | AgGlobals.PROBLEM_STATE_INPUTS_LOADED ) == AgGlobals.PROBLEM_STATE_LINKED | AgGlobals.PROBLEM_STATE_INPUTS_LOADED:
                 for io in sorted( self._99_inputs ):
                     output_file_path = os.path.join( in_out_dir, AgGlobals.get_output_file_name( assignment, self._01_prob_no, io ) )
                     fo = open( output_file_path, 'w' )
