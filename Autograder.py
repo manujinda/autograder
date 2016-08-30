@@ -301,12 +301,25 @@ class Autograder( object ):
             # For each student
             for stud in self.students:
 
+                # Student's directory name
+                stud_dir_name = stud.get_dir( index_len )
+
+                # Path for the student's directory in the students directory
+                stud_local_repo_path = os.path.join( source, stud_dir_name )
+
+                # Update local student repository
+                if not os.path.exists( stud_local_repo_path ):
+                    # Student repository has not been cloned. Have to clone it first
+                    stud.clone_student_repo( stud_local_repo_path )
+                else:
+                    stud.pull_student_repo( stud_local_repo_path )
+
                 # Copy all the student submitted files from student directory in students directory
                 # to a directory with the same name in the grading directory
                 stud.copy_student_repo( source, destination, index_len )
 
                 # Path for the student's directory in the grading directory
-                stud_dir_path = os.path.join( destination, stud.get_dir( index_len ), self.asmnt.get_assignment_sub_dir() )
+                stud_dir_path = os.path.join( destination, stud_dir_name, self.asmnt.get_assignment_sub_dir() )
 
                 # Check whether student has created a directory with the proper name in his or her
                 # repository to upload files for this assignment / project
