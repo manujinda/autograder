@@ -5,6 +5,7 @@
 import ConfigParser
 from __builtin__ import True
 import csv
+from datetime import datetime
 import os
 import shutil
 import sys
@@ -298,8 +299,14 @@ class Autograder( object ):
                     print 'Error: Provided file {} does not exist. Cannot proceed with grading. Exit...'.format( pf_path )
                     sys.exit( 1 )
 
+            # Open grading log file for this student
+            grading_log = open( os.path.join( asmnt_master_sub_dir, AgGlobals.AUTOGRADER_LOG_FILE_NAME ), 'a' )
+            AgGlobals.write_to_log( grading_log, '\n{0}<< Grading Session on {1} : START >>{0}\n'.format( '-' * 20, datetime.now() ) )
+
             # For each student
             for stud in self.students:
+
+                AgGlobals.write_to_log( grading_log, '\n{0} Student: {1} {0}\n'.format( '#' * 10, stud.get_name() ) )
 
                 # Student's directory name
                 stud_dir_name = stud.get_dir( index_len )
@@ -307,24 +314,25 @@ class Autograder( object ):
                 # Path for the student's directory in the students directory
                 stud_local_repo_path = os.path.join( source, stud_dir_name )
 
+                # Path for the student's directory in the grading directory
+                stud_dir_path = os.path.join( destination, stud_dir_name, self.asmnt.get_assignment_sub_dir() )
+
                 # Update local student repository
                 if not os.path.exists( stud_local_repo_path ):
                     # Student repository has not been cloned. Have to clone it first
-                    stud.clone_student_repo( stud_local_repo_path )
+                    stud.clone_student_repo( stud_local_repo_path, grading_log )
                 else:
-                    stud.pull_student_repo( stud_local_repo_path )
+                    stud.pull_student_repo( stud_local_repo_path, grading_log )
 
                 # Copy all the student submitted files from student directory in students directory
                 # to a directory with the same name in the grading directory
                 stud.copy_student_repo( source, destination, index_len )
 
-                # Path for the student's directory in the grading directory
-                stud_dir_path = os.path.join( destination, stud_dir_name, self.asmnt.get_assignment_sub_dir() )
-
                 # Check whether student has created a directory with the proper name in his or her
                 # repository to upload files for this assignment / project
                 if not os.path.exists( stud_dir_path ):
-                    print 'Error: Student {} does not have the assigmnent directory {} in the repository.'.format( stud.get_name(), stud_dir_path )
+                    print 'Error: Student {} does not have the assignment directory {} in the repository.'.format( stud.get_name(), stud_dir_path )
+                    AgGlobals.write_to_log( grading_log, '\tError: {} directory does not exist in the repo\n'.format( self.asmnt.get_assignment_sub_dir() ) )
                     continue
 
                 # For each file student is supposed to submit
@@ -350,11 +358,13 @@ class Autograder( object ):
                                 # Rename the file. Might want to do this only when we provide the make file
                                 cmd = 'mv {} {}'.format( file_alias, file_submitted )
                                 retcode, out, err = Command( cmd ).run( cwd = stud_dir_path )
-                                print cmd
+                                AgGlobals.write_to_log( grading_log, '\tWarning: Renamed file - {} --> {}\n'.format( file_alias, file_submitted ) )
                                 break
 
                         if not found:
                             print 'Error: Student {} has not submitted file {}'.format( stud.get_name(), file_submitted )
+                            AgGlobals.write_to_log( grading_log, '\tError: File - {} - missing\n'.format( file_submitted ) )
+                            continue
 
                 # Copy the provided files into student's directory in the grading directory
                 for pf_path in provided_file_paths:
@@ -371,6 +381,9 @@ class Autograder( object ):
                 output_dir = os.path.join( stud_dir_path, AgGlobals.INPUT_OUTPUT_DIRECTORY )
                 self.asmnt.generate_output( output_dir )
 
+                grading_log.flush()
+
+            grading_log.close()
 
     # # !! Needs update.. student.get_dir() has been changed to get_dir(index_len)
 #     def check_student_directory( self, student ):
@@ -615,7 +628,8 @@ if len( sys.argv ) > 2:
             ag.read_students()
             ag.update_repos()
     elif sys.argv[1] == 'copy':
-        ag = Autograder( sys.argv[2] )
+        ag_cfg = os.path.join( sys.argv[2], AgGlobals.AUTOGRADER_CFG_NAME )
+        ag = Autograder( ag_cfg )
         if ag.validate_config():
             ag.read_students()
             ag.update_repos()

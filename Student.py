@@ -52,11 +52,11 @@ class Student( object ):
     def get_name( self ):
         return '{} {}'.format( self._5_first_name, self._4_last_name )
 
-    def clone_student_repo( self, destination = '' ):
-        self._8_repo.clone( destination )
+    def clone_student_repo( self, destination, log_file ):
+        return self._8_repo.clone( destination, log_file )
 
-    def pull_student_repo( self, local_path = '' ):
-        self._8_repo.pull( local_path )
+    def pull_student_repo( self, local_path, log_file ):
+        self._8_repo.pull( local_path, log_file )
 
     def copy_student_repo( self, source, destination, index_len ):
         self._8_repo.copy( source, destination, self.get_dir( index_len ) )

@@ -469,10 +469,12 @@ class Assignment( object ):
                 sys.exit()
 
             success = True
-            for p in sorted( self._6_problem_ids ):
+            for p in sorted( self._6_problem_ids.keys() ):
                 success = success and self._8_problems[p].load_input( self._5_subdir, cfg_path )
 
-            print 'Success: Loading inputs'
+            if success:
+                print 'Success: Loading inputs'
+
             return success
 
 
@@ -487,7 +489,7 @@ class Assignment( object ):
             if not cwd:
                 cwd = self.get_masterdir()
             success = True
-            for p in self._6_problem_ids.keys():
+            for p in sorted( self._6_problem_ids.keys() ):
                 success = success and self._8_problems[p].compile( cwd )
 
         return success
@@ -503,7 +505,7 @@ class Assignment( object ):
             if not cwd:
                 cwd = self.get_masterdir()
             success = True
-            for p in self._6_problem_ids.keys():
+            for p in sorted( self._6_problem_ids.keys() ):
                 success = success and self._8_problems[p].link( cwd )
 
         return success
@@ -519,7 +521,7 @@ class Assignment( object ):
             if not os.path.exists( cwd ):
                 os.mkdir( cwd )
 
-            for p in sorted( self._6_problem_ids ):
+            for p in sorted( self._6_problem_ids.keys() ):
                 self._8_problems[p].generate_output( self._5_subdir, cwd )
 
             print 'Success: Generating Reference Outputs'

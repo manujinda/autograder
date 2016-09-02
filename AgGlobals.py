@@ -18,6 +18,7 @@ class AgGlobals( object ):
     AUTOGRADER_CFG_SECTION = 'Autograder Setup'  # Section name in the autograder configuration file to store configuration values
     AUTOGRADER_CFG_GRADING_ROOT = 'grading_root'  # The directory name for the autograder directory tree is stored under key in the config file. Everything autograder cares for gradeing is stored within a directory with this name
     AUTOGRADER_CFG_GRADING_MASTER = 'grading_master'  # The directory name for the directory where all the assignment / project details are stored is provided under this key in the config file. It is suggested to give this directory a meaningful name like 'Assignments' or 'Projects'
+    AUTOGRADER_LOG_FILE_NAME = 'grading_log.txt'
 
     # Autograder States
     AG_STATE_CREATED = 1
@@ -64,10 +65,11 @@ class AgGlobals( object ):
     PROBLEM_INIT_INP_OUTPS = '1:short:stdout 2:long:file 3:long:both ; List the nature of inputs and outputs to test submissions for this programming problem. Format - Input_ID:Input_Lenght:Output_location'
     PROBLEM_INIT_COMMAND_LINE_OPTIONS = False
     PROBLEM_INIT_STUDENT_MAKE_FILE = False
-    PROBLEM_INIT_MAKE_TARGS = []
+    PROBLEM_INIT_MAKE_TARGET = '  ; Make target for this problem. This is the final executable generated for this problem'
     PROBLEM_INIT_TIMEOUT = -1  # Timeout interval to decide infinite loop. # -1 means do not timeout
     PROBLEM_INIT_LANGUAGE = ''
     PROBLEM_INIT_DEPENDS_ON = ''
+    PROBLEM_INIT_MARKS = 'compile:10 link:10 memleaks:10 0:0 50:80 100:100 ; Specify the different degrees to with the student output should match the reference output and the marks granted'
 
     # Different states of a problem
     PROBLEM_STATE_INITIALIZED = 1
@@ -113,6 +115,10 @@ class AgGlobals( object ):
     STUDENT_DB_FIED_REPO = 'Repo'
     STUDENT_DB_FIEDLS = [ STUDENT_DB_FIED_NO, STUDENT_DB_FIED_UOID, STUDENT_DB_FIED_DUCKID, STUDENT_DB_FIED_LNAME, STUDENT_DB_FIED_FNAME, STUDENT_DB_FIED_EMAIL, STUDENT_DB_FIED_DIR_NAME, STUDENT_DB_FIED_REPO ]
     # STUDENT_DB_FIEDLS = ['No', 'UO ID', 'Duck ID', 'Last Name', 'First Name', 'Email', 'Dir Name', 'Repo']
+
+    # Repository last changed file names
+    REPO_LAST_CHANGED_FILE = 'last_changed.txt'
+    REPO_GIT_ALREADY_UP_TO_DATE = 'Already up-to-date.\n'
 
 
     @classmethod
@@ -234,3 +240,9 @@ class AgGlobals( object ):
             return var & check_for == check_for
 
         return False
+
+
+    @classmethod
+    def write_to_log( cls, log_file, message ):
+        if log_file:
+            log_file.write( message )

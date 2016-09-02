@@ -4,10 +4,13 @@ A class to encapsulate a version control repository such as Git
 
 @author: Manujinda Wathugala
 '''
+from datetime import datetime
 import os
 import re
 import subprocess
+
 from AgGlobals import AgGlobals
+from Command import Command
 
 
 class Repository( object ):
@@ -57,7 +60,7 @@ class Repository( object ):
 #         return desc
         return AgGlobals.string_of( self )
 
-    def clone( self, path = '' ):
+    def clone( self, path = '', log_file = '' ):
         '''
         clone the git repo at the location provided.
         Checks whether already cloned beforehand.
@@ -66,32 +69,83 @@ class Repository( object ):
             if self.repo_type == 'git':
                 # This is a git repository
                 cmd = 'git clone {} {}'.format( self.uri, path )
-                cloning = subprocess.Popen( cmd.split(), stdout = subprocess.PIPE, stderr = subprocess.PIPE )
-                out, err = cloning.communicate()
+                # cloning = subprocess.Popen( cmd.split(), stdout = subprocess.PIPE, stderr = subprocess.PIPE )
+                # out, err = cloning.communicate()
+
+                retcode, out, err = Command( cmd ).run()
                 print out
                 print err
-                print cloning.returncode
+                print retcode  # cloning.returncode
+
+                if retcode == 0:
+                    fo = open( os.path.join( path, AgGlobals.REPO_LAST_CHANGED_FILE ) , 'w' )
+                    fo.write( str( datetime.now() ) )
+                    fo.close()
+                    AgGlobals.write_to_log( log_file, 'Success: Cloning\n' )
+                    return True
+                else:
+                    AgGlobals.write_to_log( log_file, '\tError: Cloning\n' )
+                    AgGlobals.write_to_log( log_file, '\t{} {} {}'.format( retcode, out, err ) )
+                    return False
+
         else:
             print 'Error: Invalid repository uri: {}'.format( self.uri )
+            AgGlobals.write_to_log( log_file, '\tError: Invalid git uri' )
+            return False
+
+        return False
 
 
-    def pull( self, path = '' ):
+    def pull( self, path = '', log_file = '' ):
         if path:
-            cwd = os.getcwd()
+            # cwd = os.getcwd()
             if os.path.exists( path ):
-                os.chdir( path )
+                # os.chdir( path )
                 if self.repo_type == 'git':
                     if os.path.exists( '.git' ):
-                        pulling = subprocess.Popen( ['git', 'pull'], stdout = subprocess.PIPE, stderr = subprocess.PIPE )
-                        out, err = pulling.communicate()
+                        # pulling = subprocess.Popen( ['git', 'pull'], stdout = subprocess.PIPE, stderr = subprocess.PIPE )
+                        # out, err = pulling.communicate()
+
+                        retcode, out, err = Command( 'git pull' ).run( cwd = path )
                         print out
-                        print err
-                        print pulling.returncode
+                        # print err
+                        # print retcode  # pulling.returncode
+
+                        # If git pull is successful
+                        if retcode == 0:
+                            now_time = datetime.now()
+                            fo = open( os.path.join( path, AgGlobals.REPO_LAST_CHANGED_FILE ) , 'r' )
+                            prev_update = datetime.strptime( fo.readline(), '%Y-%m-%d %H:%M:%S.%f' )
+                            fo.close()
+                            # If the repo has been updated
+                            if out != AgGlobals.REPO_GIT_ALREADY_UP_TO_DATE:
+                                fo = open( os.path.join( path, AgGlobals.REPO_LAST_CHANGED_FILE ) , 'w' )
+                                fo.write( str( datetime.now() ) )
+                                fo.close()
+                                AgGlobals.write_to_log( log_file, 'Success: Pull' )
+                                return True
+                            else:
+                                diff_time = now_time - prev_update
+                                # print 'Difference: {}'.format( now_time - prev_update )
+                                # print diff_time
+                                # print now_time
+                                # print prev_update
+                                print 'There has been no change in the repo for {} days {} hours {} minutes'.format( diff_time.days, diff_time.seconds // 3600, ( diff_time.seconds // 60 ) % 60 )
+                                AgGlobals.write_to_log( log_file, '\tNothing updated since {}\n'.format( prev_update ) )
+                                AgGlobals.write_to_log( log_file, '\tNo activity for: {} days {} hours {} minutes\n'.format( diff_time.days, diff_time.seconds // 3600, ( diff_time.seconds // 60 ) % 60 ) )
+                                return False
+                        else:
+                            AgGlobals.write_to_log( log_file, '\tError: pull\n' )
+                            AgGlobals.write_to_log( log_file, '\t{} {} {}'.format( retcode, out, err ) )
+                            return False
                     else:
                         print 'this is not a git repo'
-                os.chdir( cwd )
+                        AgGlobals.write_to_log( log_file, '\tError: Not a valid git repo\n' )
+                        return False
+                # os.chdir( cwd )
         else:
             print 'empty path'
+            return False
 
 
     '''
@@ -99,28 +153,33 @@ class Repository( object ):
     '''
     def copy( self, source, destination, student ):
         src = os.path.join( source, student )
+        cwd = ''
         if self.repo_type == 'git':
             if os.path.exists( os.path.join( src, '.git' ) ):
                 root = 'git {}{}'
-                cwd = os.getcwd()
+                # cwd = os.getcwd()
                 repo_copy = os.path.join( destination, student )
                 if os.path.exists( os.path.join( repo_copy, '.git' ) ):
-                    os.chdir( repo_copy )
+                    # os.chdir( repo_copy )
+                    cwd = repo_copy
                     cmd = root.format( 'pull', '' )
                 elif not os.path.exists( repo_copy ):
-                    os.chdir( destination )
+                    # os.chdir( destination )
+                    cwd = destination
                     cmd = root.format( 'clone file://', src )
-                    print repo_copy
+                    # print repo_copy
                 else:
                     cmd = ''
                     print 'Error: Destination directory already exists but not a repository'
 
                 if cmd:
-                    copying = subprocess.Popen( cmd.split(), stdout = subprocess.PIPE, stderr = subprocess.PIPE )
-                    out, err = copying.communicate()
+                    # copying = subprocess.Popen( cmd.split(), stdout = subprocess.PIPE, stderr = subprocess.PIPE )
+                    # out, err = copying.communicate()
+
+                    retcode, out, err = Command( cmd ).run( cwd = cwd )
                     print out
                     print err
-                    print copying.returncode
+                    print retcode  # copying.returncode
 
-                os.chdir( cwd )
+                # os.chdir( cwd )
 

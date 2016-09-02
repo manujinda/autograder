@@ -48,7 +48,7 @@ class Problem( object ):
 
             self._09_command_line_options = AgGlobals.PROBLEM_INIT_COMMAND_LINE_OPTIONS
             self._10_student_make_file = AgGlobals.PROBLEM_INIT_STUDENT_MAKE_FILE
-            self._11_make_targs = AgGlobals.PROBLEM_INIT_MAKE_TARGS
+            self._11_make_target = AgGlobals.PROBLEM_INIT_MAKE_TARGET
 
             # Timeout interval to decide infinite loop
             # -1 means do not timeout
@@ -63,6 +63,12 @@ class Problem( object ):
 
         # self._14_depends_on = ' ; Problem numbers of other problems that this problem is dependent on. These problems should be specified prior to this problem'
         self._14_depends_on = AgGlobals.PROBLEM_INIT_DEPENDS_ON
+
+        # The percentage the student outputs for all grading input for this problem should
+        # match with the reference outputs and the amount of marks granted if student output achieves that level.
+        # Format: a list of matching_%:marks and compile:marsk link:makrs memleaks:marks
+        # 0 means no matching at all and 100 means perfect matching.
+        self._15_marks = AgGlobals.PROBLEM_INIT_MARKS
 
         self._99_state = AgGlobals.PROBLEM_STATE_INITIALIZED
 
@@ -132,6 +138,11 @@ class Problem( object ):
         if self._01_prob_no in self._14_depends_on:
             print 'Error: Problem {} - {} is dependent on itself. Exiting...'.format( self._01_prob_no, self._02_name )
             sys.exit()
+
+        temp_marks = AgGlobals.parse_config_line( self._15_marks )
+        self._15_marks = {}
+        for mark in temp_marks:
+            self._15_marks[mark[0]] = mark[1]
 
         self._99_state = AgGlobals.set_flags( self._99_state, AgGlobals.PROBLEM_STATE_LOADED )
         # print self
@@ -219,7 +230,7 @@ class Problem( object ):
     def compile( self, cwd ):
         if self._03_prob_type == AgGlobals.PROBLEM_TYPE_PROG and AgGlobals.is_flags_set( self._99_state, AgGlobals.PROBLEM_STATE_LOADED ):
         # if self._03_prob_type == AgGlobals.PROBLEM_TYPE_PROG and self._99_state & AgGlobals.PROBLEM_STATE_LOADED == AgGlobals.PROBLEM_STATE_LOADED:
-            self._99_state = AgGlobals.clear_flags( self._99_state, AgGlobals.PROBLEM_STATE_COMPILED )
+            self._99_state = AgGlobals.clear_flags( self._99_state, AgGlobals.PROBLEM_STATE_COMPILED, AgGlobals.PROBLEM_STATE_LINKED )
             compile_success = 0
             if self._08_language in ['c', 'C', 'cpp', 'CPP']:
                 # Cleanup
@@ -265,7 +276,7 @@ class Problem( object ):
             self._99_state = AgGlobals.clear_flags( self._99_state, AgGlobals.PROBLEM_STATE_LINKED )
             link_success = 0
             if self._08_language in ['c', 'C', 'cpp', 'CPP']:
-                cmd = 'make {}'.format( self._11_make_targs )
+                cmd = 'make {}'.format( self._11_make_target )
                 retcode, out, err = Command( cmd ).run( cwd = cwd )
 
                 print retcode
@@ -291,7 +302,7 @@ class Problem( object ):
             # Check whether the program has been successfully compiled, linked and inputs has been loaded
             if self._99_state & ( AgGlobals.PROBLEM_STATE_LINKED | AgGlobals.PROBLEM_STATE_INPUTS_LOADED ) == AgGlobals.PROBLEM_STATE_LINKED | AgGlobals.PROBLEM_STATE_INPUTS_LOADED:
                 for io in sorted( self._99_inputs ):
-                    cmd = './{} {}'.format( self._11_make_targs, self._99_inputs[io].get_cmd_line_input() )
+                    cmd = './{} {}'.format( self._11_make_target, self._99_inputs[io].get_cmd_line_input() )
                     retcode, out, err = Command( cmd ).run( self._99_inputs[io].get_inputs(), self._13_timeout )
                     print retcode
                     print out
@@ -308,19 +319,19 @@ class Problem( object ):
 
     def generate_output( self, assignment, in_out_dir ):
         if self._03_prob_type == AgGlobals.PROBLEM_TYPE_PROG:
-            print '{:0>10b}'.format( self._99_state )
+            # print '{:0>10b}'.format( self._99_state )
             # Check whether the program has been successfully compiled, linked and inputs has been loaded
             if AgGlobals.is_flags_set( self._99_state, AgGlobals.PROBLEM_STATE_LINKED, AgGlobals.PROBLEM_STATE_INPUTS_LOADED ):
             # if self._99_state & ( AgGlobals.PROBLEM_STATE_LINKED | AgGlobals.PROBLEM_STATE_INPUTS_LOADED ) == AgGlobals.PROBLEM_STATE_LINKED | AgGlobals.PROBLEM_STATE_INPUTS_LOADED:
                 for io in sorted( self._99_inputs ):
                     output_file_path = os.path.join( in_out_dir, AgGlobals.get_output_file_name( assignment, self._01_prob_no, io ) )
                     fo = open( output_file_path, 'w' )
-                    cmd = '../{} {}'.format( self._11_make_targs, self._99_inputs[io].get_cmd_line_input() )
+                    cmd = '../{} {}'.format( self._11_make_target, self._99_inputs[io].get_cmd_line_input() )
                     retcode, out, err = Command( cmd ).run( self._99_inputs[io].get_inputs(), self._13_timeout, fo, in_out_dir )
                     fo.close()
-                    print retcode
-                    print out
-                    print err
+                    # print retcode
+                    # print out
+                    # print err
 
                     for out_file in self._99_inputs[io].get_output_files_generated():
                         cmd = 'mv {0} {1}_{0}'.format( out_file, AgGlobals.get_output_file_name( assignment, self._01_prob_no, io ) )
