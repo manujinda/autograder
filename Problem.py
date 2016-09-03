@@ -227,25 +227,21 @@ class Problem( object ):
         return False
 
 
-    def compile( self, cwd ):
+    def compile( self, cwd, grading_log_file, student_log_file ):
         if self._03_prob_type == AgGlobals.PROBLEM_TYPE_PROG and AgGlobals.is_flags_set( self._99_state, AgGlobals.PROBLEM_STATE_LOADED ):
-        # if self._03_prob_type == AgGlobals.PROBLEM_TYPE_PROG and self._99_state & AgGlobals.PROBLEM_STATE_LOADED == AgGlobals.PROBLEM_STATE_LOADED:
             self._99_state = AgGlobals.clear_flags( self._99_state, AgGlobals.PROBLEM_STATE_COMPILED, AgGlobals.PROBLEM_STATE_LINKED )
             compile_success = 0
             if self._08_language in ['c', 'C', 'cpp', 'CPP']:
                 # Cleanup
-                # os.system( 'make clean' )
                 retcode, out, err = Command( 'make clean' ).run( cwd = cwd )
-                # retcode, out, err = Command( './main 4 5' ).run( inputs = '5' )
 
-                print 'return: ', retcode
-                print 'output: ', out
-                print 'error: ', err
+                # print 'return: ', retcode
+                # print 'output: ', out
+                # print 'error: ', err
 
                 source_pattern = re.compile( '^([_a-zA-Z0-9]+)\.(?:c|C|cpp|CPP)$' )
 
                 for f in self._06_files_submitted:
-                    # print f[0]
                     source_file = source_pattern.match( f[0] )
                     if source_file:
                         # print source_file.group( 1 )
@@ -261,16 +257,23 @@ class Problem( object ):
 
                         # warning = warning_pattern.match( err )
                         if err.find( 'warning' ) >= 0:
+                            AgGlobals.write_to_log( grading_log_file, '\tWarning: Compiling file {}\n'.format( f[0] ) )
+                            AgGlobals.write_to_log( student_log_file, '\tWarning: Compiling file {}\n'.format( f[0] ) )
+                            # AgGlobals.write_to_log( log_file, out )
+                            AgGlobals.write_to_log( grading_log_file, err, 2 )
+                            AgGlobals.write_to_log( student_log_file, err, 2 )
                             print '**** Warnings present ****'
 
                 if compile_success == 0:
                     # self._99_state = AgGlobals.PROBLEM_STATE_COMPILED
                     self._99_state = AgGlobals.set_flags( self._99_state, AgGlobals.PROBLEM_STATE_COMPILED )
+                    AgGlobals.write_to_log( grading_log_file, 'Success: Compiling problem: {}) {}\n'.format( self._01_prob_no, self._02_name ) )
+                    AgGlobals.write_to_log( student_log_file, 'Success: Compiling problem: {}) {}\n'.format( self._01_prob_no, self._02_name ) )
 
         return AgGlobals.is_flags_set( self._99_state, AgGlobals.PROBLEM_STATE_COMPILED )
 
 
-    def link( self, cwd ):
+    def link( self, cwd, grading_log_file, student_log_file ):
         # self._99_linked = False
         if self._03_prob_type == AgGlobals.PROBLEM_TYPE_PROG and AgGlobals.is_flags_set( self._99_state, AgGlobals.PROBLEM_STATE_COMPILED ):
             self._99_state = AgGlobals.clear_flags( self._99_state, AgGlobals.PROBLEM_STATE_LINKED )
@@ -287,49 +290,34 @@ class Problem( object ):
 
                 # warning = warning_pattern.match( err )
                 if err.find( 'warning' ) >= 0:
+                    AgGlobals.write_to_log( grading_log_file, '\tWarning: Linking target {} in problem: {} ) {}\n'.format( self._11_make_target, self._01_prob_no, self._02_name ) )
+                    AgGlobals.write_to_log( student_log_file, '\tWarning: Linking target {} in problem: {} ) {}\n'.format( self._11_make_target, self._01_prob_no, self._02_name ) )
+                    # AgGlobals.write_to_log( log_file, out, 2 )
+                    AgGlobals.write_to_log( grading_log_file, err, 2 )
+                    AgGlobals.write_to_log( student_log_file, err, 2 )
                     print '**** Warnings present ****'
 
                 # self._99_linked = ( link_success == 0 )
                 # self._99_state = AgGlobals.PROBLEM_STATE_LINKED
                 if link_success == 0:
                     self._99_state = AgGlobals.set_flags( self._99_state, AgGlobals.PROBLEM_STATE_LINKED )
+                    AgGlobals.write_to_log( grading_log_file, 'Success: Linking target {} in problem: {}) {}\n'.format( self._11_make_target, self._01_prob_no, self._02_name ) )
+                    AgGlobals.write_to_log( student_log_file, 'Success: Linking target {} in problem: {}) {}\n'.format( self._11_make_target, self._01_prob_no, self._02_name ) )
 
         return AgGlobals.is_flags_set( self._99_state, AgGlobals.PROBLEM_STATE_LINKED )
 
 
-    def generate_output2( self, assignment, in_out_dir ):
-        if self._03_prob_type == AgGlobals.PROBLEM_TYPE_PROG:
-            # Check whether the program has been successfully compiled, linked and inputs has been loaded
-            if self._99_state & ( AgGlobals.PROBLEM_STATE_LINKED | AgGlobals.PROBLEM_STATE_INPUTS_LOADED ) == AgGlobals.PROBLEM_STATE_LINKED | AgGlobals.PROBLEM_STATE_INPUTS_LOADED:
-                for io in sorted( self._99_inputs ):
-                    cmd = './{} {}'.format( self._11_make_target, self._99_inputs[io].get_cmd_line_input() )
-                    retcode, out, err = Command( cmd ).run( self._99_inputs[io].get_inputs(), self._13_timeout )
-                    print retcode
-                    print out
-                    print err
-
-                    if retcode == 0:
-                        output_file_path = os.path.join( in_out_dir, AgGlobals.get_output_file_name( assignment, self._01_prob_no, io ) )
-                        fo = open( output_file_path, 'w' )
-                        fo.write( out )
-                        fo.close()
-                    else:
-                        print 'Error Running: {}'.format( cmd )
-
-
     def generate_output( self, assignment, in_out_dir ):
         if self._03_prob_type == AgGlobals.PROBLEM_TYPE_PROG:
-            # print '{:0>10b}'.format( self._99_state )
             # Check whether the program has been successfully compiled, linked and inputs has been loaded
             if AgGlobals.is_flags_set( self._99_state, AgGlobals.PROBLEM_STATE_LINKED, AgGlobals.PROBLEM_STATE_INPUTS_LOADED ):
-            # if self._99_state & ( AgGlobals.PROBLEM_STATE_LINKED | AgGlobals.PROBLEM_STATE_INPUTS_LOADED ) == AgGlobals.PROBLEM_STATE_LINKED | AgGlobals.PROBLEM_STATE_INPUTS_LOADED:
                 for io in sorted( self._99_inputs ):
                     output_file_path = os.path.join( in_out_dir, AgGlobals.get_output_file_name( assignment, self._01_prob_no, io ) )
                     fo = open( output_file_path, 'w' )
                     cmd = '../{} {}'.format( self._11_make_target, self._99_inputs[io].get_cmd_line_input() )
                     retcode, out, err = Command( cmd ).run( self._99_inputs[io].get_inputs(), self._13_timeout, fo, in_out_dir )
                     fo.close()
-                    # print retcode
+                    # print 'running return code: ', retcode
                     # print out
                     # print err
 

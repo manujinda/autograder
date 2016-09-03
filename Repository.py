@@ -60,7 +60,7 @@ class Repository( object ):
 #         return desc
         return AgGlobals.string_of( self )
 
-    def clone( self, path = '', log_file = '' ):
+    def clone( self, path = '', grading_log_file = None, student_log_file = None ):
         '''
         clone the git repo at the location provided.
         Checks whether already cloned beforehand.
@@ -81,22 +81,25 @@ class Repository( object ):
                     fo = open( os.path.join( path, AgGlobals.REPO_LAST_CHANGED_FILE ) , 'w' )
                     fo.write( str( datetime.now() ) )
                     fo.close()
-                    AgGlobals.write_to_log( log_file, 'Success: Cloning\n' )
+                    AgGlobals.write_to_log( grading_log_file, 'Success: Cloning\n' )
+                    AgGlobals.write_to_log( student_log_file, 'Success: Cloning\n' )
                     return True
                 else:
-                    AgGlobals.write_to_log( log_file, '\tError: Cloning\n' )
-                    AgGlobals.write_to_log( log_file, '\t{} {} {}'.format( retcode, out, err ) )
+                    AgGlobals.write_to_log( grading_log_file, '\tError: Cloning\n' )
+                    AgGlobals.write_to_log( grading_log_file, '\t{} {} {}'.format( retcode, out, err ) )
+                    AgGlobals.write_to_log( student_log_file, '\tError: Cloning\n' )
+                    AgGlobals.write_to_log( student_log_file, '\t{} {} {}'.format( retcode, out, err ) )
                     return False
 
         else:
             print 'Error: Invalid repository uri: {}'.format( self.uri )
-            AgGlobals.write_to_log( log_file, '\tError: Invalid git uri' )
+            AgGlobals.write_to_log( student_log_file, '\tError: Invalid git uri' )
             return False
 
         return False
 
 
-    def pull( self, path = '', log_file = '' ):
+    def pull( self, path = '', grading_log_file = None, student_log_file = None ):
         if path:
             # cwd = os.getcwd()
             if os.path.exists( path ):
@@ -122,7 +125,8 @@ class Repository( object ):
                                 fo = open( os.path.join( path, AgGlobals.REPO_LAST_CHANGED_FILE ) , 'w' )
                                 fo.write( str( datetime.now() ) )
                                 fo.close()
-                                AgGlobals.write_to_log( log_file, 'Success: Pull' )
+                                AgGlobals.write_to_log( grading_log_file, 'Success: Pull' )
+                                AgGlobals.write_to_log( student_log_file, 'Success: Pull' )
                                 return True
                             else:
                                 diff_time = now_time - prev_update
@@ -131,16 +135,21 @@ class Repository( object ):
                                 # print now_time
                                 # print prev_update
                                 print 'There has been no change in the repo for {} days {} hours {} minutes'.format( diff_time.days, diff_time.seconds // 3600, ( diff_time.seconds // 60 ) % 60 )
-                                AgGlobals.write_to_log( log_file, '\tNothing updated since {}\n'.format( prev_update ) )
-                                AgGlobals.write_to_log( log_file, '\tNo activity for: {} days {} hours {} minutes\n'.format( diff_time.days, diff_time.seconds // 3600, ( diff_time.seconds // 60 ) % 60 ) )
+                                AgGlobals.write_to_log( grading_log_file, '\tNothing updated since {}\n'.format( prev_update ) )
+                                AgGlobals.write_to_log( grading_log_file, '\tNo activity for: {} days {} hours {} minutes\n'.format( diff_time.days, diff_time.seconds // 3600, ( diff_time.seconds // 60 ) % 60 ) )
+                                AgGlobals.write_to_log( student_log_file, '\tNothing updated since {}\n'.format( prev_update ) )
+                                AgGlobals.write_to_log( student_log_file, '\tNo activity for: {} days {} hours {} minutes\n'.format( diff_time.days, diff_time.seconds // 3600, ( diff_time.seconds // 60 ) % 60 ) )
                                 return False
                         else:
-                            AgGlobals.write_to_log( log_file, '\tError: pull\n' )
-                            AgGlobals.write_to_log( log_file, '\t{} {} {}'.format( retcode, out, err ) )
+                            AgGlobals.write_to_log( grading_log_file, '\tError: pull\n' )
+                            AgGlobals.write_to_log( grading_log_file, '\t{} {} {}'.format( retcode, out, err ) )
+                            AgGlobals.write_to_log( student_log_file, '\tError: pull\n' )
+                            AgGlobals.write_to_log( student_log_file, '\t{} {} {}'.format( retcode, out, err ) )
                             return False
                     else:
                         print 'this is not a git repo'
-                        AgGlobals.write_to_log( log_file, '\tError: Not a valid git repo\n' )
+                        AgGlobals.write_to_log( grading_log_file, '\tError: Not a valid git repo\n' )
+                        AgGlobals.write_to_log( student_log_file, '\tError: Not a valid git repo\n' )
                         return False
                 # os.chdir( cwd )
         else:

@@ -11,14 +11,15 @@ class AgGlobals( object ):
     # Autograder Diectory Names
     STUDENTS_DIRECTORY = 'students'  # This is where student details database and all the cloned student repositories are kept
     GRADING_DIRECTORY = 'grading'  # This is where compiling of all the student code and testing happens. A copy of student submissions are made here.
-    INPUT_OUTPUT_DIRECTORY = 'in_out'  # This is where test inputs and their intended output are kept
+    INPUT_OUTPUT_DIRECTORY = '+_4_in_out'  # This is where test inputs and their intended output are kept
+    LOG_FILE_DIRECTORY = '+_5_logs'  # This is where the log file for an assignment / project are kept
 
     # Autograder Configuration file name and keywords
     AUTOGRADER_CFG_NAME = 'autograder.cfg'  # Name of the autograder configuration file
     AUTOGRADER_CFG_SECTION = 'Autograder Setup'  # Section name in the autograder configuration file to store configuration values
     AUTOGRADER_CFG_GRADING_ROOT = 'grading_root'  # The directory name for the autograder directory tree is stored under key in the config file. Everything autograder cares for gradeing is stored within a directory with this name
     AUTOGRADER_CFG_GRADING_MASTER = 'grading_master'  # The directory name for the directory where all the assignment / project details are stored is provided under this key in the config file. It is suggested to give this directory a meaningful name like 'Assignments' or 'Projects'
-    AUTOGRADER_LOG_FILE_NAME = 'grading_log.txt'
+    AUTOGRADER_LOG_FILE_NAME = '+_6_grading_log.txt'
 
     # Autograder States
     AG_STATE_CREATED = 1
@@ -115,6 +116,8 @@ class AgGlobals( object ):
     STUDENT_DB_FIED_REPO = 'Repo'
     STUDENT_DB_FIEDLS = [ STUDENT_DB_FIED_NO, STUDENT_DB_FIED_UOID, STUDENT_DB_FIED_DUCKID, STUDENT_DB_FIED_LNAME, STUDENT_DB_FIED_FNAME, STUDENT_DB_FIED_EMAIL, STUDENT_DB_FIED_DIR_NAME, STUDENT_DB_FIED_REPO ]
     # STUDENT_DB_FIEDLS = ['No', 'UO ID', 'Duck ID', 'Last Name', 'First Name', 'Email', 'Dir Name', 'Repo']
+
+    STUDENT_LOG_FILE_NAME_FORMAT = '+_log_file_{}_{}.txt'
 
     # Repository last changed file names
     REPO_LAST_CHANGED_FILE = 'last_changed.txt'
@@ -243,6 +246,15 @@ class AgGlobals( object ):
 
 
     @classmethod
-    def write_to_log( cls, log_file, message ):
-        if log_file:
-            log_file.write( message )
+    def write_to_log( cls, log_file, message, tabs = 0 ):
+        if log_file and message:
+            if tabs > 0:
+                for line in message.split( '\n' ):
+                    log_file.write( '{}{}\n'.format( '\t' * tabs, line ) )
+            else:
+                log_file.write( message )
+
+
+    @classmethod
+    def get_stud_log_file_name( cls, student_dir_name, assignment_sub_dir_name ):
+        return AgGlobals.STUDENT_LOG_FILE_NAME_FORMAT.format( assignment_sub_dir_name, student_dir_name )

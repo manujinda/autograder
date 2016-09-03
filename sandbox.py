@@ -10,6 +10,14 @@ import ConfigParser
 import sys
 from AgGlobals import AgGlobals
 
+msg = 'abcd\ndefg\n1234'
+
+print msg
+
+for line in msg.split( '\n' ):
+    print line
+
+sys.exit( 0 )
 
 # Bitwise operations
 x = ( 1 << 3 )

@@ -300,11 +300,17 @@ class Autograder( object ):
                     sys.exit( 1 )
 
             # Open grading log file for this student
-            grading_log = open( os.path.join( asmnt_master_sub_dir, AgGlobals.AUTOGRADER_LOG_FILE_NAME ), 'a' )
+            log_directory_path = os.path.join( asmnt_master_sub_dir, AgGlobals.LOG_FILE_DIRECTORY )
+            grading_log = open( os.path.join( log_directory_path, AgGlobals.AUTOGRADER_LOG_FILE_NAME ), 'a' )
             AgGlobals.write_to_log( grading_log, '\n{0}<< Grading Session on {1} : START >>{0}\n'.format( '-' * 20, datetime.now() ) )
 
             # For each student
             for stud in self.students:
+
+                grading_log_stud_path = os.path.join( log_directory_path, stud.get_stud_log_file_name( index_len, self.asmnt.get_assignment_sub_dir() ) )
+                grading_log_stud = open( grading_log_stud_path, 'a' )
+                AgGlobals.write_to_log( grading_log_stud, '\n{0}<< Grading Session on {1} : START >>{0}\n'.format( '-' * 20, datetime.now() ) )
+                AgGlobals.write_to_log( grading_log_stud, '\n{0} Student: {1} {0}\n'.format( '#' * 10, stud.get_name() ) )
 
                 AgGlobals.write_to_log( grading_log, '\n{0} Student: {1} {0}\n'.format( '#' * 10, stud.get_name() ) )
 
@@ -317,12 +323,13 @@ class Autograder( object ):
                 # Path for the student's directory in the grading directory
                 stud_dir_path = os.path.join( destination, stud_dir_name, self.asmnt.get_assignment_sub_dir() )
 
+                grading_log_stud_path = ''
                 # Update local student repository
                 if not os.path.exists( stud_local_repo_path ):
                     # Student repository has not been cloned. Have to clone it first
-                    stud.clone_student_repo( stud_local_repo_path, grading_log )
+                    stud.clone_student_repo( stud_local_repo_path, grading_log, grading_log_stud )
                 else:
-                    stud.pull_student_repo( stud_local_repo_path, grading_log )
+                    stud.pull_student_repo( stud_local_repo_path, grading_log, grading_log_stud )
 
                 # Copy all the student submitted files from student directory in students directory
                 # to a directory with the same name in the grading directory
@@ -335,8 +342,14 @@ class Autograder( object ):
                     AgGlobals.write_to_log( grading_log, '\tError: {} directory does not exist in the repo\n'.format( self.asmnt.get_assignment_sub_dir() ) )
                     continue
 
+                # Use this list to rename the files back to the original file name
+                # student submitted after the compilation is over.
+                # This renaming is necessary to properly update the student submission
+                # in the grading directory in subsequent copying and compiling.
+                rename_back_list = []
+
                 # For each file student is supposed to submit
-                for file_submitted in file_aliases:
+                for file_submitted in file_aliases.keys():
 
                     # The path for that file in the student's directory in the grading directory
                     file_path = os.path.join( stud_dir_path, file_submitted )
@@ -356,32 +369,45 @@ class Autograder( object ):
                             if os.path.exists( file_alias_path ):
                                 found = True
                                 # Rename the file. Might want to do this only when we provide the make file
-                                cmd = 'mv {} {}'.format( file_alias, file_submitted )
-                                retcode, out, err = Command( cmd ).run( cwd = stud_dir_path )
+                                # cmd = 'mv {} {}'.format( file_alias, file_submitted )
+                                # retcode, out, err = Command( cmd ).run( cwd = stud_dir_path )
+                                shutil.move( file_alias_path, file_path )
+                                rename_back_list.append( ( file_path, file_alias_path ) )
                                 AgGlobals.write_to_log( grading_log, '\tWarning: Renamed file - {} --> {}\n'.format( file_alias, file_submitted ) )
+                                AgGlobals.write_to_log( grading_log_stud, '\tWarning: Renamed file - {} --> {}\n'.format( file_alias, file_submitted ) )
                                 break
 
                         if not found:
                             print 'Error: Student {} has not submitted file {}'.format( stud.get_name(), file_submitted )
                             AgGlobals.write_to_log( grading_log, '\tError: File - {} - missing\n'.format( file_submitted ) )
+                            AgGlobals.write_to_log( grading_log_stud, '\tError: File - {} - missing\n'.format( file_submitted ) )
                             continue
 
                 # Copy the provided files into student's directory in the grading directory
                 for pf_path in provided_file_paths:
-                    cmd = 'cp {} .'.format( pf_path )
-                    retcode, out, err = Command( cmd ).run( cwd = stud_dir_path )
+                    # cmd = 'cp {} .'.format( pf_path )
+                    # retcode, out, err = Command( cmd ).run( cwd = stud_dir_path )
+                    shutil.copy2( pf_path, stud_dir_path )
 
                 # Compile student submission
-                self.asmnt.compile( stud_dir_path )
+                self.asmnt.compile( stud_dir_path, grading_log, grading_log_stud )
 
                 # Link student submissions
-                self.asmnt.link( stud_dir_path )
+                self.asmnt.link( stud_dir_path, grading_log, grading_log_stud )
 
                 # Run student program and generate output for test input
                 output_dir = os.path.join( stud_dir_path, AgGlobals.INPUT_OUTPUT_DIRECTORY )
                 self.asmnt.generate_output( output_dir )
 
+                # Rename the files back to what student has originally submitted.
+                # This renaming is necessary to properly update the student submission
+                # in the grading directory in subsequent copying and compiling.
+                for bad_file_name in rename_back_list:
+                    shutil.move( bad_file_name[0], bad_file_name[1] )
+
+                grading_log_stud.close()
                 grading_log.flush()
+                os.fsync( grading_log )
 
             grading_log.close()
 

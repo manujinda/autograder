@@ -61,6 +61,7 @@ class Assignment( object ):
         assignment_master_sub_dir = os.path.join( grading_root, grading_master, assignment_name )
         if not os.path.exists( assignment_master_sub_dir ):
             os.mkdir( assignment_master_sub_dir )
+            os.mkdir( os.path.join( assignment_master_sub_dir, AgGlobals.LOG_FILE_DIRECTORY ) )
 
             assignment_config = ConfigParser.SafeConfigParser()
             assignment_config.add_section( assignment_name )
@@ -481,7 +482,7 @@ class Assignment( object ):
     '''
     Compile files.
     '''
-    def compile( self, cwd = '' ):
+    def compile( self, cwd = '', grading_log_file = None, student_log_file = None ):
         success = False
         # If problems are loaded
         if self.is_problems_loaded():
@@ -490,14 +491,14 @@ class Assignment( object ):
                 cwd = self.get_masterdir()
             success = True
             for p in sorted( self._6_problem_ids.keys() ):
-                success = success and self._8_problems[p].compile( cwd )
+                success = success and self._8_problems[p].compile( cwd, grading_log_file, student_log_file )
 
         return success
 
     '''
     Link
     '''
-    def link( self, cwd = '' ):
+    def link( self, cwd = '', grading_log_file = None, student_log_file = None ):
         success = False
         # If problems are loaded
         if self.is_problems_loaded():
@@ -506,7 +507,7 @@ class Assignment( object ):
                 cwd = self.get_masterdir()
             success = True
             for p in sorted( self._6_problem_ids.keys() ):
-                success = success and self._8_problems[p].link( cwd )
+                success = success and self._8_problems[p].link( cwd, grading_log_file, student_log_file )
 
         return success
 
