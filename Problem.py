@@ -259,8 +259,7 @@ class Problem( object ):
                         if err.find( 'warning' ) >= 0:
                             AgGlobals.write_to_log( grading_log_file, '\tWarning: Compiling file {}\n'.format( f[0] ) )
                             AgGlobals.write_to_log( student_log_file, '\tWarning: Compiling file {}\n'.format( f[0] ) )
-                            # AgGlobals.write_to_log( log_file, out )
-                            AgGlobals.write_to_log( grading_log_file, err, 2 )
+                            # AgGlobals.write_to_log( grading_log_file, err, 2 )
                             AgGlobals.write_to_log( student_log_file, err, 2 )
                             print '**** Warnings present ****'
 
@@ -292,8 +291,7 @@ class Problem( object ):
                 if err.find( 'warning' ) >= 0:
                     AgGlobals.write_to_log( grading_log_file, '\tWarning: Linking target {} in problem: {} ) {}\n'.format( self._11_make_target, self._01_prob_no, self._02_name ) )
                     AgGlobals.write_to_log( student_log_file, '\tWarning: Linking target {} in problem: {} ) {}\n'.format( self._11_make_target, self._01_prob_no, self._02_name ) )
-                    # AgGlobals.write_to_log( log_file, out, 2 )
-                    AgGlobals.write_to_log( grading_log_file, err, 2 )
+                    # AgGlobals.write_to_log( grading_log_file, err, 2 )
                     AgGlobals.write_to_log( student_log_file, err, 2 )
                     print '**** Warnings present ****'
 
