@@ -7,14 +7,77 @@ This is where I test new code, try out new stuff and learn new things before add
 This chages rapidly. Not a part of the main project. This is just my playground :)
 '''
 import ConfigParser
+from difflib import HtmlDiff
+from difflib import SequenceMatcher
+import os
+import pprint
 import sys
+
 from AgGlobals import AgGlobals
+from Command import Command
+from Repository import Repository
+from diff_match_patch import diff_match_patch
+
+
+out_ref = open( 'out_ref.txt' )
+out_stud = open( 'out_stud.txt' )
+
+lines_ref = out_ref.read()
+lines_stud = out_stud.read()
+
+print lines_ref
+print lines_stud
+
+hd = HtmlDiff( charjunk = lambda x: x == ' ' )
+
+difference = hd.make_file( lines_stud, lines_ref )
+
+of = open( 'difference.html', 'w+' )
+of.write( difference )
+of.close()
+
+dmp = diff_match_patch()
+of = open( 'difference_dmp.html', 'w+' )
+of.write( dmp.diff_prettyHtml( dmp.diff_main( lines_stud, lines_ref ) ) )
+of.close()
+
+sm = SequenceMatcher( None, lines_stud, lines_ref )
+
+for tag, i1, i2, j1, j2 in sm.get_opcodes():
+    print ( '{:>7} a[{}:{}] ({}) b[{}:{}] ({})'.format( tag, i1, i2, lines_stud[i1:i2], j1, j2, lines_ref[j1:j2] ) )
+
+print sm.ratio()
+
+print os.path.splitext( 'abcd.edd.txt' )
+
+inp = ( 'abc', '234', 'ef' )
+print '---'.join( inp )
+
+
+failCmd = 'diff -y -B -b {} {}'.format( 'out_stud.txt', 'out_ref.txt' )
+ret, out, err = Command( failCmd ).run()
+print 'ret: {}\nout: {}\nerr: {}\n'.format( ret, out, err )
+
+failCmd = 'diff  -B -b {} {}'.format( 'out_stud.txt', 'out_ref.txt' )
+subcmd = 'numdiffs=`' + failCmd + ' | wc -l` && echo $numdiffs'
+ret, out, err = Command( subcmd ).run()
+print 'ret: {}\nout: {}\nerr: {}\n'.format( ret, out, err )
+
+# pp = pprint.PrettyPrinter( indent = 4 )
+# pp.pprint( lines_ref )
+# pp.pprint( lines_stud )
+
+sys.exit()
+
+
+# playing with line breaks
 
 msg = 'abcd\ndefg\n1234'
 
 print msg
 
-for line in msg.split( '\n' ):
+# for line in msg.split( '\n' ):
+for line in msg.splitlines():
     print line
 
 sys.exit( 0 )
@@ -112,7 +175,6 @@ print ret.format( 1, 'abc' )
 sys.exit( 0 )
 # Playing with repository cloning
 
-from Repository import Repository
 
 rep = Repository( 'https://github.com/manujinda/hello-world.git' )
 
