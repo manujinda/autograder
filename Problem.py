@@ -5,6 +5,7 @@ Encapsulates a single problem
 @author: Manujinda Wathugala
 '''
 import ConfigParser
+from difflib import SequenceMatcher
 import os
 import re
 import sys
@@ -305,7 +306,7 @@ class Problem( object ):
         return AgGlobals.is_flags_set( self._99_state, AgGlobals.PROBLEM_STATE_LINKED )
 
 
-    def generate_output( self, assignment, in_out_dir ):
+    def generate_output( self, assignment, in_out_dir, assignment_master_dir_path ):
         if self._03_prob_type == AgGlobals.PROBLEM_TYPE_PROG:
             # Check whether the program has been successfully compiled, linked and inputs has been loaded
             if AgGlobals.is_flags_set( self._99_state, AgGlobals.PROBLEM_STATE_LINKED, AgGlobals.PROBLEM_STATE_INPUTS_LOADED ):
@@ -319,6 +320,28 @@ class Problem( object ):
                     # print out
                     # print err
 
+                    # print os.path.pardir( in_out_dir )
+                    # print assignment
+                    referenec_output_file_path = os.path.join( assignment_master_dir_path, AgGlobals.INPUT_OUTPUT_DIRECTORY, AgGlobals.get_output_file_name( assignment, self._01_prob_no, io ) )
+                    rf = open( referenec_output_file_path, 'r' )
+                    r_lines = rf.read()
+                    rf.close()
+                    sf = open( output_file_path )
+                    s_lines = sf.read()
+                    sf.close()
+                    sm = SequenceMatcher( None, s_lines, r_lines )
+                    # sm = SequenceMatcher( None, output_file_path, referenec_output_file_path )
+                    cmd = 'diff {} {}'.format( output_file_path, referenec_output_file_path )
+                    retcode, out, err = Command( cmd ).run()
+                    print referenec_output_file_path
+                    print output_file_path
+                    print out, err
+                    print sm.ratio()
+                    for tag, i1, i2, j1, j2 in sm.get_opcodes():
+                        print ( '{:>7} a[{}:{}] b[{}:{}]'.format( tag, i1, i2, j1, j2 ) )
+
                     for out_file in self._99_inputs[io].get_output_files_generated():
                         cmd = 'mv {0} {1}_{0}'.format( out_file, AgGlobals.get_output_file_name( assignment, self._01_prob_no, io ) )
                         retcode, out, err = Command( cmd ).run( cwd = in_out_dir )
+
+

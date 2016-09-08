@@ -28,7 +28,7 @@ lines_stud = out_stud.read()
 print lines_ref
 print lines_stud
 
-hd = HtmlDiff( charjunk = lambda x: x == ' ' )
+hd = HtmlDiff( tabsize = 20, wrapcolumn = 40, linejunk = lambda x: x == '5555\n', charjunk = lambda x: x == ' ' )
 
 difference = hd.make_file( lines_stud, lines_ref )
 
@@ -41,12 +41,18 @@ of = open( 'difference_dmp.html', 'w+' )
 of.write( dmp.diff_prettyHtml( dmp.diff_main( lines_stud, lines_ref ) ) )
 of.close()
 
-sm = SequenceMatcher( None, lines_stud, lines_ref )
+sm = SequenceMatcher( isjunk = lambda x: x in ' 58\n', a = lines_stud, b = lines_ref )
 
 for tag, i1, i2, j1, j2 in sm.get_opcodes():
     print ( '{:>7} a[{}:{}] ({}) b[{}:{}] ({})'.format( tag, i1, i2, lines_stud[i1:i2], j1, j2, lines_ref[j1:j2] ) )
 
-print sm.ratio()
+for block in sm.get_matching_blocks():
+    print block
+
+print 'ratio: ', sm.ratio()
+
+print SequenceMatcher( None, " abcd", "abcd abcd" ).ratio()
+sys.exit()
 
 print os.path.splitext( 'abcd.edd.txt' )
 

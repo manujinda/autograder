@@ -523,7 +523,7 @@ class Assignment( object ):
                 os.mkdir( cwd )
 
             for p in sorted( self._6_problem_ids.keys() ):
-                self._8_problems[p].generate_output( self._5_subdir, cwd )
+                self._8_problems[p].generate_output( self._5_subdir, cwd, self.get_masterdir() )
 
             print 'Success: Generating Reference Outputs'
 
