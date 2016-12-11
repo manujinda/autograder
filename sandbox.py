@@ -14,8 +14,8 @@ import pprint
 import sys
 
 from AgGlobals import AgGlobals
-from Command import Command
-from Repository import Repository
+# from Command import Command
+# from Repository import Repository
 from diff_match_patch import diff_match_patch
 
 
@@ -38,8 +38,19 @@ of.close()
 
 dmp = diff_match_patch()
 of = open( 'difference_dmp.html', 'w+' )
-of.write( dmp.diff_prettyHtml( dmp.diff_main( lines_stud, lines_ref ) ) )
+
+diffs = dmp.diff_main( lines_stud, lines_ref )
+of.write( dmp.diff_prettyHtml( diffs ) )
 of.close()
+
+dmp.diff_cleanupSemantic( diffs )
+
+for ( flag, data ) in diffs:
+    if ( data != ' ' ):
+        print flag, data
+    else:
+        print 'space'
+
 
 sm = SequenceMatcher( isjunk = lambda x: x in ' 58\n', a = lines_stud, b = lines_ref )
 
@@ -51,8 +62,101 @@ for block in sm.get_matching_blocks():
 
 print 'ratio: ', sm.ratio()
 
+print dmp.diff_levenshtein( diffs )
+
 print SequenceMatcher( None, " abcd", "abcd abcd" ).ratio()
+
+stud = "12344"
+our = "12345"
+
+# stud = "private Thread currentThread;"
+# our = "private volatile Thread currentThread;"
+
+stud = "*\n* *\n* * *\n* * * *\n"
+our = "*\n**\n***\n****\n"
+
+stud = "   *\n  **\n ***\n****\n"
+our = "      *\n    * *\n  * * *\n* * * *\n"
+
+stud = "   *\n  * *\n * * *\n* * * *\n"
+our = "      *\n    *   *\n  *   *   *\n*   *   *   *\n"
+
+
+#   def diff_levenshtein( self, diffs ):
+#     """Compute the Levenshtein distance; the number of inserted, deleted or
+#     substituted characters.
+
+
+# s = SequenceMatcher( lambda x: x == " ",
+#                     "private Thread currentThread;",
+#                     "private volatile Thread currentThread;" )
+
+s = SequenceMatcher( lambda x: x == " ", stud, our )
+
+print round( s.ratio(), 3 )
+
+for block in s.get_matching_blocks():
+    print "a[%d] and b[%d] match for %d elements" % block
+
+for op, a_start, a_end, b_start, b_end in s.get_opcodes():
+    # print "%6s a[%d:%d] b[%d:%d]" % opcode
+    # print opcode
+    print op, stud[a_start:a_end], our[b_start:b_end]
+
+
+def create_diff_html( old_txt, new_txt, changes ):
+    html = []
+#     ot = ( data.replace( "&", "&amp;" ).replace( "<", "&lt;" )
+#              .replace( ">", "&gt;" ).replace( "\n", "&para;<br>" ) )
+    space_match = 0
+
+    for op, ob, oe, nb, ne in changes.get_opcodes():
+
+        ot = old_txt[ob:oe].replace( "&", "&amp;" ).replace( "<", "&lt;" ).replace( ">", "&gt;" ).replace( "\n", "&para;<br>" )
+        nt = new_txt[nb:ne].replace( "&", "&amp;" ).replace( "<", "&lt;" ).replace( ">", "&gt;" ).replace( "\n", "&para;<br>" )
+
+        if op == 'insert':
+            if ( ot.strip() ):
+                html.append( "<ins style=\"background:#e6ffe6;\">{}</ins>".format( nt ) )
+            else:
+                space_match += 1
+        elif op == 'delete':
+            if ( ot.strip() ):
+                html.append( "<del style=\"background:#ffe6e6;\">{}</del>".format( ot ) )
+            else:
+                html.append( "<span>{}</span>".format( ot ) )
+                space_match += 1
+        elif op == 'replace':
+            html.append( "<del style=\"background:#ffe6e6;\">{}</del>".format( ot ) )
+            html.append( "<ins style=\"background:#e6ffe6;\">{}</ins>".format( nt ) )
+        elif op == 'equal':
+            html.append( "<span>{}</span>".format( ot ) )
+
+    def_ratio = changes.ratio()
+    comb_len = len( old_txt ) + len( new_txt )
+    def_match = def_ratio * ( comb_len )
+    new_match = def_match + 2 * space_match
+    new_ratio = new_match / comb_len
+    print "space match : ", space_match
+    print "old ratio : ", def_ratio
+    print "new ratio : ", new_ratio
+    return "".join( html )
+
+
+print
+print create_diff_html( stud, our, s )
+
+# diffs = dmp.diff_main( "private Thread currentThread;",
+#                     "private volatile Thread currentThread;" )
+diffs = dmp.diff_main( stud, our )
+
+for ( flag, data ) in diffs:
+    print flag, data
+
+
 sys.exit()
+
+
 
 print os.path.splitext( 'abcd.edd.txt' )
 
