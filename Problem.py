@@ -330,6 +330,7 @@ class Problem( object ):
                     s_lines = sf.read()
                     sf.close()
                     sm = SequenceMatcher( None, s_lines, r_lines )
+                    print self.grade_student_output( s_lines, r_lines, True )
                     # sm = SequenceMatcher( None, output_file_path, referenec_output_file_path )
                     cmd = 'diff {} {}'.format( output_file_path, referenec_output_file_path )
                     retcode, out, err = Command( cmd ).run()
@@ -344,4 +345,55 @@ class Problem( object ):
                         cmd = 'mv {0} {1}_{0}'.format( out_file, AgGlobals.get_output_file_name( assignment, self._01_prob_no, io ) )
                         retcode, out, err = Command( cmd ).run( cwd = in_out_dir )
 
+
+    '''
+        Comared the differences between the student output and the reference output
+        Based on the differences, provide a matching score for the student output
+        Further, provides some html highlighting the differences between the two
+        outputs so that the student can improve his or her program.
+        student_out    : Studnent's output text
+        reference_out  : Reference output text
+        ignore_spaces  : If set to true, differences due to white spaces are ignored
+    '''
+    def grade_student_output( self, student_out, reference_out, ignore_spaces = False ):
+
+        differences = SequenceMatcher( None, student_out, reference_out )
+
+        html = []
+        html.append( '<pre>' )
+
+        space_match = 0
+
+        for op, ob, oe, nb, ne in differences.get_opcodes():
+
+            so = student_out[ob:oe].replace( "&", "&amp;" ).replace( "<", "&lt;" ).replace( ">", "&gt;" ).replace( "\n", "&para;<br>" )
+            ro = reference_out[nb:ne].replace( "&", "&amp;" ).replace( "<", "&lt;" ).replace( ">", "&gt;" ).replace( "\n", "&para;<br>" )
+
+            if op == 'insert':
+                if ( so.strip() or not ignore_spaces ):
+                    html.append( '<ins style=\"background:#e6ffe6;\">{}</ins>'.format( ro ) )
+                else:
+                    space_match += 1
+            elif op == 'delete':
+                if ( so.strip() or not ignore_spaces ):
+                    html.append( '<del style=\"background:#ffe6e6;\">{}</del>'.format( so ) )
+                else:
+                    html.append( '<span>{}</span>'.format( so ) )
+                    space_match += 1
+            elif op == 'replace':
+                html.append( '<del style=\"background:#ffe6e6;\">{}</del>'.format( so ) )
+                html.append( '<ins style=\"background:#e6ffe6;\">{}</ins>'.format( ro ) )
+            elif op == 'equal':
+                html.append( '<span>{}</span>'.format( so ) )
+
+        html.append( '</pre>' )
+        def_ratio = differences.ratio()
+        comb_len = len( student_out ) + len( reference_out )
+        def_match = def_ratio * ( comb_len )
+        new_match = def_match + 2 * space_match
+        new_ratio = new_match / comb_len
+        print "space match : ", space_match
+        print "old ratio : ", def_ratio
+        print "new ratio : ", new_ratio
+        return "".join( html )
 
