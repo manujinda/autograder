@@ -72,14 +72,14 @@ our = "12345"
 # stud = "private Thread currentThread;"
 # our = "private volatile Thread currentThread;"
 
-stud = "*\n* *\n* * *\n* * * *\n"
-our = "*\n**\n***\n****\n"
+# stud = "*\n* *\n* * *\n* * * *\n"
+# our = "*\n**\n***\n****\n"
+#
+# stud = "   *\n  **\n ***\n****\n"
+# our = "      *\n    * *\n  * * *\n* * * *\n"
 
-stud = "   *\n  **\n ***\n****\n"
-our = "      *\n    * *\n  * * *\n* * * *\n"
-
-stud = "   *\n  * *\n * * *\n* * * *\n"
-our = "      *\n    *   *\n  *   *   *\n*   *   *   *\n"
+stud = "      *\n    *   *\n  *   *   *\n*   *   *  *\n"
+our = "   *\n  * *\n * * *\n* * * *\n"
 
 
 #   def diff_levenshtein( self, diffs ):
@@ -104,10 +104,10 @@ for op, a_start, a_end, b_start, b_end in s.get_opcodes():
     print op, stud[a_start:a_end], our[b_start:b_end]
 
 
-def create_diff_html( old_txt, new_txt, changes ):
+def create_diff_html( old_txt, new_txt, changes, ignore_spaces = False ):
     html = []
-#     ot = ( data.replace( "&", "&amp;" ).replace( "<", "&lt;" )
-#              .replace( ">", "&gt;" ).replace( "\n", "&para;<br>" ) )
+    html.append( "<pre>" )
+
     space_match = 0
 
     for op, ob, oe, nb, ne in changes.get_opcodes():
@@ -116,12 +116,12 @@ def create_diff_html( old_txt, new_txt, changes ):
         nt = new_txt[nb:ne].replace( "&", "&amp;" ).replace( "<", "&lt;" ).replace( ">", "&gt;" ).replace( "\n", "&para;<br>" )
 
         if op == 'insert':
-            if ( ot.strip() ):
+            if ( ot.strip() or not ignore_spaces ):
                 html.append( "<ins style=\"background:#e6ffe6;\">{}</ins>".format( nt ) )
             else:
                 space_match += 1
         elif op == 'delete':
-            if ( ot.strip() ):
+            if ( ot.strip() or not ignore_spaces ):
                 html.append( "<del style=\"background:#ffe6e6;\">{}</del>".format( ot ) )
             else:
                 html.append( "<span>{}</span>".format( ot ) )
@@ -132,6 +132,7 @@ def create_diff_html( old_txt, new_txt, changes ):
         elif op == 'equal':
             html.append( "<span>{}</span>".format( ot ) )
 
+    html.append( "</pre>" )
     def_ratio = changes.ratio()
     comb_len = len( old_txt ) + len( new_txt )
     def_match = def_ratio * ( comb_len )
@@ -142,6 +143,11 @@ def create_diff_html( old_txt, new_txt, changes ):
     print "new ratio : ", new_ratio
     return "".join( html )
 
+
+
+of = open( 'my_diff.html', 'w+' )
+of.write( create_diff_html( stud, our, s, False ) )
+of.close()
 
 print
 print create_diff_html( stud, our, s )
