@@ -6,6 +6,8 @@ Created on Jul 11, 2016
 This is where I test new code, try out new stuff and learn new things before adding them to the main files.
 This chages rapidly. Not a part of the main project. This is just my playground :)
 '''
+
+# Generating Gradebook
 import ConfigParser
 from difflib import HtmlDiff
 from difflib import SequenceMatcher
@@ -14,9 +16,39 @@ import pprint
 import sys
 
 from AgGlobals import AgGlobals
-# from Command import Command
-# from Repository import Repository
+from Assignment import Assignment
+from Command import Command
+from Repository import Repository
 from diff_match_patch import diff_match_patch
+
+
+asmnt = Assignment()
+
+asmnt.load_assignment( \
+'C:\Users\manujinda\Documents\Manujinda\UOregon\Classes\\4_2016_Summer\Boyana\grading', \
+'assignments', 'assignment_2' )
+
+asmnt.load_problems()
+
+headers = asmnt.generate_gradebook_headers()
+
+print headers
+
+asmnt_master_sub_dir = asmnt.get_masterdir()
+log_directory_path = os.path.join( asmnt_master_sub_dir, AgGlobals.LOG_FILE_DIRECTORY )
+gradebook = open( os.path.join( log_directory_path, 'gradebook.csv' ), 'w' )
+AgGlobals.write_to_log( gradebook, 'Assignment 2 Marks\n' )
+AgGlobals.write_to_log( gradebook, headers[0] )
+AgGlobals.write_to_log( gradebook, headers[1] )
+
+gradebook.close()
+
+exit()
+
+
+
+
+
 
 
 out_ref = open( 'out_ref.txt' )
