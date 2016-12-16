@@ -558,3 +558,28 @@ class Assignment( object ):
 
 # p = Assignment()
 # p.test_meth()
+
+    def generate_gradebook_headers( self ):
+        problem_header = ['']
+        marks_header = ['Student']
+        if self.is_problems_loaded():
+            for p in sorted( self._6_problem_ids.keys() ):
+                print p
+                headers = self._8_problems[p].get_gradebook_headers()
+
+                problem_header.append( ',' )
+                problem_header.append( headers[0] )
+
+                marks_header.append( ',' )
+                marks_header.append( headers[1] )
+
+#                 for h in range( len( headers[1] ) - 1 ):
+#                     problem_header.append( ', ' )
+
+        problem_header.append( '\n' )
+        marks_header.append( '\n' )
+
+        problem_header = ''.join( problem_header )
+        marks_header = ''.join( marks_header )
+
+        return( problem_header, marks_header )
