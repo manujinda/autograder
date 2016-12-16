@@ -67,7 +67,7 @@ class Problem( object ):
 
         # The percentage the student outputs for all grading input for this problem should
         # match with the reference outputs and the amount of marks granted if student output achieves that level.
-        # Format: a list of matching_%:marks and compile:marsk link:makrs memleaks:marks
+        # Format: a list of matching_%:marks and compile:marks compwarn:marks link:makrs linkwarn:marks memleaks:marks
         # 0 means no matching at all and 100 means perfect matching.
         self._15_marks = AgGlobals.PROBLEM_INIT_MARKS
 
@@ -143,7 +143,19 @@ class Problem( object ):
         temp_marks = AgGlobals.parse_config_line( self._15_marks )
         self._15_marks = {}
         for mark in temp_marks:
-            self._15_marks[mark[0]] = mark[1]
+            try:
+                thresh = float( mark[0] )
+            except ValueError:
+                thresh = mark[0]
+
+            try:
+                self._15_marks[thresh] = float( mark[1] )
+            except ValueError as e:
+                print 'Error: Problem Configuration File: {}'.format( config_file )
+                print '\tMarks should be Integer or Real valued. Check'
+                print '\t\tProblem: {}'.format( self._01_prob_no )
+                print '\t\tMarks = {}:{}'.format( mark[0], mark[1] )
+                exit()
 
         self._99_state = AgGlobals.set_flags( self._99_state, AgGlobals.PROBLEM_STATE_LOADED )
         # print self
@@ -397,3 +409,34 @@ class Problem( object ):
         print "new ratio : ", new_ratio
         return "".join( html )
 
+
+    def get_gradebook_headers( self ):
+        problem_header = []
+        marks_header = []
+        print self._15_marks
+        if self._03_prob_type == AgGlobals.PROBLEM_TYPE_PROG:
+            if self._08_language in ['c', 'C', 'cpp', 'CPP']:
+#                 problem_header = self._01_prob_no
+#                 marks_header = 'compile, link, marks'
+                rubric = self._15_marks.keys()
+
+                if AgGlobals.RUBRIC_COMPILE in rubric:
+                    marks_header.append( AgGlobals.RUBRIC_COMPILE )
+
+                if AgGlobals.RUBRIC_COMPILE_WARNING in rubric:
+                    marks_header.append( 'No Warnings Compiling' )
+
+                if AgGlobals.RUBRIC_LINK in rubric:
+                    marks_header.append( AgGlobals.RUBRIC_LINK )
+
+                if AgGlobals.RUBRIC_LINK_WARNING in rubric:
+                    marks_header.append( 'No Warnings Linking' )
+
+                marks_header.append( 'Marks' )
+
+                problem_header.append( self._01_prob_no )
+
+                for r in range( len( marks_header ) - 1 ):
+                    problem_header.append( '' )
+
+        return ( ','.join( problem_header ), ','.join( marks_header ) )
