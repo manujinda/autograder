@@ -79,6 +79,14 @@ class AgGlobals( object ):
     PROBLEM_STATE_LINKED = 8
     PROBLEM_STATE_INPUTS_LOADED = 16
 
+    # Marks components in the grading rubric
+    RUBRIC_COMPILE = 'compile'
+    RUBRIC_COMPILE_WARNING = 'compwarn'
+    RUBRIC_LINK = 'link'
+    RUBRIC_LINK_WARNING = 'linkwarn'
+    RUBRIC_MEMLEAK = 'memleak'
+    RUBRIC_FILE_NAMING = 'filenames'
+
     # Input output configuration file names
     INPUT_CFG_FORMAT = '+_3_{}_inputs.cfg'  # Format for test inputs for a program assignment configuration file name. E.g. +_3_Assignment_1_inputs.cfg
     INPUT_CFG_SECTION_FORMAT = '{}_problem_{}_input_{}'  # Format for the section name in configuration file for a specific input to a problem. E.g. Assignment_1_problem_2_input_1
