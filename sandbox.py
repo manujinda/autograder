@@ -9,6 +9,7 @@ This chages rapidly. Not a part of the main project. This is just my playground 
 
 # Generating Gradebook
 import ConfigParser
+import csv
 from difflib import HtmlDiff
 from difflib import SequenceMatcher
 import os
@@ -21,6 +22,16 @@ from Command import Command
 from Repository import Repository
 from diff_match_patch import diff_match_patch
 
+
+# Dictionary to CSV file writing
+my_dict = {"x": 2, "a": 1}
+
+with open( 'mycsvfile.csv', 'wb' ) as f:  # Just use 'w' mode in 3.x
+    w = csv.DictWriter( f, ['x', 'a'] )
+    w.writeheader()
+    w.writerow( my_dict )
+
+exit()
 
 asmnt = Assignment()
 
