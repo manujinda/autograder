@@ -20,6 +20,7 @@ class AgGlobals( object ):
     AUTOGRADER_CFG_GRADING_ROOT = 'grading_root'  # The directory name for the autograder directory tree is stored under key in the config file. Everything autograder cares for gradeing is stored within a directory with this name
     AUTOGRADER_CFG_GRADING_MASTER = 'grading_master'  # The directory name for the directory where all the assignment / project details are stored is provided under this key in the config file. It is suggested to give this directory a meaningful name like 'Assignments' or 'Projects'
     AUTOGRADER_LOG_FILE_NAME = '+_6_grading_log.txt'
+    AUTOGRADER_GRADEBOOK_NAME = '+_7_gradebook.csv'
 
     # Autograder States
     AG_STATE_CREATED = 1
