@@ -304,6 +304,20 @@ class Autograder( object ):
             grading_log = open( os.path.join( log_directory_path, AgGlobals.AUTOGRADER_LOG_FILE_NAME ), 'a' )
             AgGlobals.write_to_log( grading_log, '\n{0}<< Grading Session on {1} : START >>{0}\n'.format( '-' * 20, datetime.now() ) )
 
+            # Create the gradebook
+            gradebook_headers = self.asmnt.generate_gradebook_headers()
+            gradebook = open( os.path.join( log_directory_path, AgGlobals.AUTOGRADER_GRADEBOOK_NAME ), 'wb' )
+            # gradebook_headers.append( 'Total' )
+            gradebook_headers += [ 'Total', 'Comment' ]
+            gb = csv.DictWriter( gradebook, gradebook_headers )
+            gb.writeheader()
+            # AgGlobals.write_to_log( gradebook, 'Marks for Grading Session on {}'.format( datetime.now() ) )
+            # AgGlobals.write_to_log( gradebook, gradebook_headers[0] )
+            # AgGlobals.write_to_log( gradebook, gradebook_headers[1] )
+
+            # gradebook.close()
+            # grading_log.close()
+            # exit()
             # For each student
             for stud in self.students:
 
@@ -313,6 +327,13 @@ class Autograder( object ):
                 AgGlobals.write_to_log( grading_log_stud, '\n{0} Student: {1} {0}\n'.format( '#' * 10, stud.get_name() ) )
 
                 AgGlobals.write_to_log( grading_log, '\n{0} Student: {1} {0}\n'.format( '#' * 10, stud.get_name() ) )
+                # AgGlobals.write_to_log( gradebook, '\n{}'.format( stud.get_index() ) )
+
+                marks_dict = {}
+                for h in gradebook_headers:
+                    marks_dict[h] = 0.0
+                marks_dict['Student'] = stud.get_index()
+                marks_dict['Comment'] = ''
 
                 # Student's directory name
                 stud_dir_name = stud.get_dir( index_len )
@@ -325,21 +346,23 @@ class Autograder( object ):
 
                 grading_log_stud_path = ''
                 # Update local student repository
-                if not os.path.exists( stud_local_repo_path ):
+#                if not os.path.exists( stud_local_repo_path ):
                     # Student repository has not been cloned. Have to clone it first
-                    stud.clone_student_repo( stud_local_repo_path, grading_log, grading_log_stud )
-                else:
-                    stud.pull_student_repo( stud_local_repo_path, grading_log, grading_log_stud )
+#                    stud.clone_student_repo( stud_local_repo_path, grading_log, grading_log_stud )
+#                else:
+#                    stud.pull_student_repo( stud_local_repo_path, grading_log, grading_log_stud )
 
                 # Copy all the student submitted files from student directory in students directory
                 # to a directory with the same name in the grading directory
-                stud.copy_student_repo( source, destination, index_len )
+#                stud.copy_student_repo( source, destination, index_len )
 
                 # Check whether student has created a directory with the proper name in his or her
                 # repository to upload files for this assignment / project
                 if not os.path.exists( stud_dir_path ):
                     print 'Error: Student {} does not have the assignment directory {} in the repository.'.format( stud.get_name(), stud_dir_path )
                     AgGlobals.write_to_log( grading_log, '\tError: {} directory does not exist in the repo\n'.format( self.asmnt.get_assignment_sub_dir() ) )
+                    marks_dict['Comment'] = '{} directory does not exist in the repo'.format( self.asmnt.get_assignment_sub_dir() )
+                    self.write_stud_marks( marks_dict, gb )
                     continue
 
                 # Use this list to rename the files back to the original file name
@@ -375,12 +398,15 @@ class Autograder( object ):
                                 rename_back_list.append( ( file_path, file_alias_path ) )
                                 AgGlobals.write_to_log( grading_log, '\tWarning: Renamed file - {} --> {}\n'.format( file_alias, file_submitted ) )
                                 AgGlobals.write_to_log( grading_log_stud, '\tWarning: Renamed file - {} --> {}\n'.format( file_alias, file_submitted ) )
+                                marks_dict['Comment'] += 'Renamed file - {} --> {}\n'.format( file_alias, file_submitted )
                                 break
 
                         if not found:
                             print 'Error: Student {} has not submitted file {}'.format( stud.get_name(), file_submitted )
                             AgGlobals.write_to_log( grading_log, '\tError: File - {} - missing\n'.format( file_submitted ) )
                             AgGlobals.write_to_log( grading_log_stud, '\tError: File - {} - missing\n'.format( file_submitted ) )
+                            marks_dict['Comment'] += 'File - {} - missing\n'.format( file_submitted )
+                            self.write_stud_marks( marks_dict, gb )
                             continue
 
                 # Copy the provided files into student's directory in the grading directory
@@ -389,15 +415,16 @@ class Autograder( object ):
                     # retcode, out, err = Command( cmd ).run( cwd = stud_dir_path )
                     shutil.copy2( pf_path, stud_dir_path )
 
+                self.asmnt.grade( stud_dir_path, grading_log, grading_log_stud, marks_dict )
                 # Compile student submission
-                self.asmnt.compile( stud_dir_path, grading_log, grading_log_stud )
+#                self.asmnt.compile( stud_dir_path, grading_log, grading_log_stud, gradebook )
 
                 # Link student submissions
-                self.asmnt.link( stud_dir_path, grading_log, grading_log_stud )
+#                self.asmnt.link( stud_dir_path, grading_log, grading_log_stud, gradebook )
 
                 # Run student program and generate output for test input
                 output_dir = os.path.join( stud_dir_path, AgGlobals.INPUT_OUTPUT_DIRECTORY )
-                self.asmnt.generate_output( output_dir )
+#                self.asmnt.generate_output( output_dir )
 
                 # Rename the files back to what student has originally submitted.
                 # This renaming is necessary to properly update the student submission
@@ -405,11 +432,30 @@ class Autograder( object ):
                 for bad_file_name in rename_back_list:
                     shutil.move( bad_file_name[0], bad_file_name[1] )
 
+                # gb.writerow( marks_dict )
+                self.write_stud_marks( marks_dict, gb )
+                # continue
+
+
                 grading_log_stud.close()
                 grading_log.flush()
                 os.fsync( grading_log )
 
+                gradebook.flush()
+                os.fsync( gradebook )
+
             grading_log.close()
+            gradebook.close()
+
+    def write_stud_marks( self, marks_dict, gb_csv ):
+        tot = 0
+        for h in marks_dict:
+            if h != 'Student' and h != 'Comment':
+                tot += marks_dict[h]
+
+        marks_dict['Total'] = tot
+
+        gb_csv.writerow( marks_dict )
 
     # # !! Needs update.. student.get_dir() has been changed to get_dir(index_len)
 #     def check_student_directory( self, student ):

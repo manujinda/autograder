@@ -482,7 +482,7 @@ class Assignment( object ):
     '''
     Compile files.
     '''
-    def compile( self, cwd = '', grading_log_file = None, student_log_file = None ):
+    def compile( self, cwd = '', grading_log_file = None, student_log_file = None, gradebook = None ):
         success = False
         # If problems are loaded
         if self.is_problems_loaded():
@@ -491,14 +491,14 @@ class Assignment( object ):
                 cwd = self.get_masterdir()
             success = True
             for p in sorted( self._6_problem_ids.keys() ):
-                success = success and self._8_problems[p].compile( cwd, grading_log_file, student_log_file )
+                success = success and self._8_problems[p].compile( cwd, grading_log_file, student_log_file, gradebook )
 
         return success
 
     '''
     Link
     '''
-    def link( self, cwd = '', grading_log_file = None, student_log_file = None ):
+    def link( self, cwd = '', grading_log_file = None, student_log_file = None, gradebook = None ):
         success = False
         # If problems are loaded
         if self.is_problems_loaded():
@@ -507,7 +507,7 @@ class Assignment( object ):
                 cwd = self.get_masterdir()
             success = True
             for p in sorted( self._6_problem_ids.keys() ):
-                success = success and self._8_problems[p].link( cwd, grading_log_file, student_log_file )
+                success = success and self._8_problems[p].link( cwd, grading_log_file, student_log_file, gradebook )
 
         return success
 
@@ -527,6 +527,26 @@ class Assignment( object ):
 
             print 'Success: Generating Reference Outputs'
 
+
+    def grade( self, cwd = '', grading_log_file = None, student_log_file = None, gradebook = None ):
+        success = False
+        # If problems are loaded
+        if self.is_problems_loaded():
+            # os.chdir( self.get_masterdir() )
+            if not cwd:
+                cwd = self.get_masterdir()
+            success = True
+            for p in sorted( self._6_problem_ids.keys() ):
+                success = success and self._8_problems[p].compile( cwd, grading_log_file, student_log_file, gradebook )
+
+                if success:
+                    success = success and self._8_problems[p].link( cwd, grading_log_file, student_log_file, gradebook )
+                else:
+                    # Compilation failed. Cannot link. Grade next problem
+                    success = True
+                    continue
+
+        return success
 
 #     def load_inputs( self ):
 #         if self._99_state == AgGlobals.ASSIGNMENT_STATE_LOADED:
@@ -567,19 +587,23 @@ class Assignment( object ):
                 print p
                 headers = self._8_problems[p].get_gradebook_headers()
 
-                problem_header.append( ',' )
-                problem_header.append( headers[0] )
+                # problem_header.append( ',' )
+                # problem_header.append( headers[0] )
 
-                marks_header.append( ',' )
-                marks_header.append( headers[1] )
+                # marks_header.append( ',' )
+                # marks_header.append( headers[1] )
+                print headers
+                marks_header += headers
 
 #                 for h in range( len( headers[1] ) - 1 ):
 #                     problem_header.append( ', ' )
 
-        problem_header.append( '\n' )
-        marks_header.append( '\n' )
+        # problem_header.append( '\n' )
+        # marks_header.append( '\n' )
 
-        problem_header = ''.join( problem_header )
-        marks_header = ''.join( marks_header )
+        # print marks_header
+        # problem_header = ''.join( problem_header )
+        # marks_header = ''.join( marks_header )
 
-        return( problem_header, marks_header )
+        # return( problem_header, marks_header )
+        return marks_header

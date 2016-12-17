@@ -240,7 +240,17 @@ class Problem( object ):
         return False
 
 
-    def compile( self, cwd, grading_log_file, student_log_file ):
+    def compile( self, cwd, grading_log_file, student_log_file, gradebook ):
+        rubric = self._15_marks.keys()
+
+        if AgGlobals.RUBRIC_COMPILE in rubric:
+            gradebook['{}_Compile'.format( self._01_prob_no )] = self._15_marks[AgGlobals.RUBRIC_COMPILE]
+
+        if AgGlobals.RUBRIC_COMPILE_WARNING in rubric:
+            gradebook['{}_No Warnings Compiling'.format( self._01_prob_no )] = self._15_marks[AgGlobals.RUBRIC_COMPILE_WARNING]
+
+        return True
+
         if self._03_prob_type == AgGlobals.PROBLEM_TYPE_PROG and AgGlobals.is_flags_set( self._99_state, AgGlobals.PROBLEM_STATE_LOADED ):
             self._99_state = AgGlobals.clear_flags( self._99_state, AgGlobals.PROBLEM_STATE_COMPILED, AgGlobals.PROBLEM_STATE_LINKED )
             compile_success = 0
@@ -285,7 +295,17 @@ class Problem( object ):
         return AgGlobals.is_flags_set( self._99_state, AgGlobals.PROBLEM_STATE_COMPILED )
 
 
-    def link( self, cwd, grading_log_file, student_log_file ):
+    def link( self, cwd, grading_log_file, student_log_file, gradebook ):
+        rubric = self._15_marks.keys()
+
+        if AgGlobals.RUBRIC_LINK in rubric:
+            gradebook['{}_Link'.format( self._01_prob_no )] = self._15_marks[AgGlobals.RUBRIC_LINK]
+
+        if AgGlobals.RUBRIC_LINK_WARNING in rubric:
+            gradebook['{}_No Warnings Linking'.format( self._01_prob_no )] = self._15_marks[AgGlobals.RUBRIC_LINK_WARNING]
+
+        return True
+
         # self._99_linked = False
         if self._03_prob_type == AgGlobals.PROBLEM_TYPE_PROG and AgGlobals.is_flags_set( self._99_state, AgGlobals.PROBLEM_STATE_COMPILED ):
             self._99_state = AgGlobals.clear_flags( self._99_state, AgGlobals.PROBLEM_STATE_LINKED )
@@ -421,22 +441,24 @@ class Problem( object ):
                 rubric = self._15_marks.keys()
 
                 if AgGlobals.RUBRIC_COMPILE in rubric:
-                    marks_header.append( AgGlobals.RUBRIC_COMPILE )
+                    marks_header.append( '{}_Compile'.format( self._01_prob_no ) )
 
                 if AgGlobals.RUBRIC_COMPILE_WARNING in rubric:
-                    marks_header.append( 'No Warnings Compiling' )
+                    marks_header.append( '{}_No Warnings Compiling'.format( self._01_prob_no ) )
 
                 if AgGlobals.RUBRIC_LINK in rubric:
-                    marks_header.append( AgGlobals.RUBRIC_LINK )
+                    marks_header.append( '{}_Link'.format( self._01_prob_no ) )
 
                 if AgGlobals.RUBRIC_LINK_WARNING in rubric:
-                    marks_header.append( 'No Warnings Linking' )
+                    marks_header.append( '{}_No Warnings Linking'.format( self._01_prob_no ) )
 
-                marks_header.append( 'Marks' )
+                marks_header.append( '{}_Marks'.format( self._01_prob_no ) )
 
-                problem_header.append( self._01_prob_no )
+                # problem_header.append( self._01_prob_no )
 
-                for r in range( len( marks_header ) - 1 ):
-                    problem_header.append( '' )
+                # for r in range( len( marks_header ) - 1 ):
+                #    problem_header.append( '' )
 
-        return ( ','.join( problem_header ), ','.join( marks_header ) )
+        # return ( ','.join( problem_header ), ','.join( marks_header ) )
+        print marks_header
+        return marks_header
