@@ -142,6 +142,12 @@ class Problem( object ):
 
         temp_marks = AgGlobals.parse_config_line( self._15_marks )
         self._15_marks = {}
+
+        # The marks that have the form <outpu matching %> --> <grade>
+        # These are needed separately to grade student output.
+        # So, they are kept in a separate dictionary for the ease of processing.
+        self._99_threshold_marks = {}
+
         for mark in temp_marks:
             try:
                 thresh = float( mark[0] )
@@ -156,6 +162,9 @@ class Problem( object ):
                 print '\t\tProblem: {}'.format( self._01_prob_no )
                 print '\t\tMarks = {}:{}'.format( mark[0], mark[1] )
                 exit()
+
+            if isinstance( thresh, float ):
+                self._99_threshold_marks[thresh] = self._15_marks[thresh]
 
         self._99_state = AgGlobals.set_flags( self._99_state, AgGlobals.PROBLEM_STATE_LOADED )
         # print self
@@ -241,7 +250,7 @@ class Problem( object ):
 
 
     def compile( self, cwd, grading_log_file, student_log_file, gradebook ):
-        rubric = self._15_marks.keys()
+        # rubric = self._15_marks.keys()
 
         # if AgGlobals.RUBRIC_COMPILE in rubric:
         #    gradebook['{}_Compile'.format( self._01_prob_no )] = self._15_marks[AgGlobals.RUBRIC_COMPILE]
@@ -293,14 +302,17 @@ class Problem( object ):
                 if compile_success == 0:
                     # self._99_state = AgGlobals.PROBLEM_STATE_COMPILED
                     self._99_state = AgGlobals.set_flags( self._99_state, AgGlobals.PROBLEM_STATE_COMPILED )
-                    AgGlobals.write_to_log( grading_log_file, 'Success: Compiling problem: {}) {}\n'.format( self._01_prob_no, self._02_name ) )
-                    AgGlobals.write_to_log( student_log_file, 'Success: Compiling problem: {}) {}\n'.format( self._01_prob_no, self._02_name ) )
 
-                    if AgGlobals.RUBRIC_COMPILE in rubric:
-                        gradebook['{}_Compile'.format( self._01_prob_no )] = self._15_marks[AgGlobals.RUBRIC_COMPILE]
+                    if gradebook:
+                        AgGlobals.write_to_log( grading_log_file, 'Success: Compiling problem: {}) {}\n'.format( self._01_prob_no, self._02_name ) )
+                        AgGlobals.write_to_log( student_log_file, 'Success: Compiling problem: {}) {}\n'.format( self._01_prob_no, self._02_name ) )
 
-                    if ( not warnings_present ) and AgGlobals.RUBRIC_COMPILE_WARNING in rubric:
-                        gradebook['{}_No Warnings Compiling'.format( self._01_prob_no )] = self._15_marks[AgGlobals.RUBRIC_COMPILE_WARNING]
+                        rubric = self._15_marks.keys()
+                        if AgGlobals.RUBRIC_COMPILE in rubric:
+                            gradebook['{}_Compile'.format( self._01_prob_no )] = self._15_marks[AgGlobals.RUBRIC_COMPILE]
+
+                        if ( not warnings_present ) and AgGlobals.RUBRIC_COMPILE_WARNING in rubric:
+                            gradebook['{}_No Warnings Compiling'.format( self._01_prob_no )] = self._15_marks[AgGlobals.RUBRIC_COMPILE_WARNING]
 
 
 
@@ -308,7 +320,7 @@ class Problem( object ):
 
 
     def link( self, cwd, grading_log_file, student_log_file, gradebook ):
-        rubric = self._15_marks.keys()
+        # rubric = self._15_marks.keys()
 
         # if AgGlobals.RUBRIC_LINK in rubric:
         #    gradebook['{}_Link'.format( self._01_prob_no )] = self._15_marks[AgGlobals.RUBRIC_LINK]
@@ -348,14 +360,17 @@ class Problem( object ):
                 # self._99_state = AgGlobals.PROBLEM_STATE_LINKED
                 if link_success == 0:
                     self._99_state = AgGlobals.set_flags( self._99_state, AgGlobals.PROBLEM_STATE_LINKED )
-                    AgGlobals.write_to_log( grading_log_file, 'Success: Linking target {} in problem: {}) {}\n'.format( self._11_make_target, self._01_prob_no, self._02_name ) )
-                    AgGlobals.write_to_log( student_log_file, 'Success: Linking target {} in problem: {}) {}\n'.format( self._11_make_target, self._01_prob_no, self._02_name ) )
 
-                    if AgGlobals.RUBRIC_LINK in rubric:
-                        gradebook['{}_Link'.format( self._01_prob_no )] = self._15_marks[AgGlobals.RUBRIC_LINK]
+                    if gradebook:
+                        AgGlobals.write_to_log( grading_log_file, 'Success: Linking target {} in problem: {}) {}\n'.format( self._11_make_target, self._01_prob_no, self._02_name ) )
+                        AgGlobals.write_to_log( student_log_file, 'Success: Linking target {} in problem: {}) {}\n'.format( self._11_make_target, self._01_prob_no, self._02_name ) )
 
-                    if ( not warnings_present ) and AgGlobals.RUBRIC_LINK_WARNING in rubric:
-                        gradebook['{}_No Warnings Linking'.format( self._01_prob_no )] = self._15_marks[AgGlobals.RUBRIC_LINK_WARNING]
+                        rubric = self._15_marks.keys()
+                        if AgGlobals.RUBRIC_LINK in rubric:
+                            gradebook['{}_Link'.format( self._01_prob_no )] = self._15_marks[AgGlobals.RUBRIC_LINK]
+
+                        if ( not warnings_present ) and AgGlobals.RUBRIC_LINK_WARNING in rubric:
+                            gradebook['{}_No Warnings Linking'.format( self._01_prob_no )] = self._15_marks[AgGlobals.RUBRIC_LINK_WARNING]
 
         return AgGlobals.is_flags_set( self._99_state, AgGlobals.PROBLEM_STATE_LINKED )
 
@@ -364,6 +379,7 @@ class Problem( object ):
         if self._03_prob_type == AgGlobals.PROBLEM_TYPE_PROG:
             # Check whether the program has been successfully compiled, linked and inputs has been loaded
             if AgGlobals.is_flags_set( self._99_state, AgGlobals.PROBLEM_STATE_LINKED, AgGlobals.PROBLEM_STATE_INPUTS_LOADED ):
+                matching_ratio_all_inputs = 0
                 for io in sorted( self._99_inputs ):
                     output_file_path = os.path.join( in_out_dir, AgGlobals.get_output_file_name( assignment, self._01_prob_no, io ) )
                     fo = open( output_file_path, 'w' )
@@ -376,28 +392,47 @@ class Problem( object ):
 
                     # print os.path.pardir( in_out_dir )
                     # print assignment
-                    referenec_output_file_path = os.path.join( assignment_master_dir_path, AgGlobals.INPUT_OUTPUT_DIRECTORY, AgGlobals.get_output_file_name( assignment, self._01_prob_no, io ) )
-                    rf = open( referenec_output_file_path, 'r' )
-                    r_lines = rf.read()
-                    rf.close()
-                    sf = open( output_file_path )
-                    s_lines = sf.read()
-                    sf.close()
-                    sm = SequenceMatcher( None, s_lines, r_lines )
-                    print self.grade_student_output( s_lines, r_lines, True )
-                    # sm = SequenceMatcher( None, output_file_path, referenec_output_file_path )
-                    cmd = 'diff {} {}'.format( output_file_path, referenec_output_file_path )
-                    retcode, out, err = Command( cmd ).run()
-                    print referenec_output_file_path
-                    print output_file_path
-                    print out, err
-                    print sm.ratio()
-                    for tag, i1, i2, j1, j2 in sm.get_opcodes():
-                        print ( '{:>7} a[{}:{}] b[{}:{}]'.format( tag, i1, i2, j1, j2 ) )
+
+                    if gradebook:
+                        referenec_output_file_path = os.path.join( assignment_master_dir_path, AgGlobals.INPUT_OUTPUT_DIRECTORY, AgGlobals.get_output_file_name( assignment, self._01_prob_no, io ) )
+                        # print referenec_output_file_path
+                        rf = open( referenec_output_file_path, 'r' )
+                        r_lines = rf.read()
+                        rf.close()
+
+                        # print output_file_path
+                        sf = open( output_file_path )
+                        s_lines = sf.read()
+                        sf.close()
+
+                        sm = SequenceMatcher( None, s_lines, r_lines )
+                        matching_ratio, outpu_diff = self.grade_student_output( s_lines, r_lines, False )
+                        print matching_ratio
+                        print outpu_diff
+
+                        matching_ratio_all_inputs += matching_ratio
+                        # print sm.ratio()
+                        # sm = SequenceMatcher( None, output_file_path, referenec_output_file_path )
+
+                        # cmd = 'diff {} {}'.format( output_file_path, referenec_output_file_path )
+                        # retcode, out, err = Command( cmd ).run()
+                        # print out, err
+                        # for tag, i1, i2, j1, j2 in sm.get_opcodes():
+                        #    print ( '{:>7} a[{}:{}] b[{}:{}]'.format( tag, i1, i2, j1, j2 ) )
 
                     for out_file in self._99_inputs[io].get_output_files_generated():
                         cmd = 'mv {0} {1}_{0}'.format( out_file, AgGlobals.get_output_file_name( assignment, self._01_prob_no, io ) )
                         retcode, out, err = Command( cmd ).run( cwd = in_out_dir )
+
+                if gradebook:
+                    final_matching_percentage = matching_ratio_all_inputs * 100.0 / len( self._99_inputs )
+                    print final_matching_percentage, '%'
+                    # print sorted( self._99_threshold_marks, reverse = True )
+
+                    for m in sorted( self._99_threshold_marks, reverse = True ):
+                        if final_matching_percentage >= m:
+                            gradebook['{}_Marks'.format( self._01_prob_no )] = self._99_threshold_marks[m]
+                            break
 
 
     '''
@@ -417,11 +452,14 @@ class Problem( object ):
         html.append( '<pre>' )
 
         space_match = 0
+        tot_elems = 0
 
         for op, ob, oe, nb, ne in differences.get_opcodes():
 
             so = student_out[ob:oe].replace( "&", "&amp;" ).replace( "<", "&lt;" ).replace( ">", "&gt;" ).replace( "\n", "&para;<br>" )
             ro = reference_out[nb:ne].replace( "&", "&amp;" ).replace( "<", "&lt;" ).replace( ">", "&gt;" ).replace( "\n", "&para;<br>" )
+
+            tot_elems += 1
 
             if op == 'insert':
                 if ( so.strip() or not ignore_spaces ):
@@ -437,19 +475,46 @@ class Problem( object ):
             elif op == 'replace':
                 html.append( '<del style=\"background:#ffe6e6;\">{}</del>'.format( so ) )
                 html.append( '<ins style=\"background:#e6ffe6;\">{}</ins>'.format( ro ) )
+                tot_elems += 1  # we need to count this twice
             elif op == 'equal':
                 html.append( '<span>{}</span>'.format( so ) )
+                tot_elems += 1  # We need to count this twice
 
         html.append( '</pre>' )
-        def_ratio = differences.ratio()
-        comb_len = len( student_out ) + len( reference_out )
-        def_match = def_ratio * ( comb_len )
-        new_match = def_match + 2 * space_match
-        new_ratio = new_match / comb_len
-        print "space match : ", space_match
-        print "old ratio : ", def_ratio
-        print "new ratio : ", new_ratio
-        return "".join( html )
+
+        # Compute the matching ratio between the
+        # student output and the reference output
+
+        # Default matching ratio
+        # This is calculated by:
+        #    2.0*M / T
+        #        T is the total number of elements in both sequences
+        #        M is the number of matches
+        matching_ratio = differences.ratio()
+
+        if ignore_spaces:
+            # Total lengths of student and reference outputs
+            comb_len = len( student_out ) + len( reference_out )
+            # print 'comb_len: ', comb_len
+            # print 'tot elms: ', tot_elems
+
+            # Reverse engineer the formula used in ratio() to
+            # get the default matching elements
+            def_match = matching_ratio * ( comb_len )
+            # def_match = matching_ratio * tot_elems
+
+            # Add the elements mismatched due to spaces
+            # in the the count of matching elements
+            new_match = def_match + 2 * space_match
+
+            # Re-compute a new ratio using the new matching count
+            matching_ratio = new_match / comb_len
+            # matching_ratio = new_match / tot_elems
+
+        # print "space match : ", space_match
+        # print "old ratio : ", def_ratio
+        # print "Matching ratio : ", matching_ratio
+        return matching_ratio, "".join( html )
 
 
     def get_gradebook_headers( self ):
