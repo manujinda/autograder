@@ -23,40 +23,23 @@ from Repository import Repository
 from diff_match_patch import diff_match_patch
 
 
-# Dictionary to CSV file writing
-my_dict = {"x": 2, "a": 1}
+# Dictionary sorting
 
-with open( 'mycsvfile.csv', 'wb' ) as f:  # Just use 'w' mode in 3.x
-    w = csv.DictWriter( f, ['x', 'a'] )
-    w.writeheader()
-    w.writerow( my_dict )
+d = {0:34.0, 10:50, 80:100, 'compile':5, 'compwarn':4, 'link':6, 'linkwarn':8}
 
+print sorted( d, reverse = True )
+
+e = {t:d[t] if isinstance( t, int ) else None for t in d}
+
+print e
+
+d2 = {}
+for t in d:
+    if isinstance( t, int ):
+        d2[t] = d[t]
+
+print d2
 exit()
-
-asmnt = Assignment()
-
-asmnt.load_assignment( \
-'C:\Users\manujinda\Documents\Manujinda\UOregon\Classes\\4_2016_Summer\Boyana\grading', \
-'assignments', 'assignment_2' )
-
-asmnt.load_problems()
-
-headers = asmnt.generate_gradebook_headers()
-
-print headers
-
-asmnt_master_sub_dir = asmnt.get_masterdir()
-log_directory_path = os.path.join( asmnt_master_sub_dir, AgGlobals.LOG_FILE_DIRECTORY )
-gradebook = open( os.path.join( log_directory_path, 'gradebook.csv' ), 'w' )
-AgGlobals.write_to_log( gradebook, 'Assignment 2 Marks\n' )
-AgGlobals.write_to_log( gradebook, headers[0] )
-AgGlobals.write_to_log( gradebook, headers[1] )
-
-gradebook.close()
-
-exit()
-
-
 
 
 
@@ -152,11 +135,14 @@ def create_diff_html( old_txt, new_txt, changes, ignore_spaces = False ):
     html.append( "<pre>" )
 
     space_match = 0
+    tot_elms = 0
 
     for op, ob, oe, nb, ne in changes.get_opcodes():
 
         ot = old_txt[ob:oe].replace( "&", "&amp;" ).replace( "<", "&lt;" ).replace( ">", "&gt;" ).replace( "\n", "&para;<br>" )
         nt = new_txt[nb:ne].replace( "&", "&amp;" ).replace( "<", "&lt;" ).replace( ">", "&gt;" ).replace( "\n", "&para;<br>" )
+
+        tot_elms += 1
 
         if op == 'insert':
             if ( ot.strip() or not ignore_spaces ):
@@ -172,16 +158,19 @@ def create_diff_html( old_txt, new_txt, changes, ignore_spaces = False ):
         elif op == 'replace':
             html.append( "<del style=\"background:#ffe6e6;\">{}</del>".format( ot ) )
             html.append( "<ins style=\"background:#e6ffe6;\">{}</ins>".format( nt ) )
+            tot_elms += 1
         elif op == 'equal':
             html.append( "<span>{}</span>".format( ot ) )
+            tot_elms += 1
 
     html.append( "</pre>" )
     def_ratio = changes.ratio()
     comb_len = len( old_txt ) + len( new_txt )
-    def_match = def_ratio * ( comb_len )
+    def_match = def_ratio * comb_len  # tot_elms  # (  )
     new_match = def_match + 2 * space_match
-    new_ratio = new_match / comb_len
+    new_ratio = new_match / comb_len  # tot_elms  #
     print "space match : ", space_match
+    print 'tot elms : ', tot_elms
     print "old ratio : ", def_ratio
     print "new ratio : ", new_ratio
     return "".join( html )
@@ -193,7 +182,7 @@ of.write( create_diff_html( stud, our, s, False ) )
 of.close()
 
 print
-print create_diff_html( stud, our, s )
+print create_diff_html( stud, our, s, True )
 
 # diffs = dmp.diff_main( "private Thread currentThread;",
 #                     "private volatile Thread currentThread;" )
@@ -204,6 +193,41 @@ for ( flag, data ) in diffs:
 
 
 sys.exit()
+
+
+# Dictionary to CSV file writing
+my_dict = {"x": 2, "a": 1}
+
+with open( 'mycsvfile.csv', 'wb' ) as f:  # Just use 'w' mode in 3.x
+    w = csv.DictWriter( f, ['x', 'a'] )
+    w.writeheader()
+    w.writerow( my_dict )
+
+exit()
+
+asmnt = Assignment()
+
+asmnt.load_assignment( \
+'C:\Users\manujinda\Documents\Manujinda\UOregon\Classes\\4_2016_Summer\Boyana\grading', \
+'assignments', 'assignment_2' )
+
+asmnt.load_problems()
+
+headers = asmnt.generate_gradebook_headers()
+
+print headers
+
+asmnt_master_sub_dir = asmnt.get_masterdir()
+log_directory_path = os.path.join( asmnt_master_sub_dir, AgGlobals.LOG_FILE_DIRECTORY )
+gradebook = open( os.path.join( log_directory_path, 'gradebook.csv' ), 'w' )
+AgGlobals.write_to_log( gradebook, 'Assignment 2 Marks\n' )
+AgGlobals.write_to_log( gradebook, headers[0] )
+AgGlobals.write_to_log( gradebook, headers[1] )
+
+gradebook.close()
+
+exit()
+
 
 
 
