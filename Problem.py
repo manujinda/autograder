@@ -293,9 +293,14 @@ class Problem( object ):
                         # warning = warning_pattern.match( err )
                         if err.find( 'warning' ) >= 0:
                             AgGlobals.write_to_log( grading_log_file, '\tWarning: Compiling file {}\n'.format( f[0] ) )
-                            AgGlobals.write_to_log( student_log_file, '\tWarning: Compiling file {}\n'.format( f[0] ) )
+                            # AgGlobals.write_to_log( student_log_file, '\tWarning: Compiling file {}\n'.format( f[0] ) )
+                            AgGlobals.write_to_log( student_log_file, '<p class=warning>Warning: Compiling file {}</p>\n'.format( f[0] ) )
+
                             # AgGlobals.write_to_log( grading_log_file, err, 2 )
+
+                            AgGlobals.write_to_log( student_log_file, '<code class=warning_out>\n' )
                             AgGlobals.write_to_log( student_log_file, err, 2 )
+                            AgGlobals.write_to_log( student_log_file, '</code>\n' )
                             print '**** Warnings present ****'
                             warnings_present = True
 
@@ -305,7 +310,8 @@ class Problem( object ):
 
                     if gradebook:
                         AgGlobals.write_to_log( grading_log_file, 'Success: Compiling problem: {}) {}\n'.format( self._01_prob_no, self._02_name ) )
-                        AgGlobals.write_to_log( student_log_file, 'Success: Compiling problem: {}) {}\n'.format( self._01_prob_no, self._02_name ) )
+                        # AgGlobals.write_to_log( student_log_file, 'Success: Compiling problem: {}) {}\n'.format( self._01_prob_no, self._02_name ) )
+                        AgGlobals.write_to_log( student_log_file, '<h3 class=success>Success: Compiling problem: {}) {}</h3>\n'.format( self._01_prob_no, self._02_name ) )
 
                         rubric = self._15_marks.keys()
                         if AgGlobals.RUBRIC_COMPILE in rubric:
@@ -313,8 +319,6 @@ class Problem( object ):
 
                         if ( not warnings_present ) and AgGlobals.RUBRIC_COMPILE_WARNING in rubric:
                             gradebook['{}_No Warnings Compiling'.format( self._01_prob_no )] = self._15_marks[AgGlobals.RUBRIC_COMPILE_WARNING]
-
-
 
         return AgGlobals.is_flags_set( self._99_state, AgGlobals.PROBLEM_STATE_COMPILED )
 
@@ -350,9 +354,14 @@ class Problem( object ):
                 # warning = warning_pattern.match( err )
                 if err.find( 'warning' ) >= 0:
                     AgGlobals.write_to_log( grading_log_file, '\tWarning: Linking target {} in problem: {} ) {}\n'.format( self._11_make_target, self._01_prob_no, self._02_name ) )
-                    AgGlobals.write_to_log( student_log_file, '\tWarning: Linking target {} in problem: {} ) {}\n'.format( self._11_make_target, self._01_prob_no, self._02_name ) )
+                    # AgGlobals.write_to_log( student_log_file, '\tWarning: Linking target {} in problem: {} ) {}\n'.format( self._11_make_target, self._01_prob_no, self._02_name ) )
+                    AgGlobals.write_to_log( student_log_file, '<p class=warning>Warning: Linking target {} in problem: {} ) {}</p>\n'.format( self._11_make_target, self._01_prob_no, self._02_name ) )
+
                     # AgGlobals.write_to_log( grading_log_file, err, 2 )
+
+                    AgGlobals.write_to_log( student_log_file, '<code class=warning_out>\n' )
                     AgGlobals.write_to_log( student_log_file, err, 2 )
+                    AgGlobals.write_to_log( student_log_file, '</code>\n' )
                     print '**** Warnings present ****'
                     warnings_present = True
 
@@ -363,7 +372,8 @@ class Problem( object ):
 
                     if gradebook:
                         AgGlobals.write_to_log( grading_log_file, 'Success: Linking target {} in problem: {}) {}\n'.format( self._11_make_target, self._01_prob_no, self._02_name ) )
-                        AgGlobals.write_to_log( student_log_file, 'Success: Linking target {} in problem: {}) {}\n'.format( self._11_make_target, self._01_prob_no, self._02_name ) )
+                        # AgGlobals.write_to_log( student_log_file, 'Success: Linking target {} in problem: {}) {}\n'.format( self._11_make_target, self._01_prob_no, self._02_name ) )
+                        AgGlobals.write_to_log( student_log_file, '<h3 class=success>Success: Linking target {} in problem: {}</h3>\n) {}\n'.format( self._11_make_target, self._01_prob_no, self._02_name ) )
 
                         rubric = self._15_marks.keys()
                         if AgGlobals.RUBRIC_LINK in rubric:
@@ -409,6 +419,10 @@ class Problem( object ):
                         matching_ratio, outpu_diff = self.grade_student_output( s_lines, r_lines, False )
                         print matching_ratio
                         print outpu_diff
+
+                        AgGlobals.write_to_log( student_log_file, '<code class=output_diff>\n' )
+                        AgGlobals.write_to_log( student_log_file, outpu_diff )
+                        AgGlobals.write_to_log( student_log_file, '</code>\n' )
 
                         matching_ratio_all_inputs += matching_ratio
                         # print sm.ratio()
