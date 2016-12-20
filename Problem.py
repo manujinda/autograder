@@ -243,17 +243,20 @@ class Problem( object ):
     def compile( self, cwd, grading_log_file, student_log_file, gradebook ):
         rubric = self._15_marks.keys()
 
-        if AgGlobals.RUBRIC_COMPILE in rubric:
-            gradebook['{}_Compile'.format( self._01_prob_no )] = self._15_marks[AgGlobals.RUBRIC_COMPILE]
+        # if AgGlobals.RUBRIC_COMPILE in rubric:
+        #    gradebook['{}_Compile'.format( self._01_prob_no )] = self._15_marks[AgGlobals.RUBRIC_COMPILE]
 
-        if AgGlobals.RUBRIC_COMPILE_WARNING in rubric:
-            gradebook['{}_No Warnings Compiling'.format( self._01_prob_no )] = self._15_marks[AgGlobals.RUBRIC_COMPILE_WARNING]
+        # if AgGlobals.RUBRIC_COMPILE_WARNING in rubric:
+        #    gradebook['{}_No Warnings Compiling'.format( self._01_prob_no )] = self._15_marks[AgGlobals.RUBRIC_COMPILE_WARNING]
 
-        return True
+        # return True
 
         if self._03_prob_type == AgGlobals.PROBLEM_TYPE_PROG and AgGlobals.is_flags_set( self._99_state, AgGlobals.PROBLEM_STATE_LOADED ):
+
             self._99_state = AgGlobals.clear_flags( self._99_state, AgGlobals.PROBLEM_STATE_COMPILED, AgGlobals.PROBLEM_STATE_LINKED )
             compile_success = 0
+            warnings_present = False
+
             if self._08_language in ['c', 'C', 'cpp', 'CPP']:
                 # Cleanup
                 retcode, out, err = Command( 'make clean' ).run( cwd = cwd )
@@ -285,6 +288,7 @@ class Problem( object ):
                             # AgGlobals.write_to_log( grading_log_file, err, 2 )
                             AgGlobals.write_to_log( student_log_file, err, 2 )
                             print '**** Warnings present ****'
+                            warnings_present = True
 
                 if compile_success == 0:
                     # self._99_state = AgGlobals.PROBLEM_STATE_COMPILED
@@ -292,24 +296,35 @@ class Problem( object ):
                     AgGlobals.write_to_log( grading_log_file, 'Success: Compiling problem: {}) {}\n'.format( self._01_prob_no, self._02_name ) )
                     AgGlobals.write_to_log( student_log_file, 'Success: Compiling problem: {}) {}\n'.format( self._01_prob_no, self._02_name ) )
 
+                    if AgGlobals.RUBRIC_COMPILE in rubric:
+                        gradebook['{}_Compile'.format( self._01_prob_no )] = self._15_marks[AgGlobals.RUBRIC_COMPILE]
+
+                    if ( not warnings_present ) and AgGlobals.RUBRIC_COMPILE_WARNING in rubric:
+                        gradebook['{}_No Warnings Compiling'.format( self._01_prob_no )] = self._15_marks[AgGlobals.RUBRIC_COMPILE_WARNING]
+
+
+
         return AgGlobals.is_flags_set( self._99_state, AgGlobals.PROBLEM_STATE_COMPILED )
 
 
     def link( self, cwd, grading_log_file, student_log_file, gradebook ):
         rubric = self._15_marks.keys()
 
-        if AgGlobals.RUBRIC_LINK in rubric:
-            gradebook['{}_Link'.format( self._01_prob_no )] = self._15_marks[AgGlobals.RUBRIC_LINK]
+        # if AgGlobals.RUBRIC_LINK in rubric:
+        #    gradebook['{}_Link'.format( self._01_prob_no )] = self._15_marks[AgGlobals.RUBRIC_LINK]
 
-        if AgGlobals.RUBRIC_LINK_WARNING in rubric:
-            gradebook['{}_No Warnings Linking'.format( self._01_prob_no )] = self._15_marks[AgGlobals.RUBRIC_LINK_WARNING]
+        # if AgGlobals.RUBRIC_LINK_WARNING in rubric:
+        #    gradebook['{}_No Warnings Linking'.format( self._01_prob_no )] = self._15_marks[AgGlobals.RUBRIC_LINK_WARNING]
 
-        return True
+        # return True
 
         # self._99_linked = False
         if self._03_prob_type == AgGlobals.PROBLEM_TYPE_PROG and AgGlobals.is_flags_set( self._99_state, AgGlobals.PROBLEM_STATE_COMPILED ):
+
             self._99_state = AgGlobals.clear_flags( self._99_state, AgGlobals.PROBLEM_STATE_LINKED )
             link_success = 0
+            warnings_present = False
+
             if self._08_language in ['c', 'C', 'cpp', 'CPP']:
                 cmd = 'make {}'.format( self._11_make_target )
                 retcode, out, err = Command( cmd ).run( cwd = cwd )
@@ -327,6 +342,7 @@ class Problem( object ):
                     # AgGlobals.write_to_log( grading_log_file, err, 2 )
                     AgGlobals.write_to_log( student_log_file, err, 2 )
                     print '**** Warnings present ****'
+                    warnings_present = True
 
                 # self._99_linked = ( link_success == 0 )
                 # self._99_state = AgGlobals.PROBLEM_STATE_LINKED
@@ -335,10 +351,16 @@ class Problem( object ):
                     AgGlobals.write_to_log( grading_log_file, 'Success: Linking target {} in problem: {}) {}\n'.format( self._11_make_target, self._01_prob_no, self._02_name ) )
                     AgGlobals.write_to_log( student_log_file, 'Success: Linking target {} in problem: {}) {}\n'.format( self._11_make_target, self._01_prob_no, self._02_name ) )
 
+                    if AgGlobals.RUBRIC_LINK in rubric:
+                        gradebook['{}_Link'.format( self._01_prob_no )] = self._15_marks[AgGlobals.RUBRIC_LINK]
+
+                    if ( not warnings_present ) and AgGlobals.RUBRIC_LINK_WARNING in rubric:
+                        gradebook['{}_No Warnings Linking'.format( self._01_prob_no )] = self._15_marks[AgGlobals.RUBRIC_LINK_WARNING]
+
         return AgGlobals.is_flags_set( self._99_state, AgGlobals.PROBLEM_STATE_LINKED )
 
 
-    def generate_output( self, assignment, in_out_dir, assignment_master_dir_path ):
+    def generate_output( self, assignment, in_out_dir, assignment_master_dir_path, grading_log_file = None, student_log_file = None, gradebook = None ):
         if self._03_prob_type == AgGlobals.PROBLEM_TYPE_PROG:
             # Check whether the program has been successfully compiled, linked and inputs has been loaded
             if AgGlobals.is_flags_set( self._99_state, AgGlobals.PROBLEM_STATE_LINKED, AgGlobals.PROBLEM_STATE_INPUTS_LOADED ):

@@ -9,6 +9,7 @@ import ConfigParser
 from __builtin__ import True
 import datetime
 import os
+import shutil
 import sys
 
 from AgGlobals import AgGlobals
@@ -547,6 +548,119 @@ class Assignment( object ):
                     continue
 
         return success
+
+    '''
+        Autograder do_grade2 calls this.
+    '''
+    def grade2( self, cwd, grading_log_file = None, student_log_file = None, gradebook = None ):
+
+        def rename_bad_file_names_back( name_tuple_list ):
+            # Rename the files back to what student has originally submitted.
+            # This renaming is necessary to properly update the student submission
+            # in the grading directory in subsequent copying and compiling.
+            for bad_file_name in name_tuple_list:
+                shutil.move( bad_file_name[0], bad_file_name[1] )
+
+
+        success = False
+        # If problems are loaded
+        if self.is_problems_loaded():
+            success = True
+            for p in sorted( self._6_problem_ids.keys() ):
+
+                success = True
+
+                # Check whether the student has submitted all the files
+                # required for this problem. If not we cannot grade this problem
+                skip_problem = False
+
+                # Get the list of lists of file names and their aliases student should submit and
+                # for the list of each file and its aliases - The 1st element is the file name and
+                # the following names are the aliases
+                # [ [fn1, a11, a12], [fn2, a21, a22, a23], [fn3] ]
+                file_aliases = self._8_problems[p].get_files_submitted_with_aliases()
+
+                # Use this list to rename the files back to the original file name
+                # student submitted after the compilation is over.
+                # This renaming is necessary to properly update the student submission
+                # in the grading directory in subsequent copying and compiling.
+                rename_back_list = []
+
+                # For each file student is supposed to submit
+                for file_submitted in file_aliases:
+
+                    # The path for that file in the student's directory in the grading directory
+                    file_path = os.path.join( cwd, file_submitted[0] )
+
+                    # If student has not submitted a file with the exact name
+                    if not os.path.exists( file_path ):
+
+                        # Check whether the student has submitted a file that matches an alias
+                        # Alias could be a misspelled file name or a shorten file name
+                        found = False
+                        for file_alias in file_submitted[1:]:
+                            file_alias_path = os.path.join( cwd, file_alias )
+
+                            # A file that matches an alias exists.
+                            # Student might have submitted this file thinking he/she is submitting
+                            # the file he/she is supposed to submit
+                            if os.path.exists( file_alias_path ):
+                                found = True
+                                # Rename the file. Might want to do this only when we provide the make file
+                                shutil.move( file_alias_path, file_path )
+                                rename_back_list.append( ( file_path, file_alias_path ) )
+                                AgGlobals.write_to_log( grading_log_file, '\tWarning: Renamed file - {} --> {}\n'.format( file_alias, file_submitted[0] ) )
+                                AgGlobals.write_to_log( student_log_file, '\tWarning: Renamed file - {} --> {}\n'.format( file_alias, file_submitted[0] ) )
+                                gradebook['Comment'] += 'Renamed file - {} --> {}\n'.format( file_alias, file_submitted[0] )
+                                break
+
+                        if not found:
+                            # print 'Error: Student {} has not submitted file {}'.format( stud.get_name(), file_submitted[0] )
+                            AgGlobals.write_to_log( grading_log_file, '\tError: File - {} - missing\n'.format( file_submitted[0] ) )
+                            AgGlobals.write_to_log( student_log_file, '\tError: File - {} - missing\n'.format( file_submitted[0] ) )
+                            gradebook['Comment'] += 'File - {} - missing. Cannot grade problem {}\n'.format( file_submitted[0], p )
+                            # self.write_stud_marks( marks_dict, gb )
+                            # We cannot proceed with grading this problem.
+                            skip_problem = True
+
+                if skip_problem:
+                    # Rename the files back to what student has originally submitted.
+                    # This renaming is necessary to properly update the student submission
+                    # in the grading directory in subsequent copying and compiling.
+                    rename_bad_file_names_back( rename_back_list )
+                    continue
+
+                # Compiling
+                success = success and self._8_problems[p].compile( cwd, grading_log_file, student_log_file, gradebook )
+
+                # Linking
+                if success:
+                    # Compiled successfully. Try to link
+                    success = success and self._8_problems[p].link( cwd, grading_log_file, student_log_file, gradebook )
+                else:
+                    # Compilation failed. Cannot link. Grade next problem
+                    success = True
+                    # Rename the files back to what student has originally submitted.
+                    # This renaming is necessary to properly update the student submission
+                    # in the grading directory in subsequent copying and compiling.
+                    rename_bad_file_names_back( rename_back_list )
+                    continue
+
+                # Running
+                if success:
+                    # Linked successfully. Try to run and produce output
+                    output_dir = os.path.join( cwd, AgGlobals.INPUT_OUTPUT_DIRECTORY )
+                    self._8_problems[p].generate_output( self._5_subdir, output_dir, self.get_masterdir(), grading_log_file, student_log_file, gradebook )
+                    # self.generate_output( output_dir )
+
+                # Rename the files back to what student has originally submitted.
+                # This renaming is necessary to properly update the student submission
+                # in the grading directory in subsequent copying and compiling.
+                for bad_file_name in rename_back_list:
+                    shutil.move( bad_file_name[0], bad_file_name[1] )
+
+        return success
+
 
 #     def load_inputs( self ):
 #         if self._99_state == AgGlobals.ASSIGNMENT_STATE_LOADED:
