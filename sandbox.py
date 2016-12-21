@@ -22,28 +22,24 @@ from Command import Command
 from Repository import Repository
 from diff_match_patch import diff_match_patch
 
-
-# Dictionary sorting
-
-d = {0:34.0, 10:50, 80:100, 'compile':5, 'compwarn':4, 'link':6, 'linkwarn':8}
-
-print sorted( d, reverse = True )
-
-e = {t:d[t] if isinstance( t, int ) else None for t in d}
-
-print e
-
-d2 = {}
-for t in d:
-    if isinstance( t, int ):
-        d2[t] = d[t]
-
-print d2
-exit()
+# Hacking difflib
+stud = '1**2*'
+our = '1*2'
+space_match = 2
 
 
+s = SequenceMatcher( lambda x: x == " ", stud, our )
 
+def_ratio = s.ratio()
+comb_len = len( stud ) + len( our )
+def_match = def_ratio * comb_len
+new_match = def_match + space_match
+new_ratio = new_match / comb_len
+print "space match : ", space_match
+print "old ratio : ", def_ratio
+print "new ratio : ", new_ratio
 
+# exit()
 
 out_ref = open( 'out_ref.txt' )
 out_stud = open( 'out_stud.txt' )
@@ -101,11 +97,11 @@ our = "12345"
 # stud = "*\n* *\n* * *\n* * * *\n"
 # our = "*\n**\n***\n****\n"
 #
-# stud = "   *\n  **\n ***\n****\n"
-# our = "      *\n    * *\n  * * *\n* * * *\n"
+stud = "   *\n  **\n ***\n****\n"
+our = "      *\n    * *\n  * * *\n* * * *\n"
 
-stud = "      *\n    *   *\n  *   *   *\n*   *   *  *\n"
-our = "   *\n  * *\n * * *\n* * * *\n"
+# stud = "      *\n    *   *\n  *   *   *\n*   *   *  *\n"
+# our = "   *\n  * *\n * * *\n* * * *\n"
 
 
 #   def diff_levenshtein( self, diffs ):
@@ -135,42 +131,42 @@ def create_diff_html( old_txt, new_txt, changes, ignore_spaces = False ):
     html.append( "<pre>" )
 
     space_match = 0
-    tot_elms = 0
+    # tot_elms = 0
 
     for op, ob, oe, nb, ne in changes.get_opcodes():
 
         ot = old_txt[ob:oe].replace( "&", "&amp;" ).replace( "<", "&lt;" ).replace( ">", "&gt;" ).replace( "\n", "&para;<br>" )
         nt = new_txt[nb:ne].replace( "&", "&amp;" ).replace( "<", "&lt;" ).replace( ">", "&gt;" ).replace( "\n", "&para;<br>" )
 
-        tot_elms += 1
+        # tot_elms += 1
 
         if op == 'insert':
             if ( ot.strip() or not ignore_spaces ):
                 html.append( "<ins style=\"background:#e6ffe6;\">{}</ins>".format( nt ) )
             else:
-                space_match += 1
+                space_match += len( nt )
         elif op == 'delete':
             if ( ot.strip() or not ignore_spaces ):
                 html.append( "<del style=\"background:#ffe6e6;\">{}</del>".format( ot ) )
             else:
                 html.append( "<span>{}</span>".format( ot ) )
-                space_match += 1
+                space_match += len( ot )
         elif op == 'replace':
             html.append( "<del style=\"background:#ffe6e6;\">{}</del>".format( ot ) )
             html.append( "<ins style=\"background:#e6ffe6;\">{}</ins>".format( nt ) )
-            tot_elms += 1
+            # tot_elms += 1
         elif op == 'equal':
             html.append( "<span>{}</span>".format( ot ) )
-            tot_elms += 1
+            # tot_elms += 1
 
     html.append( "</pre>" )
     def_ratio = changes.ratio()
     comb_len = len( old_txt ) + len( new_txt )
-    def_match = def_ratio * comb_len  # tot_elms  # (  )
-    new_match = def_match + 2 * space_match
-    new_ratio = new_match / comb_len  # tot_elms  #
+    def_match = def_ratio * comb_len
+    new_match = def_match + space_match
+    new_ratio = new_match / comb_len
     print "space match : ", space_match
-    print 'tot elms : ', tot_elms
+    # print 'tot elms : ', tot_elms
     print "old ratio : ", def_ratio
     print "new ratio : ", new_ratio
     return "".join( html )
@@ -193,6 +189,31 @@ for ( flag, data ) in diffs:
 
 
 sys.exit()
+
+
+
+
+# Dictionary sorting
+
+d = {0:34.0, 10:50, 80:100, 'compile':5, 'compwarn':4, 'link':6, 'linkwarn':8}
+
+print sorted( d, reverse = True )
+
+e = {t:d[t] if isinstance( t, int ) else None for t in d}
+
+print e
+
+d2 = {}
+for t in d:
+    if isinstance( t, int ):
+        d2[t] = d[t]
+
+print d2
+exit()
+
+
+
+
 
 
 # Dictionary to CSV file writing
