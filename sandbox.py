@@ -16,16 +16,22 @@ import os
 import pprint
 import sys
 
+from sqlalchemy.ext.serializer import our_ids
+
 from AgGlobals import AgGlobals
 from Assignment import Assignment
 from Command import Command
 from Repository import Repository
 from diff_match_patch import diff_match_patch
 
+
 # Hacking difflib
-stud = '1**2*'
-our = '1*2'
-space_match = 2
+# stud = '1**2*'
+# our = '1*2'
+our = "*\n**\n***\n****\n"
+stud = "      *\n    * *\n  * * *\n* * * *\n"
+
+space_match = 36
 
 
 s = SequenceMatcher( lambda x: x == " ", stud, our )
@@ -39,6 +45,8 @@ print "space match : ", space_match
 print "old ratio : ", def_ratio
 print "new ratio : ", new_ratio
 
+print our
+print stud
 # exit()
 
 out_ref = open( 'out_ref.txt' )
@@ -98,6 +106,8 @@ our = "12345"
 # our = "*\n**\n***\n****\n"
 #
 stud = "   *\n  **\n ***\n****\n"
+# stud = "   *\n   **\n   ***\n   ****\n"
+# stud = "*\n**\n***\n****\n"
 our = "      *\n    * *\n  * * *\n* * * *\n"
 
 # stud = "      *\n    *   *\n  *   *   *\n*   *   *  *\n"
@@ -141,7 +151,7 @@ def create_diff_html( old_txt, new_txt, changes, ignore_spaces = False ):
         # tot_elms += 1
 
         if op == 'insert':
-            if ( ot.strip() or not ignore_spaces ):
+            if ( nt.strip() or not ignore_spaces ):
                 html.append( "<ins style=\"background:#e6ffe6;\">{}</ins>".format( nt ) )
             else:
                 space_match += len( nt )
@@ -184,10 +194,11 @@ print create_diff_html( stud, our, s, True )
 #                     "private volatile Thread currentThread;" )
 diffs = dmp.diff_main( stud, our )
 
-for ( flag, data ) in diffs:
-    print flag, data
+# for ( flag, data ) in diffs:
+#    print flag, data
 
-
+print our
+print stud
 sys.exit()
 
 
