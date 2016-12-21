@@ -1,0 +1,31 @@
+h2.grading_session {
+	background: lightgray;
+	padding: 10px;
+	border: solid gray;
+}
+
+.warning {
+	color: orange;
+}
+
+.success {
+	color: lightgreen;
+}
+
+.error {
+	color: pink;
+}
+
+.warning_out {
+	background: lightyellow;
+	border: solid yellow;
+	padding: 10px
+}
+
+.output_diff {
+	background: lightgray;
+	padding: 10px;
+	border: solid lightgreen;
+	margin: 10px
+}
+
