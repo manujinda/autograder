@@ -511,6 +511,10 @@ class Autograder( object ):
             gb = csv.DictWriter( gradebook, gradebook_headers )
             gb.writeheader()
 
+            # Open and read grading output skeleton html
+            html_file = open( 'skeleton.html', 'r' )
+            html_skeleton = html_file.read()
+
             # For each student
             for stud in self.students:
 
@@ -518,7 +522,7 @@ class Autograder( object ):
                 grading_log_stud = open( grading_log_stud_path, 'a' )
                 # AgGlobals.write_to_log( grading_log_stud, '\n{0}<< Grading Session on {1} : START >>{0}\n'.format( '-' * 20, datetime.now() ) )
                 # AgGlobals.write_to_log( grading_log_stud, '\n{0} Student: {1} {0}\n'.format( '#' * 10, stud.get_name() ) )
-                AgGlobals.write_to_log( grading_log_stud, '\n<h2 class=grading_session>Grading Session on {} : START</h2>\n'.format( datetime.now() ) )
+                AgGlobals.write_to_log( grading_log_stud, '\n<h2 class=grading_session>Grading Session on {}</h2>\n'.format( datetime.now() ) )
 
                 AgGlobals.write_to_log( grading_log, '\n{0} Student: {1} {0}\n'.format( '#' * 10, stud.get_name() ) )
 
@@ -537,7 +541,7 @@ class Autograder( object ):
                 # Path for the student's directory in the grading directory
                 stud_dir_path = os.path.join( destination, stud_dir_name, self.asmnt.get_assignment_sub_dir() )
 
-                grading_log_stud_path = ''
+                # grading_log_stud_path = ''
                 # Update local student repository
 #                if not os.path.exists( stud_local_repo_path ):
                     # Student repository has not been cloned. Have to clone it first
@@ -556,7 +560,7 @@ class Autograder( object ):
                     AgGlobals.write_to_log( grading_log, '\tError: {} directory does not exist in the repo\n'.format( self.asmnt.get_assignment_sub_dir() ) )
                     AgGlobals.write_to_log( grading_log_stud, '<p class=error>Error: {} directory does not exist in the repo</p>\n'.format( self.asmnt.get_assignment_sub_dir() ) )
                     marks_dict['Comment'] = '{} directory does not exist in the repo'.format( self.asmnt.get_assignment_sub_dir() )
-                    self.write_stud_marks( marks_dict, gb )
+                    self.write_stud_marks( marks_dict, gb, grading_log_stud_path, html_skeleton )
                     continue
 
                 # Copy the provided files into student's directory in the grading directory
@@ -565,11 +569,11 @@ class Autograder( object ):
 
                 self.asmnt.grade2( stud_dir_path, grading_log, grading_log_stud, marks_dict )
 
-                self.write_stud_marks( marks_dict, gb )
-
                 grading_log_stud.close()
                 grading_log.flush()
                 os.fsync( grading_log )
+
+                self.write_stud_marks( marks_dict, gb, grading_log_stud_path, html_skeleton )
 
                 gradebook.flush()
                 os.fsync( gradebook )
@@ -578,7 +582,7 @@ class Autograder( object ):
             gradebook.close()
 
 
-    def write_stud_marks( self, marks_dict, gb_csv ):
+    def write_stud_marks( self, marks_dict, gb_csv, grading_log_stud_path, html_skeleton ):
         tot = 0
         for h in marks_dict:
             if h != 'Student' and h != 'Comment':
@@ -587,6 +591,15 @@ class Autograder( object ):
         marks_dict['Total'] = tot
 
         gb_csv.writerow( marks_dict )
+
+        grading_log_stud_html = open( '{}{}'.format( grading_log_stud_path[:-3], 'html' ), 'wb' )
+        grading_log_stud = open( grading_log_stud_path, 'r' )
+        stud_log_entries = grading_log_stud.read()
+        AgGlobals.write_to_log( grading_log_stud_html, html_skeleton )
+        AgGlobals.write_to_log( grading_log_stud_html, stud_log_entries )
+        AgGlobals.write_to_log( grading_log_stud_html, '</body>\n</html>\n' )
+        grading_log_stud.close()
+        grading_log_stud_html.close()
 
 
     '''

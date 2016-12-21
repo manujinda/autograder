@@ -298,9 +298,9 @@ class Problem( object ):
 
                             # AgGlobals.write_to_log( grading_log_file, err, 2 )
 
-                            AgGlobals.write_to_log( student_log_file, '<code class=warning_out>\n' )
+                            AgGlobals.write_to_log( student_log_file, '<div class=warning_out><pre>\n' )
                             AgGlobals.write_to_log( student_log_file, err, 2 )
-                            AgGlobals.write_to_log( student_log_file, '</code>\n' )
+                            AgGlobals.write_to_log( student_log_file, '</pre></div>\n' )
                             print '**** Warnings present ****'
                             warnings_present = True
 
@@ -359,9 +359,9 @@ class Problem( object ):
 
                     # AgGlobals.write_to_log( grading_log_file, err, 2 )
 
-                    AgGlobals.write_to_log( student_log_file, '<code class=warning_out>\n' )
+                    AgGlobals.write_to_log( student_log_file, '<div class=warning_out><pre>\n' )
                     AgGlobals.write_to_log( student_log_file, err, 2 )
-                    AgGlobals.write_to_log( student_log_file, '</code>\n' )
+                    AgGlobals.write_to_log( student_log_file, '</pre></div>\n' )
                     print '**** Warnings present ****'
                     warnings_present = True
 
@@ -373,7 +373,7 @@ class Problem( object ):
                     if gradebook:
                         AgGlobals.write_to_log( grading_log_file, 'Success: Linking target {} in problem: {}) {}\n'.format( self._11_make_target, self._01_prob_no, self._02_name ) )
                         # AgGlobals.write_to_log( student_log_file, 'Success: Linking target {} in problem: {}) {}\n'.format( self._11_make_target, self._01_prob_no, self._02_name ) )
-                        AgGlobals.write_to_log( student_log_file, '<h3 class=success>Success: Linking target {} in problem: {}</h3>\n) {}\n'.format( self._11_make_target, self._01_prob_no, self._02_name ) )
+                        AgGlobals.write_to_log( student_log_file, '<h3 class=success>Success: Linking target {} in problem: {}) {}</h3>\n'.format( self._11_make_target, self._01_prob_no, self._02_name ) )
 
                         rubric = self._15_marks.keys()
                         if AgGlobals.RUBRIC_LINK in rubric:
@@ -420,9 +420,12 @@ class Problem( object ):
                         print matching_ratio
                         print outpu_diff
 
-                        AgGlobals.write_to_log( student_log_file, '<code class=output_diff>\n' )
+                        AgGlobals.write_to_log( student_log_file, '<h4 class=output>$ {}</h4>'.format( cmd[3:] ) )
+                        AgGlobals.write_to_log( student_log_file, '<p>Inputs provided in order</p>' )
+                        AgGlobals.write_to_log( student_log_file, '<p>{}</p>'.format( self._99_inputs[io].get_inputs() ) )
+                        AgGlobals.write_to_log( student_log_file, '<div class=output_diff>\n' )
                         AgGlobals.write_to_log( student_log_file, outpu_diff )
-                        AgGlobals.write_to_log( student_log_file, '</code>\n' )
+                        AgGlobals.write_to_log( student_log_file, '</div>\n' )
 
                         matching_ratio_all_inputs += matching_ratio
                         # print sm.ratio()
