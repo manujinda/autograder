@@ -10,19 +10,27 @@ This chages rapidly. Not a part of the main project. This is just my playground 
 # Generating Gradebook
 import ConfigParser
 import csv
+from datetime import datetime
 from difflib import HtmlDiff
 from difflib import SequenceMatcher
 import os
 import pprint
 import sys
 
-from sqlalchemy.ext.serializer import our_ids
-
 from AgGlobals import AgGlobals
 from Assignment import Assignment
 from Command import Command
 from Repository import Repository
 from diff_match_patch import diff_match_patch
+
+
+# Manupulating date time
+dt = datetime.now()
+
+
+print dt.strftime( '%m - %d - %Y :: ' )
+print dt.strftime( '%x %X' )
+exit()
 
 
 # Hacking difflib
