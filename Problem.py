@@ -291,17 +291,28 @@ class Problem( object ):
                         compile_success += retcode
 
                         # warning = warning_pattern.match( err )
+                        if err.find( 'error' ) >= 0:
+                            AgGlobals.write_to_log( grading_log_file, 'Error: Compiling file {}\n'.format( f[0] ), 1 )
+                            AgGlobals.write_to_log( student_log_file, '<div class=error>Error: Compiling file {}</div>'.format( f[0] ), 1 )
+
+                            AgGlobals.write_to_log( student_log_file, '<div class=error_out><pre>', 1 )
+                            err = err.replace( "&", "&amp;" ).replace( "<", "&lt;" ).replace( ">", "&gt;" )
+                            AgGlobals.write_to_log( student_log_file, err, 2 )
+                            AgGlobals.write_to_log( student_log_file, '</pre></div>', 1 )
+                            print '**** Compilation Errors present ****'
+
                         if err.find( 'warning' ) >= 0:
-                            AgGlobals.write_to_log( grading_log_file, '\tWarning: Compiling file {}\n'.format( f[0] ) )
+                            AgGlobals.write_to_log( grading_log_file, 'Warning: Compiling file {}\n'.format( f[0] ), 1 )
                             # AgGlobals.write_to_log( student_log_file, '\tWarning: Compiling file {}\n'.format( f[0] ) )
-                            AgGlobals.write_to_log( student_log_file, '<p class=warning>Warning: Compiling file {}</p>\n'.format( f[0] ) )
+                            AgGlobals.write_to_log( student_log_file, '<div class=warning>Warning: Compiling file {}</div>'.format( f[0] ), 1 )
 
                             # AgGlobals.write_to_log( grading_log_file, err, 2 )
 
-                            AgGlobals.write_to_log( student_log_file, '<div class=warning_out><pre>\n' )
+                            AgGlobals.write_to_log( student_log_file, '<div class=warning_out><pre>', 1 )
+                            err = err.replace( "&", "&amp;" ).replace( "<", "&lt;" ).replace( ">", "&gt;" )
                             AgGlobals.write_to_log( student_log_file, err, 2 )
-                            AgGlobals.write_to_log( student_log_file, '</pre></div>\n' )
-                            print '**** Warnings present ****'
+                            AgGlobals.write_to_log( student_log_file, '</pre></div>', 1 )
+                            print '**** Compilation Warnings present ****'
                             warnings_present = True
 
                 if compile_success == 0:
@@ -311,7 +322,7 @@ class Problem( object ):
                     if gradebook:
                         AgGlobals.write_to_log( grading_log_file, 'Success: Compiling problem: {}) {}\n'.format( self._01_prob_no, self._02_name ) )
                         # AgGlobals.write_to_log( student_log_file, 'Success: Compiling problem: {}) {}\n'.format( self._01_prob_no, self._02_name ) )
-                        AgGlobals.write_to_log( student_log_file, '<h3 class=success>Success: Compiling problem: {}) {}</h3>\n'.format( self._01_prob_no, self._02_name ) )
+                        AgGlobals.write_to_log( student_log_file, '<h3 class=success>Success: Compiling problem: {}) {}</h3>'.format( self._01_prob_no, self._02_name ), 1 )
 
                         rubric = self._15_marks.keys()
                         if AgGlobals.RUBRIC_COMPILE in rubric:
@@ -351,18 +362,29 @@ class Problem( object ):
 
                 link_success += retcode
 
+                if err.find( 'error' ) >= 0:
+                    AgGlobals.write_to_log( grading_log_file, 'Error: Linking target {} in problem: {} ) {}\n'.format( self._11_make_target, self._01_prob_no, self._02_name ), 1 )
+                    AgGlobals.write_to_log( student_log_file, '<div class=error>Error: Linking target {} in problem: {} ) {}</div>'.format( self._11_make_target, self._01_prob_no, self._02_name ), 1 )
+
+                    AgGlobals.write_to_log( student_log_file, '<div class=error_out><pre>', 1 )
+                    err = err.replace( "&", "&amp;" ).replace( "<", "&lt;" ).replace( ">", "&gt;" )
+                    AgGlobals.write_to_log( student_log_file, err, 2 )
+                    AgGlobals.write_to_log( student_log_file, '</pre></div>', 1 )
+                    print '**** Linking Errors present ****'
+
                 # warning = warning_pattern.match( err )
                 if err.find( 'warning' ) >= 0:
-                    AgGlobals.write_to_log( grading_log_file, '\tWarning: Linking target {} in problem: {} ) {}\n'.format( self._11_make_target, self._01_prob_no, self._02_name ) )
+                    AgGlobals.write_to_log( grading_log_file, 'Warning: Linking target {} in problem: {} ) {}\n'.format( self._11_make_target, self._01_prob_no, self._02_name ), 1 )
                     # AgGlobals.write_to_log( student_log_file, '\tWarning: Linking target {} in problem: {} ) {}\n'.format( self._11_make_target, self._01_prob_no, self._02_name ) )
-                    AgGlobals.write_to_log( student_log_file, '<p class=warning>Warning: Linking target {} in problem: {} ) {}</p>\n'.format( self._11_make_target, self._01_prob_no, self._02_name ) )
+                    AgGlobals.write_to_log( student_log_file, '<div class=warning>Warning: Linking target {} in problem: {} ) {}</div>'.format( self._11_make_target, self._01_prob_no, self._02_name ), 1 )
 
                     # AgGlobals.write_to_log( grading_log_file, err, 2 )
 
-                    AgGlobals.write_to_log( student_log_file, '<div class=warning_out><pre>\n' )
+                    AgGlobals.write_to_log( student_log_file, '<div class=warning_out><pre>', 1 )
+                    err = err.replace( "&", "&amp;" ).replace( "<", "&lt;" ).replace( ">", "&gt;" )
                     AgGlobals.write_to_log( student_log_file, err, 2 )
-                    AgGlobals.write_to_log( student_log_file, '</pre></div>\n' )
-                    print '**** Warnings present ****'
+                    AgGlobals.write_to_log( student_log_file, '</pre></div>', 1 )
+                    print '**** Linking Warnings present ****'
                     warnings_present = True
 
                 # self._99_linked = ( link_success == 0 )
@@ -373,7 +395,7 @@ class Problem( object ):
                     if gradebook:
                         AgGlobals.write_to_log( grading_log_file, 'Success: Linking target {} in problem: {}) {}\n'.format( self._11_make_target, self._01_prob_no, self._02_name ) )
                         # AgGlobals.write_to_log( student_log_file, 'Success: Linking target {} in problem: {}) {}\n'.format( self._11_make_target, self._01_prob_no, self._02_name ) )
-                        AgGlobals.write_to_log( student_log_file, '<h3 class=success>Success: Linking target {} in problem: {}) {}</h3>\n'.format( self._11_make_target, self._01_prob_no, self._02_name ) )
+                        AgGlobals.write_to_log( student_log_file, '<h3 class=success>Success: Linking target {} in problem: {}) {}</h3>'.format( self._11_make_target, self._01_prob_no, self._02_name ), 1 )
 
                         rubric = self._15_marks.keys()
                         if AgGlobals.RUBRIC_LINK in rubric:
@@ -420,12 +442,14 @@ class Problem( object ):
                         print matching_ratio
                         print outpu_diff
 
-                        AgGlobals.write_to_log( student_log_file, '<h4 class=output>$ {}</h4>'.format( cmd[3:] ) )
-                        AgGlobals.write_to_log( student_log_file, '<p>Inputs provided in order</p>' )
-                        AgGlobals.write_to_log( student_log_file, '<p>{}</p>'.format( self._99_inputs[io].get_inputs() ) )
-                        AgGlobals.write_to_log( student_log_file, '<div class=output_diff>\n' )
-                        AgGlobals.write_to_log( student_log_file, outpu_diff )
-                        AgGlobals.write_to_log( student_log_file, '</div>\n' )
+                        AgGlobals.write_to_log( student_log_file, '<h4 class=output>$ {}</h4>'.format( cmd[3:] ), 1 )
+                        AgGlobals.write_to_log( student_log_file, '<div>Inputs provided in order</div>', 1 )
+                        AgGlobals.write_to_log( student_log_file, '<div class=input><pre>', 1 )
+                        AgGlobals.write_to_log( student_log_file, self._99_inputs[io].get_inputs().replace( "&", "&amp;" ).replace( "<", "&lt;" ).replace( ">", "&gt;" ), 2 )
+                        AgGlobals.write_to_log( student_log_file, '</pre></div>'.format( self._99_inputs[io].get_inputs() ), 1 )
+                        AgGlobals.write_to_log( student_log_file, '<div class=output_diff>', 1 )
+                        AgGlobals.write_to_log( student_log_file, outpu_diff, 2 )
+                        AgGlobals.write_to_log( student_log_file, '</div>', 1 )
 
                         matching_ratio_all_inputs += matching_ratio
                         # print sm.ratio()
@@ -468,34 +492,29 @@ class Problem( object ):
         html = []
         html.append( '<pre>' )
 
-        space_match = 0
-        tot_elems = 0
+        space_mismatch = 0
 
         for op, ob, oe, nb, ne in differences.get_opcodes():
 
             so = student_out[ob:oe].replace( "&", "&amp;" ).replace( "<", "&lt;" ).replace( ">", "&gt;" ).replace( "\n", "&para;<br>" )
             ro = reference_out[nb:ne].replace( "&", "&amp;" ).replace( "<", "&lt;" ).replace( ">", "&gt;" ).replace( "\n", "&para;<br>" )
 
-            tot_elems += 1
-
             if op == 'insert':
-                if ( so.strip() or not ignore_spaces ):
+                if ( ro.strip() or not ignore_spaces ):
                     html.append( '<ins style=\"background:#e6ffe6;\">{}</ins>'.format( ro ) )
                 else:
-                    space_match += 1
+                    space_mismatch += len( ro )
             elif op == 'delete':
                 if ( so.strip() or not ignore_spaces ):
                     html.append( '<del style=\"background:#ffe6e6;\">{}</del>'.format( so ) )
                 else:
                     html.append( '<span>{}</span>'.format( so ) )
-                    space_match += 1
+                    space_mismatch += len( so )
             elif op == 'replace':
                 html.append( '<del style=\"background:#ffe6e6;\">{}</del>'.format( so ) )
                 html.append( '<ins style=\"background:#e6ffe6;\">{}</ins>'.format( ro ) )
-                tot_elems += 1  # we need to count this twice
             elif op == 'equal':
                 html.append( '<span>{}</span>'.format( so ) )
-                tot_elems += 1  # We need to count this twice
 
         html.append( '</pre>' )
 
@@ -513,20 +532,18 @@ class Problem( object ):
             # Total lengths of student and reference outputs
             comb_len = len( student_out ) + len( reference_out )
             # print 'comb_len: ', comb_len
-            # print 'tot elms: ', tot_elems
 
             # Reverse engineer the formula used in ratio() to
             # get the default matching elements
-            def_match = matching_ratio * ( comb_len )
+            def_match = matching_ratio * comb_len
             # def_match = matching_ratio * tot_elems
 
             # Add the elements mismatched due to spaces
             # in the the count of matching elements
-            new_match = def_match + 2 * space_match
+            new_match = def_match + space_mismatch
 
             # Re-compute a new ratio using the new matching count
             matching_ratio = new_match / comb_len
-            # matching_ratio = new_match / tot_elems
 
         # print "space match : ", space_match
         # print "old ratio : ", def_ratio
@@ -535,7 +552,7 @@ class Problem( object ):
 
 
     def get_gradebook_headers( self ):
-        problem_header = []
+        # problem_header = []
         marks_header = []
         print self._15_marks
         if self._03_prob_type == AgGlobals.PROBLEM_TYPE_PROG:

@@ -568,6 +568,8 @@ class Assignment( object ):
             success = True
             for p in sorted( self._6_problem_ids.keys() ):
 
+                AgGlobals.write_to_log( student_log_file, '<h3 class=problem_heading>Grading problem: {}) {}</h3>'.format( p, self._8_problems[p].get_name() ), 1 )
+
                 success = True
 
                 # Check whether the student has submitted all the files
@@ -609,15 +611,15 @@ class Assignment( object ):
                                 # Rename the file. Might want to do this only when we provide the make file
                                 shutil.move( file_alias_path, file_path )
                                 rename_back_list.append( ( file_path, file_alias_path ) )
-                                AgGlobals.write_to_log( grading_log_file, '\tWarning: Renamed file - {} --> {}\n'.format( file_alias, file_submitted[0] ) )
-                                AgGlobals.write_to_log( student_log_file, '\tWarning: Renamed file - {} --> {}\n'.format( file_alias, file_submitted[0] ) )
+                                AgGlobals.write_to_log( grading_log_file, 'Warning: Renamed file - {} --> {}\n'.format( file_alias, file_submitted[0] ), 1 )
+                                AgGlobals.write_to_log( student_log_file, '<div class=warning>Warning: Renamed file - {} --> {}</div>'.format( file_alias, file_submitted[0] ), 1 )
                                 gradebook['Comment'] += 'Renamed file - {} --> {}\n'.format( file_alias, file_submitted[0] )
                                 break
 
                         if not found:
                             # print 'Error: Student {} has not submitted file {}'.format( stud.get_name(), file_submitted[0] )
-                            AgGlobals.write_to_log( grading_log_file, '\tError: File - {} - missing\n'.format( file_submitted[0] ) )
-                            AgGlobals.write_to_log( student_log_file, '\tError: File - {} - missing\n'.format( file_submitted[0] ) )
+                            AgGlobals.write_to_log( grading_log_file, 'Error: File - {} - missing\n'.format( file_submitted[0] ), 1 )
+                            AgGlobals.write_to_log( student_log_file, '<div class=warning>Error: File - {} - missing<div class=warning>'.format( file_submitted[0] ), 1 )
                             gradebook['Comment'] += 'File - {} - missing. Cannot grade problem {}\n'.format( file_submitted[0], p )
                             # self.write_stud_marks( marks_dict, gb )
                             # We cannot proceed with grading this problem.

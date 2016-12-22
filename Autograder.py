@@ -502,7 +502,7 @@ class Autograder( object ):
             # Open grading log file for this student
             log_directory_path = os.path.join( asmnt_master_sub_dir, AgGlobals.LOG_FILE_DIRECTORY )
             grading_log = open( os.path.join( log_directory_path, AgGlobals.AUTOGRADER_LOG_FILE_NAME ), 'a' )
-            AgGlobals.write_to_log( grading_log, '\n{0}<< Grading Session on {1} : START >>{0}\n'.format( '-' * 20, datetime.now() ) )
+            AgGlobals.write_to_log( grading_log, '\n{0}<< Grading Session on {1} : START >>{0}\n'.format( '-' * 20, datetime.now().strftime( '%x :: %X' ) ) )
 
             # Create the gradebook
             gradebook_headers = self.asmnt.generate_gradebook_headers()
@@ -522,7 +522,7 @@ class Autograder( object ):
                 grading_log_stud = open( grading_log_stud_path, 'a' )
                 # AgGlobals.write_to_log( grading_log_stud, '\n{0}<< Grading Session on {1} : START >>{0}\n'.format( '-' * 20, datetime.now() ) )
                 # AgGlobals.write_to_log( grading_log_stud, '\n{0} Student: {1} {0}\n'.format( '#' * 10, stud.get_name() ) )
-                AgGlobals.write_to_log( grading_log_stud, '\n<h2 class=grading_session>Grading Session on {}</h2>\n'.format( datetime.now() ) )
+                AgGlobals.write_to_log( grading_log_stud, '\n<h2 class=grading_session>Grading Session on {}</h2>'.format( datetime.now().strftime( '%x :: %X' ) ), 1 )
 
                 AgGlobals.write_to_log( grading_log, '\n{0} Student: {1} {0}\n'.format( '#' * 10, stud.get_name() ) )
 
@@ -558,7 +558,7 @@ class Autograder( object ):
                 if not os.path.exists( stud_dir_path ):
                     print 'Error: Student {} does not have the assignment directory {} in the repository.'.format( stud.get_name(), stud_dir_path )
                     AgGlobals.write_to_log( grading_log, '\tError: {} directory does not exist in the repo\n'.format( self.asmnt.get_assignment_sub_dir() ) )
-                    AgGlobals.write_to_log( grading_log_stud, '<p class=error>Error: {} directory does not exist in the repo</p>\n'.format( self.asmnt.get_assignment_sub_dir() ) )
+                    AgGlobals.write_to_log( grading_log_stud, '<p class=error>Error: {} directory does not exist in the repo</p>'.format( self.asmnt.get_assignment_sub_dir() ), 1 )
                     marks_dict['Comment'] = '{} directory does not exist in the repo'.format( self.asmnt.get_assignment_sub_dir() )
                     self.write_stud_marks( marks_dict, gb, grading_log_stud_path, html_skeleton )
                     continue
@@ -597,7 +597,7 @@ class Autograder( object ):
         stud_log_entries = grading_log_stud.read()
         AgGlobals.write_to_log( grading_log_stud_html, html_skeleton )
         AgGlobals.write_to_log( grading_log_stud_html, stud_log_entries )
-        AgGlobals.write_to_log( grading_log_stud_html, '</body>\n</html>\n' )
+        AgGlobals.write_to_log( grading_log_stud_html, '</body>\n</html>' )
         grading_log_stud.close()
         grading_log_stud_html.close()
 

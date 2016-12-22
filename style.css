@@ -22,6 +22,12 @@ h2.grading_session {
 	padding: 10px
 }
 
+.error_out {
+	background: pink;
+	border: solid maroon;
+	padding: 10px
+}
+
 .output_diff {
 	background: lightgray;
 	padding: 10px;
