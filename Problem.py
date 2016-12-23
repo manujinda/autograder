@@ -22,6 +22,12 @@ class Problem( object ):
 
     def __init__( self, no, prob_type ):
         self._01_prob_no = no
+        try:
+            self._01_prob_no = int( self._01_prob_no )
+        except ValueError:
+            print 'Error: Problem number "{}" of problem type "{}" must be an integer. Exiting...'.format( self._01_prob_no, prob_type )
+            sys.exit()
+
         self._02_name = AgGlobals.PROBLEM_INIT_NAME
         self._03_prob_type = prob_type
         self._04_prob_desc = AgGlobals.PROBLEM_INIT_DESCRIPTION
@@ -88,6 +94,9 @@ class Problem( object ):
 
         self._99_state = AgGlobals.clear_flags( self._99_state, AgGlobals.PROBLEM_STATE_LOADED )
 
+        prob_no_in_assignment = self._01_prob_no
+        prob_type_in_assignment = self._03_prob_type
+
         # Check whether the problem configuration file exists.
         if not os.path.exists( config_file ):
             print '\nProblem configuration file {} does not exist, exit...'.format( config_file )
@@ -106,6 +115,48 @@ class Problem( object ):
         except ConfigParser.NoOptionError as no_op_err:
             print 'Error: {} in problem configuration file {}. Exiting...'.format( no_op_err, config_file )
             sys.exit()
+
+
+        try:
+            self._01_prob_no = int( self._01_prob_no )
+        except ValueError:
+            print 'Error: Problem number {} for problem {} must be an integer. Exiting...'.format( self._01_prob_no, self._02_name )
+            sys.exit()
+
+        if self._01_prob_no != prob_no_in_assignment:
+            print 'Error:  Problem number mismatch for problem "{}" of type "{}"'.format( self._02_name, self._03_prob_type )
+            print '\tProblem number in assignment configuration : {}'.format( prob_no_in_assignment )
+            print '\tProblem number in problem configuration    : {}'.format( self._01_prob_no )
+            print '\tExiting...'
+            sys.exit()
+
+        if self._03_prob_type != prob_type_in_assignment:
+            print 'Error:  Problem type mismatch for problem "{} - {}"'.format( self._01_prob_no, self._02_name )
+            print '\tProblem type in assignment configuration : {}'.format( prob_type_in_assignment )
+            print '\tProblem type in problem configuration    : {}'.format( self._03_prob_type )
+            print '\tExiting...'
+            sys.exit()
+
+        temp_dept = []
+        for p in self._14_depends_on.split():
+            try:
+                temp_dept.append( int( p ) )
+            except ValueError:
+                print 'Error: Problem {} - {} is dependent on problem id "{}" which is not an integer problem id. Exiting...'.format( self._01_prob_no, self._02_name, p )
+                sys.exit()
+
+        self._14_depends_on = temp_dept  # self._14_depends_on.split()
+#         if self._01_prob_no in self._14_depends_on:
+#             print 'Error: Problem {} - {} is dependent on itself. Exiting...'.format( self._01_prob_no, self._02_name )
+#             sys.exit()
+
+        for p in self._14_depends_on:
+            if p == self._01_prob_no:
+                print 'Error: Problem {} - {} is dependent on itself. Exiting...'.format( self._01_prob_no, self._02_name )
+                sys.exit()
+            elif p > self._01_prob_no:
+                print 'Error: Problem {} - {} is dependent on problem {} that comes after it. Exiting...'.format( self._01_prob_no, self._02_name, p )
+                sys.exit()
 
         if self._03_prob_type == AgGlobals.PROBLEM_TYPE_PROG:
             self._05_files_provided = self._05_files_provided.split()
@@ -134,11 +185,6 @@ class Problem( object ):
         # This is a list of lists with all the submitted file names and their file name aliases.
         # The first entry is the expected file name
         self._06_files_submitted = AgGlobals.parse_config_line( self._06_files_submitted )
-
-        self._14_depends_on = self._14_depends_on.split()
-        if self._01_prob_no in self._14_depends_on:
-            print 'Error: Problem {} - {} is dependent on itself. Exiting...'.format( self._01_prob_no, self._02_name )
-            sys.exit()
 
         temp_marks = AgGlobals.parse_config_line( self._15_marks )
         self._15_marks = {}
@@ -326,10 +372,10 @@ class Problem( object ):
 
                         rubric = self._15_marks.keys()
                         if AgGlobals.RUBRIC_COMPILE in rubric:
-                            gradebook['{}_Compile'.format( self._01_prob_no )] = self._15_marks[AgGlobals.RUBRIC_COMPILE]
+                            gradebook[AgGlobals.get_gradebook_heading( AgGlobals.RUBRIC_COMPILE, self._01_prob_no )] = self._15_marks[AgGlobals.RUBRIC_COMPILE]
 
                         if ( not warnings_present ) and AgGlobals.RUBRIC_COMPILE_WARNING in rubric:
-                            gradebook['{}_No Warnings Compiling'.format( self._01_prob_no )] = self._15_marks[AgGlobals.RUBRIC_COMPILE_WARNING]
+                            gradebook[AgGlobals.get_gradebook_heading( AgGlobals.RUBRIC_COMPILE_WARNING, self._01_prob_no )] = self._15_marks[AgGlobals.RUBRIC_COMPILE_WARNING]
 
         return AgGlobals.is_flags_set( self._99_state, AgGlobals.PROBLEM_STATE_COMPILED )
 
@@ -399,10 +445,10 @@ class Problem( object ):
 
                         rubric = self._15_marks.keys()
                         if AgGlobals.RUBRIC_LINK in rubric:
-                            gradebook['{}_Link'.format( self._01_prob_no )] = self._15_marks[AgGlobals.RUBRIC_LINK]
+                            gradebook[AgGlobals.get_gradebook_heading( AgGlobals.RUBRIC_LINK, self._01_prob_no )] = self._15_marks[AgGlobals.RUBRIC_LINK]
 
                         if ( not warnings_present ) and AgGlobals.RUBRIC_LINK_WARNING in rubric:
-                            gradebook['{}_No Warnings Linking'.format( self._01_prob_no )] = self._15_marks[AgGlobals.RUBRIC_LINK_WARNING]
+                            gradebook[AgGlobals.get_gradebook_heading( AgGlobals.RUBRIC_LINK_WARNING, self._01_prob_no )] = self._15_marks[AgGlobals.RUBRIC_LINK_WARNING]
 
         return AgGlobals.is_flags_set( self._99_state, AgGlobals.PROBLEM_STATE_LINKED )
 
@@ -472,7 +518,7 @@ class Problem( object ):
 
                     for m in sorted( self._99_threshold_marks, reverse = True ):
                         if final_matching_percentage >= m:
-                            gradebook['{}_Marks'.format( self._01_prob_no )] = self._99_threshold_marks[m]
+                            gradebook[AgGlobals.get_gradebook_heading( AgGlobals.RUBRIC_MARKS, self._01_prob_no )] = self._99_threshold_marks[m]
                             break
 
 
@@ -562,18 +608,21 @@ class Problem( object ):
                 rubric = self._15_marks.keys()
 
                 if AgGlobals.RUBRIC_COMPILE in rubric:
-                    marks_header.append( '{}_Compile'.format( self._01_prob_no ) )
+                    marks_header.append( AgGlobals.get_gradebook_heading( AgGlobals.RUBRIC_COMPILE, self._01_prob_no ) )
 
                 if AgGlobals.RUBRIC_COMPILE_WARNING in rubric:
-                    marks_header.append( '{}_No Warnings Compiling'.format( self._01_prob_no ) )
+                    marks_header.append( AgGlobals.get_gradebook_heading( AgGlobals.RUBRIC_COMPILE_WARNING, self._01_prob_no ) )
 
                 if AgGlobals.RUBRIC_LINK in rubric:
-                    marks_header.append( '{}_Link'.format( self._01_prob_no ) )
+                    marks_header.append( AgGlobals.get_gradebook_heading( AgGlobals.RUBRIC_LINK, self._01_prob_no ) )
 
                 if AgGlobals.RUBRIC_LINK_WARNING in rubric:
-                    marks_header.append( '{}_No Warnings Linking'.format( self._01_prob_no ) )
+                    marks_header.append( AgGlobals.get_gradebook_heading( AgGlobals.RUBRIC_LINK_WARNING, self._01_prob_no ) )
 
-                marks_header.append( '{}_Marks'.format( self._01_prob_no ) )
+                if AgGlobals.RUBRIC_MEMLEAK in rubric:
+                    marks_header.append( AgGlobals.get_gradebook_heading( AgGlobals.RUBRIC_MEMLEAK, self._01_prob_no ) )
+
+                marks_header.append( AgGlobals.get_gradebook_heading( AgGlobals.RUBRIC_MARKS, self._01_prob_no ) )
 
                 # problem_header.append( self._01_prob_no )
 

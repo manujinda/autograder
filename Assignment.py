@@ -125,7 +125,13 @@ class Assignment( object ):
         problems = AgGlobals.parse_config_line( self._6_problem_ids )
         temp_prob = {}
         for p in problems:
-            temp_prob[p[0]] = p[1]
+#            temp_prob[p[0]] = p[1]
+            try:
+                temp_prob[int( p[0] )] = p[1]
+            except ValueError:
+                print 'Error: Problem number "{}" of problem type "{}" must be an integer. Exiting...'.format( p[0], p[1] )
+                sys.exit()
+
 
         # This is a dictiory of the form:
         #    problem_id -> problem_type
@@ -562,6 +568,8 @@ class Assignment( object ):
                 shutil.move( bad_file_name[0], bad_file_name[1] )
 
 
+        depend_success = { p:False for p in self._6_problem_ids.keys() }
+
         success = False
         # If problems are loaded
         if self.is_problems_loaded():
@@ -613,17 +621,27 @@ class Assignment( object ):
                                 rename_back_list.append( ( file_path, file_alias_path ) )
                                 AgGlobals.write_to_log( grading_log_file, 'Warning: Renamed file - {} --> {}\n'.format( file_alias, file_submitted[0] ), 1 )
                                 AgGlobals.write_to_log( student_log_file, '<div class=warning>Warning: Renamed file - {} --> {}</div>'.format( file_alias, file_submitted[0] ), 1 )
-                                gradebook['Comment'] += 'Renamed file - {} --> {}\n'.format( file_alias, file_submitted[0] )
+                                gradebook[AgGlobals.GRADEBOOK_HEADER_COMMENT] += 'Renamed file - {} --> {}\n'.format( file_alias, file_submitted[0] )
                                 break
 
                         if not found:
                             # print 'Error: Student {} has not submitted file {}'.format( stud.get_name(), file_submitted[0] )
                             AgGlobals.write_to_log( grading_log_file, 'Error: File - {} - missing\n'.format( file_submitted[0] ), 1 )
-                            AgGlobals.write_to_log( student_log_file, '<div class=warning>Error: File - {} - missing<div class=warning>'.format( file_submitted[0] ), 1 )
-                            gradebook['Comment'] += 'File - {} - missing. Cannot grade problem {}\n'.format( file_submitted[0], p )
+                            AgGlobals.write_to_log( student_log_file, '<div class=error>Error: File - {} - missing</div>'.format( file_submitted[0] ), 1 )
+                            gradebook[AgGlobals.GRADEBOOK_HEADER_COMMENT] += 'File - {} - missing. Cannot grade problem {}\n'.format( file_submitted[0], p )
                             # self.write_stud_marks( marks_dict, gb )
                             # We cannot proceed with grading this problem.
                             skip_problem = True
+
+                # Check whether all the problems that this problem depends on
+                # succeeded before moving forward with this problem
+                for depend in self._8_problems[p].get_dependencies():
+                    if not depend_success[depend]:
+                        AgGlobals.write_to_log( grading_log_file, 'Error: Depends on problem - {}) {} - that did not succeed'.format( depend, self._8_problems[depend].get_name() ), 1 )
+                        AgGlobals.write_to_log( student_log_file, '<div class=error>Error:  Depends on problem - {}) {} - that did not suceed</div>'.format( depend, self._8_problems[depend].get_name() ), 1 )
+                        gradebook[AgGlobals.GRADEBOOK_HEADER_COMMENT] += 'Depends on problem {}. Cannot grade problem {}\n'.format( depend, p )
+                        skip_problem = True
+                        # break
 
                 if skip_problem:
                     # Rename the files back to what student has originally submitted.
@@ -647,6 +665,9 @@ class Assignment( object ):
                     # in the grading directory in subsequent copying and compiling.
                     rename_bad_file_names_back( rename_back_list )
                     continue
+
+                # Keep track of whether problem p linked successfully
+                depend_success[p] = success
 
                 # Running
                 if success:
@@ -696,8 +717,8 @@ class Assignment( object ):
 # p.test_meth()
 
     def generate_gradebook_headers( self ):
-        problem_header = ['']
-        marks_header = ['Student']
+        # problem_header = ['']
+        marks_header = [AgGlobals.GRADEBOOK_HEADER_STUDENT]
         if self.is_problems_loaded():
             for p in sorted( self._6_problem_ids.keys() ):
                 print p

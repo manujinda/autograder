@@ -507,7 +507,7 @@ class Autograder( object ):
             # Create the gradebook
             gradebook_headers = self.asmnt.generate_gradebook_headers()
             gradebook = open( os.path.join( log_directory_path, AgGlobals.AUTOGRADER_GRADEBOOK_NAME ), 'wb' )
-            gradebook_headers += [ 'Total', 'Comment' ]
+            gradebook_headers += [ AgGlobals.GRADEBOOK_HEADER_TOTAL, AgGlobals.GRADEBOOK_HEADER_COMMENT ]
             gb = csv.DictWriter( gradebook, gradebook_headers )
             gb.writeheader()
 
@@ -529,8 +529,8 @@ class Autograder( object ):
                 marks_dict = {}
                 for h in gradebook_headers:
                     marks_dict[h] = 0.0
-                marks_dict['Student'] = stud.get_index()
-                marks_dict['Comment'] = ''
+                marks_dict[AgGlobals.GRADEBOOK_HEADER_STUDENT] = stud.get_index()
+                marks_dict[AgGlobals.GRADEBOOK_HEADER_COMMENT] = ''
 
                 # Student's directory name
                 stud_dir_name = stud.get_dir( index_len )
@@ -559,7 +559,7 @@ class Autograder( object ):
                     print 'Error: Student {} does not have the assignment directory {} in the repository.'.format( stud.get_name(), stud_dir_path )
                     AgGlobals.write_to_log( grading_log, '\tError: {} directory does not exist in the repo\n'.format( self.asmnt.get_assignment_sub_dir() ) )
                     AgGlobals.write_to_log( grading_log_stud, '<p class=error>Error: {} directory does not exist in the repo</p>'.format( self.asmnt.get_assignment_sub_dir() ), 1 )
-                    marks_dict['Comment'] = '{} directory does not exist in the repo'.format( self.asmnt.get_assignment_sub_dir() )
+                    marks_dict[AgGlobals.GRADEBOOK_HEADER_COMMENT] = '{} directory does not exist in the repo'.format( self.asmnt.get_assignment_sub_dir() )
                     self.write_stud_marks( marks_dict, gb, grading_log_stud_path, html_skeleton )
                     continue
 
@@ -585,10 +585,10 @@ class Autograder( object ):
     def write_stud_marks( self, marks_dict, gb_csv, grading_log_stud_path, html_skeleton ):
         tot = 0
         for h in marks_dict:
-            if h != 'Student' and h != 'Comment':
+            if h != AgGlobals.GRADEBOOK_HEADER_STUDENT and h != AgGlobals.GRADEBOOK_HEADER_COMMENT:
                 tot += marks_dict[h]
 
-        marks_dict['Total'] = tot
+        marks_dict[AgGlobals.GRADEBOOK_HEADER_TOTAL] = tot
 
         gb_csv.writerow( marks_dict )
 

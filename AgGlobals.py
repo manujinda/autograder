@@ -86,6 +86,7 @@ class AgGlobals( object ):
     RUBRIC_LINK = 'link'
     RUBRIC_LINK_WARNING = 'linkwarn'
     RUBRIC_MEMLEAK = 'memleak'
+    RUBRIC_MARKS = 'marks'
     RUBRIC_FILE_NAMING = 'filenames'
 
     # Input output configuration file names
@@ -267,3 +268,29 @@ class AgGlobals( object ):
     @classmethod
     def get_stud_log_file_name( cls, student_dir_name, assignment_sub_dir_name ):
         return AgGlobals.STUDENT_LOG_FILE_NAME_FORMAT.format( assignment_sub_dir_name, student_dir_name )
+
+
+    @classmethod
+    def get_gradebook_heading( cls, heading_type, problem_no ):
+        if heading_type == AgGlobals.RUBRIC_COMPILE:
+            return '{}_Compile'.format( problem_no )
+
+        if heading_type == AgGlobals.RUBRIC_COMPILE_WARNING:
+            return '{}_No Warnings\nCompiling'.format( problem_no )
+
+        if heading_type == AgGlobals.RUBRIC_LINK:
+            return '{}_Link'.format( problem_no )
+
+        if heading_type == AgGlobals.RUBRIC_LINK_WARNING:
+            return '{}_No Warnings\nLinking'.format( problem_no )
+
+        if heading_type == AgGlobals.RUBRIC_MEMLEAK:
+            return '{}_No Memory Leaks'.format( problem_no )
+
+        if heading_type == AgGlobals.RUBRIC_MARKS:
+            return '{}_Marks'.format( problem_no )
+
+    # Other constant gradebook headers
+    GRADEBOOK_HEADER_STUDENT = 'Student'
+    GRADEBOOK_HEADER_TOTAL = 'Total'
+    GRADEBOOK_HEADER_COMMENT = 'Comment'
