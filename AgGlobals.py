@@ -128,6 +128,7 @@ class AgGlobals( object ):
     # STUDENT_DB_FIEDLS = ['No', 'UO ID', 'Duck ID', 'Last Name', 'First Name', 'Email', 'Dir Name', 'Repo']
 
     STUDENT_LOG_FILE_NAME_FORMAT = '+_log_file_{}_{}.txt'
+    STUDENT_GRADES_FILE_NAME_FORMAT = '+_8_grades_{}_{}.csv'
 
     # Repository last changed file names
     REPO_LAST_CHANGED_FILE = 'last_changed.txt'
@@ -268,6 +269,10 @@ class AgGlobals( object ):
     @classmethod
     def get_stud_log_file_name( cls, student_dir_name, assignment_sub_dir_name ):
         return AgGlobals.STUDENT_LOG_FILE_NAME_FORMAT.format( assignment_sub_dir_name, student_dir_name )
+
+    @classmethod
+    def get_stud_grades_file_name( cls, student_dir_name, assignment_sub_dir_name ):
+        return AgGlobals.STUDENT_GRADES_FILE_NAME_FORMAT.format( assignment_sub_dir_name, student_dir_name )
 
 
     @classmethod

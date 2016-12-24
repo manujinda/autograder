@@ -9,6 +9,7 @@ This chages rapidly. Not a part of the main project. This is just my playground 
 
 # Generating Gradebook
 import ConfigParser
+from collections import OrderedDict
 import csv
 from datetime import datetime
 from difflib import HtmlDiff
@@ -22,6 +23,19 @@ from Assignment import Assignment
 from Command import Command
 from Repository import Repository
 from diff_match_patch import diff_match_patch
+
+# Playing with ordered dictionary
+
+od = OrderedDict()
+
+od[5] = 'abc'
+od[2] = 'def'
+od[4] = 'ghi'
+od[7] = 'jkl'
+
+print od[next( reversed( od ) )]
+print od
+exit()
 
 
 # Manupulating date time

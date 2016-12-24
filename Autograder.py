@@ -4,6 +4,7 @@
 """
 import ConfigParser
 from __builtin__ import True
+from collections import OrderedDict
 import csv
 from datetime import datetime
 import os
@@ -53,7 +54,7 @@ class Autograder( object ):
 
 
         self.students = []
-        self.students_dict = {}
+        self.students_dict = OrderedDict()
 
         self.asmnt = Assignment()
 
@@ -210,17 +211,18 @@ class Autograder( object ):
             sys.exit()
 
         self.students = []
-        self.students_dict = {}
+        self.students_dict = OrderedDict()
         with open( students ) as student_db:
             reader = csv.DictReader( student_db )
             for row in reader:
                 stud = Student( row )
                 self.students.append( stud )
-                self.students_dict[stud.get_index()] = Student
+                self.students_dict[stud.get_index()] = stud
                 # print '{}\n'.format( stud )
                 # self.check_student_directory( stud )
 
-        return len( self.students ) > 0
+        # return len( self.students ) > 0
+        return len( self.students_dict ) > 0
 
 #     def clone_repos( self ):
 #         # When student database is sorted in the ascending order of  student index numbers
@@ -244,8 +246,11 @@ class Autograder( object ):
         # local student repository directory name each directory have the index number of each
         # student prefixed to student name in such a way prefixed index numbers have the same
         # length with 0s padded in the left. e.g. 003_manujinda
-        index_len = len( '{}'.format( self.students[-1].get_index() ) )
-        for stud in self.students:
+        index_len = len( '{}'.format( self.students_dict[next( reversed( self.students_dict ) )].get_index() ) )
+        for stud_no in self.students_dict.keys():
+            stud = self.students_dict[stud_no]
+#         index_len = len( '{}'.format( self.students[-1].get_index() ) )
+#         for stud in self.students:
             stud_dir = os.path.join( self.grading_root, self.students_directory, stud.get_dir( index_len ) )
             if not os.path.exists( stud_dir ):
                 # Student repository has not been cloned. Have to clone it first
@@ -459,9 +464,21 @@ class Autograder( object ):
     If this has any bad implications I'd have to copy files using
     OS file copy utilities.
     '''
-    def do_grading2( self ):
+    def do_grading2( self, stud_no = None ):
+
+        # Grade a specific student
+        if stud_no:
+            # Check whether this is a valid student number
+            if stud_no in self.students_dict.keys():
+                students = [stud_no]
+            else:
+                print 'Error: Invalid student number for grading {}. Exiting...'.format( stud_no )
+                exit()
+        else:
+            students = self.students_dict.keys()
+
         # If students are loaded and problems are loaded
-        if len( self.students ) > 0 and AgGlobals.is_flags_set( self.ag_state, AgGlobals.AG_STATE_ASSIGNMENT_LOADED, AgGlobals.AG_STATE_PROBLEMS_LOADED, AgGlobals.AG_STATE_INPUTS_LOADED ) :
+        if len( students ) > 0 and AgGlobals.is_flags_set( self.ag_state, AgGlobals.AG_STATE_ASSIGNMENT_LOADED, AgGlobals.AG_STATE_PROBLEMS_LOADED, AgGlobals.AG_STATE_INPUTS_LOADED ) :
 
             # This is the path for the students directory
             source = os.path.join( self.grading_root, self.students_directory )
@@ -471,7 +488,8 @@ class Autograder( object ):
 
             # Length of the longest student index. This is used to insert
             # leading 0's in the student directory name
-            index_len = len( '{}'.format( self.students[-1].get_index() ) )
+            index_len = len( '{}'.format( self.students_dict[next( reversed( self.students_dict ) )].get_index() ) )
+#            index_len = len( '{}'.format( self.students[-1].get_index() ) )
 
             # Get a dictionary of submitted file names and their aliases
             # submitted_file_name --> set(alias1, alias2, ...)
@@ -506,7 +524,11 @@ class Autograder( object ):
 
             # Create the gradebook
             gradebook_headers = self.asmnt.generate_gradebook_headers()
-            gradebook = open( os.path.join( log_directory_path, AgGlobals.AUTOGRADER_GRADEBOOK_NAME ), 'wb' )
+            if stud_no:
+                grades_file_stud_path = os.path.join( log_directory_path, self.students_dict[stud_no].get_stud_grades_file_name( index_len, self.asmnt.get_assignment_sub_dir() ) )
+                gradebook = open( grades_file_stud_path, 'wb' )
+            else:
+                gradebook = open( os.path.join( log_directory_path, AgGlobals.AUTOGRADER_GRADEBOOK_NAME ), 'wb' )
             gradebook_headers += [ AgGlobals.GRADEBOOK_HEADER_TOTAL, AgGlobals.GRADEBOOK_HEADER_COMMENT ]
             gb = csv.DictWriter( gradebook, gradebook_headers )
             gb.writeheader()
@@ -516,7 +538,10 @@ class Autograder( object ):
             html_skeleton = html_file.read()
 
             # For each student
-            for stud in self.students:
+            for stud_no in students:
+#            for stud_no in self.students_dict.keys():
+                stud = self.students_dict[stud_no]
+#            for stud in self.students:
 
                 grading_log_stud_path = os.path.join( log_directory_path, stud.get_stud_log_file_name( index_len, self.asmnt.get_assignment_sub_dir() ) )
                 grading_log_stud = open( grading_log_stud_path, 'a' )
@@ -723,7 +748,13 @@ if len( sys.argv ) > 2:
         if ag.created():
             ag.setup_grading_dir_tree()
 
-    elif sys.argv[1] == 'newasmnt':
+        exit()
+else:
+    print 'Error: Invalid command'
+    exit()
+
+if len( sys.argv ) > 3:
+    if sys.argv[1] == 'newasmnt':
         # Create a sub directory for a new assignment / project and provide
         # skeleton configuration file as a start
         # Command:
@@ -842,7 +873,12 @@ if len( sys.argv ) > 2:
                     if ag.load_problems():
                         if ag.read_students():
                             if ag.load_input():
-                                ag.do_grading2()
+                                if len( sys.argv ) > 5:
+                                    if sys.argv[4] == '-s':
+                                        ag.do_grading2( sys.argv[5] )
+                                else:
+                                    ag.do_grading2()
+
 
 
     elif sys.argv[1] == 'gradeSP':
@@ -891,3 +927,7 @@ if len( sys.argv ) > 2:
             ag.read_students()
             ag.update_repos()
             ag.copy_files_for_grading()
+else:
+    print 'Error: Invalid Command'
+    print '\t{}'.format( ' '.join( sys.argv ) )
+    exit()

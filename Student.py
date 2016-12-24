@@ -63,3 +63,6 @@ class Student( object ):
 
     def get_stud_log_file_name( self, index_len, assignment_sub_dir_name ):
         return AgGlobals.get_stud_log_file_name( self.get_dir( index_len ), assignment_sub_dir_name )
+
+    def get_stud_grades_file_name( self, index_len, assignment_sub_dir_name ):
+        return AgGlobals.get_stud_grades_file_name( self.get_dir( index_len ), assignment_sub_dir_name )
