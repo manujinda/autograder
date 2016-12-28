@@ -20,7 +20,7 @@ class AgGlobals( object ):
     AUTOGRADER_CFG_GRADING_ROOT = 'grading_root'  # The directory name for the autograder directory tree is stored under key in the config file. Everything autograder cares for gradeing is stored within a directory with this name
     AUTOGRADER_CFG_GRADING_MASTER = 'grading_master'  # The directory name for the directory where all the assignment / project details are stored is provided under this key in the config file. It is suggested to give this directory a meaningful name like 'Assignments' or 'Projects'
     AUTOGRADER_LOG_FILE_NAME = '+_6_grading_log.txt'
-    AUTOGRADER_GRADEBOOK_NAME = '+_7_gradebook.csv'
+    AUTOGRADER_GRADEBOOK_NAME_FORMAT = '+_{}_gradebook_{}{}{}.csv'
 
     # Autograder States
     AG_STATE_CREATED = 1
@@ -128,7 +128,9 @@ class AgGlobals( object ):
     # STUDENT_DB_FIEDLS = ['No', 'UO ID', 'Duck ID', 'Last Name', 'First Name', 'Email', 'Dir Name', 'Repo']
 
     STUDENT_LOG_FILE_NAME_FORMAT = '+_log_file_{}_{}.txt'
-    STUDENT_GRADES_FILE_NAME_FORMAT = '+_8_grades_{}_{}.csv'
+    STUDENT_GRADES_FILE_NAME_FORMAT = '+_9_grades_{}_{}.csv'
+    STUDENT_LOG_CSS_FILE_NAME = 'style.css'
+    STUDENT_LOG_HTML_SKELETON_FILE_NAME = 'skeleton.html'
 
     # Repository last changed file names
     REPO_LAST_CHANGED_FILE = 'last_changed.txt'
@@ -273,6 +275,14 @@ class AgGlobals( object ):
     @classmethod
     def get_stud_grades_file_name( cls, student_dir_name, assignment_sub_dir_name ):
         return AgGlobals.STUDENT_GRADES_FILE_NAME_FORMAT.format( assignment_sub_dir_name, student_dir_name )
+
+
+    @classmethod
+    def get_gradebook_file_name( cls, assingment_name, prob_no = None ):
+        if prob_no:
+            return AgGlobals.AUTOGRADER_GRADEBOOK_NAME_FORMAT.format( 8, assingment_name, '_', prob_no )
+        else:
+            return AgGlobals.AUTOGRADER_GRADEBOOK_NAME_FORMAT.format( 7, assingment_name, '', '' )
 
 
     @classmethod

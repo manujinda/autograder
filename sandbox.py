@@ -24,6 +24,48 @@ from Command import Command
 from Repository import Repository
 from diff_match_patch import diff_match_patch
 
+# Checking the current directory of a python script
+
+print os.getcwd()
+
+print __file__
+
+print os.path.realpath( __file__ )
+
+print( os.path.dirname( os.path.realpath( __file__ ) ) )
+
+print sys.path[0]
+
+
+exit()
+
+# Playing with sets to get all the dependencies of a problem
+
+a = set( [5] )
+
+if a:
+    print 'not empty'
+else:
+    print 'empty'
+
+get_dependencies = {5:[4], 4:[3, 2], 3:[1], 2:[], 1:[]}
+
+search_dependencis_for = set( [5] )
+dept_probs = []
+
+while search_dependencis_for:
+    p = search_dependencis_for.pop()
+    if p not in dept_probs:
+        dept_probs.append( p )
+        deps = get_dependencies[p]
+
+        for d in deps:
+            if d not in dept_probs:
+                search_dependencis_for.add( d )
+
+print dept_probs
+exit()
+
 # Playing with ordered dictionary
 
 od = OrderedDict()

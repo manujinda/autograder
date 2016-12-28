@@ -558,7 +558,7 @@ class Assignment( object ):
     '''
         Autograder do_grade2 calls this.
     '''
-    def grade2( self, cwd, grading_log_file = None, student_log_file = None, gradebook = None ):
+    def grade2( self, cwd, grading_log_file = None, student_log_file = None, gradebook = None, prob_no = None ):
 
         def rename_bad_file_names_back( name_tuple_list ):
             # Rename the files back to what student has originally submitted.
@@ -573,8 +573,16 @@ class Assignment( object ):
         success = False
         # If problems are loaded
         if self.is_problems_loaded():
+
+            if prob_no:
+                problems = self.get_dependent_problme_nos( prob_no )
+            else:
+                problems = sorted( self._6_problem_ids.keys() )
+
             success = True
-            for p in sorted( self._6_problem_ids.keys() ):
+
+            for p in problems:
+            # for p in sorted( self._6_problem_ids.keys() ):
 
                 AgGlobals.write_to_log( student_log_file, '<h3 class=problem_heading>Grading problem: {}) {}</h3>'.format( p, self._8_problems[p].get_name() ), 1 )
 
@@ -716,11 +724,17 @@ class Assignment( object ):
 # p = Assignment()
 # p.test_meth()
 
-    def generate_gradebook_headers( self ):
+    def generate_gradebook_headers( self, prob_no = None ):
         # problem_header = ['']
         marks_header = [AgGlobals.GRADEBOOK_HEADER_STUDENT]
         if self.is_problems_loaded():
-            for p in sorted( self._6_problem_ids.keys() ):
+
+            if prob_no:
+                problems = self.get_dependent_problme_nos( prob_no )
+            else:
+                problems = sorted( self._6_problem_ids.keys() )
+
+            for p in problems:
                 print p
                 headers = self._8_problems[p].get_gradebook_headers()
 
@@ -744,3 +758,46 @@ class Assignment( object ):
 
         # return( problem_header, marks_header )
         return marks_header
+
+
+    '''
+        Find all the problem numbers the provided problem prob_no
+        is directly or inderectly dependent upon.
+    '''
+    def get_dependent_problme_nos( self, prob_no ):
+
+        # Problems numbers yet to search for dependencies
+        search_dependencis = set( [prob_no] )
+
+        # Already found dependencies
+        dept_probs = []
+
+        # While there are more problems to search for dependencies
+        while search_dependencis:
+
+            # Consider one such probelm
+            p = search_dependencis.pop()
+
+            # If that problem is not already in the
+            # dependencies found so far.
+            # This could happen due to indirect dependencies
+            if p not in dept_probs:
+
+                # Add this problem to the set of dependencies
+                dept_probs.append( p )
+
+                # Get all the problems that this problem is dependent upon
+                deps = self._8_problems[p].get_dependencies()
+
+                # For each problem that this problem is dependent upon
+                for d in deps:
+
+                    # If that problem is not already in the list of dependent
+                    # problems found so far.
+                    if d not in dept_probs:
+
+                        # We have to find all the problems that this problem
+                        # is dependent upon.
+                        search_dependencis.add( d )
+
+        return sorted( dept_probs )

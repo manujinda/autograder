@@ -99,6 +99,12 @@ class Autograder( object ):
         # Copy the autograder configuration file to autograder directory for later usage
         shutil.copy2( self.config_file, os.path.join( self.grading_root, AgGlobals.AUTOGRADER_CFG_NAME ) )
 
+        # Get the directory where Autograder.py module is stored
+        autograder_module_dir = os.path.dirname( os.path.realpath( __file__ ) )
+        # Copy the student comments style sheet to the grading root directory
+        shutil.copy2( os.path.join( autograder_module_dir, AgGlobals.STUDENT_LOG_CSS_FILE_NAME ), self.grading_root )
+
+
         # Create the skeleton of the student data csv file
         student_db = os.path.join( self.grading_root, self.students_directory, AgGlobals.STUDENT_DB )
         with open( student_db, 'wb' ) as students:
@@ -314,7 +320,7 @@ class Autograder( object ):
 
             # Create the gradebook
             gradebook_headers = self.asmnt.generate_gradebook_headers()
-            gradebook = open( os.path.join( log_directory_path, AgGlobals.AUTOGRADER_GRADEBOOK_NAME ), 'wb' )
+            gradebook = open( os.path.join( log_directory_path, AgGlobals.get_gradebook_file_name( self.asmnt.get_assignment_sub_dir() ) ), 'wb' )
             # gradebook_headers.append( 'Total' )
             gradebook_headers += [ 'Total', 'Comment' ]
             gb = csv.DictWriter( gradebook, gradebook_headers )
@@ -464,7 +470,14 @@ class Autograder( object ):
     If this has any bad implications I'd have to copy files using
     OS file copy utilities.
     '''
-    def do_grading2( self, stud_no = None ):
+    def do_grading2( self, stud_no = None, prob_no = None ):
+
+        if prob_no:
+            try:
+                prob_no = int( prob_no )
+            except ValueError:
+                print 'Error: Problem number "{}" must be an integer. Exiting...'.format( prob_no )
+                exit()
 
         # Grade a specific student
         if stud_no:
@@ -523,18 +536,22 @@ class Autograder( object ):
             AgGlobals.write_to_log( grading_log, '\n{0}<< Grading Session on {1} : START >>{0}\n'.format( '-' * 20, datetime.now().strftime( '%x :: %X' ) ) )
 
             # Create the gradebook
-            gradebook_headers = self.asmnt.generate_gradebook_headers()
+            gradebook_headers = self.asmnt.generate_gradebook_headers( prob_no )
             if stud_no:
                 grades_file_stud_path = os.path.join( log_directory_path, self.students_dict[stud_no].get_stud_grades_file_name( index_len, self.asmnt.get_assignment_sub_dir() ) )
                 gradebook = open( grades_file_stud_path, 'wb' )
             else:
-                gradebook = open( os.path.join( log_directory_path, AgGlobals.AUTOGRADER_GRADEBOOK_NAME ), 'wb' )
+                # gradebook = open( os.path.join( log_directory_path, AgGlobals.AUTOGRADER_GRADEBOOK_NAME ), 'wb' )
+                gradebook = open( os.path.join( log_directory_path, AgGlobals.get_gradebook_file_name( self.asmnt.get_assignment_sub_dir(), prob_no ) ), 'wb' )
             gradebook_headers += [ AgGlobals.GRADEBOOK_HEADER_TOTAL, AgGlobals.GRADEBOOK_HEADER_COMMENT ]
             gb = csv.DictWriter( gradebook, gradebook_headers )
             gb.writeheader()
 
+            # Get the directory where Autograder.py module is stored
+            autograder_module_dir = os.path.dirname( os.path.realpath( __file__ ) )
             # Open and read grading output skeleton html
-            html_file = open( 'skeleton.html', 'r' )
+            html_file = open( os.path.join( autograder_module_dir, AgGlobals.STUDENT_LOG_HTML_SKELETON_FILE_NAME ), 'r' )
+            # html_file = open( 'skeleton.html', 'r' )
             html_skeleton = html_file.read()
 
             # For each student
@@ -626,24 +643,6 @@ class Autograder( object ):
         grading_log_stud.close()
         grading_log_stud_html.close()
 
-
-    '''
-        Grade a particular problem of a particular student
-    '''
-    def grade_student_problem( self, student_id, problem_id ):
-
-        # Check whether this is a valid student
-        stud = self.students_dict.get( student_id, None )
-        if not stud:
-            print 'Error: Invalid Student id - {}'.format( student_id )
-            return False
-
-        # Check whether assignment, problems and inputs are loaded
-        # For the moment we are loading all the problems and all the inputs.
-        # A better approach is to load only the problem needed and the inputs for that problem
-        if not AgGlobals.is_flags_set( self.ag_state, AgGlobals.AG_STATE_ASSIGNMENT_LOADED, AgGlobals.AG_STATE_PROBLEMS_LOADED, AgGlobals.AG_STATE_INPUTS_LOADED ) :
-            print 'Error: Assignment, problems and input are not properly loaded to proceed with grading'
-            return False
 
     # # !! Needs update.. student.get_dir() has been changed to get_dir(index_len)
 #     def check_student_directory( self, student ):
@@ -875,32 +874,14 @@ if len( sys.argv ) > 3:
                             if ag.load_input():
                                 if len( sys.argv ) > 5:
                                     if sys.argv[4] == '-s':
-                                        ag.do_grading2( sys.argv[5] )
+                                        ag.do_grading2( stud_no = sys.argv[5] )
+                                    elif sys.argv[4] == '-p':
+                                        ag.do_grading2( prob_no = sys.argv[5] )
+                                    elif sys.argv[4] == '-sp' and len( sys.argv ) > 6:
+                                        ag.do_grading2( stud_no = sys.argv[5], prob_no = sys.argv[6] )
                                 else:
                                     ag.do_grading2()
 
-
-
-    elif sys.argv[1] == 'gradeSP':
-        # Grade a particular problem of a particular student
-        # Students, Assignment and its problems must be loaded before running this command
-        # Command:
-        #     $ python Autograder.py grading <path to autograder root directory> <assignment / project name>
-        # Test Parameters
-        #    gradeSP /home/users/manu/Documents/manujinda/uo_classes/4_2016_summer/boyana/grading assignment_2 <student id> <problem id>
-        if len( sys.argv ) > 4:
-            ag_cfg = os.path.join( sys.argv[2], AgGlobals.AUTOGRADER_CFG_NAME )
-            stud_id = sys.argv[4]
-            prob_id = sys.argv[5]
-            ag = Autograder( ag_cfg )
-
-            if ag.created():
-                if ag.validate_config():
-                    if ag.load_assignment( sys.argv[3] ):
-                        if ag.load_problems():
-                            if ag.read_students():
-                                if ag.load_input():
-                                    ag.grade_student_problem( stud_id, prob_id )
 
 
     elif sys.argv[1] == 'setasmnt':
