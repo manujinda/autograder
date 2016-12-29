@@ -377,6 +377,9 @@ class Problem( object ):
                         if ( not warnings_present ) and AgGlobals.RUBRIC_COMPILE_WARNING in rubric:
                             gradebook[AgGlobals.get_gradebook_heading( AgGlobals.RUBRIC_COMPILE_WARNING, self._01_prob_no )] = self._15_marks[AgGlobals.RUBRIC_COMPILE_WARNING]
 
+                    else:
+                        print 'Success: Compiling sample solution'
+
         return AgGlobals.is_flags_set( self._99_state, AgGlobals.PROBLEM_STATE_COMPILED )
 
 
@@ -449,6 +452,8 @@ class Problem( object ):
 
                         if ( not warnings_present ) and AgGlobals.RUBRIC_LINK_WARNING in rubric:
                             gradebook[AgGlobals.get_gradebook_heading( AgGlobals.RUBRIC_LINK_WARNING, self._01_prob_no )] = self._15_marks[AgGlobals.RUBRIC_LINK_WARNING]
+                    else:
+                        print 'Success: Linking sample solution'
 
         return AgGlobals.is_flags_set( self._99_state, AgGlobals.PROBLEM_STATE_LINKED )
 

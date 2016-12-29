@@ -19,6 +19,8 @@ class AgGlobals( object ):
     AUTOGRADER_CFG_SECTION = 'Autograder Setup'  # Section name in the autograder configuration file to store configuration values
     AUTOGRADER_CFG_GRADING_ROOT = 'grading_root'  # The directory name for the autograder directory tree is stored under key in the config file. Everything autograder cares for gradeing is stored within a directory with this name
     AUTOGRADER_CFG_GRADING_MASTER = 'grading_master'  # The directory name for the directory where all the assignment / project details are stored is provided under this key in the config file. It is suggested to give this directory a meaningful name like 'Assignments' or 'Projects'
+    AUTOGRADER_CFG_GRADING_ROOT_COMMENT = '  ; Enter the root directory for all the grading of this class'
+    AUTOGRADER_CFG_GRADING_MASTER_COMMENT = 'assignments ; Enter the master directory where all assignment / project configurations are kept'
     AUTOGRADER_LOG_FILE_NAME = '+_6_grading_log.txt'
     AUTOGRADER_GRADEBOOK_NAME_FORMAT = '+_{}_gradebook_{}{}{}.csv'
 
@@ -47,7 +49,7 @@ class AgGlobals( object ):
     ASSIGNMENT_INIT_NO = '1 ; insert the assignment number before the ; sign'
     ASSIGNMENT_INIT_NAME = 'hello world ; insert the assignment name before the ; sign'
     ASSIGNMENT_INIT_DUE_DATE = '6/28/2016 ; insert the due date before the ; sign. Format mm/dd/yyyy'
-    ASSIGNMENT_INIT_PROBLEM_IDS = '1:prog 2:code 3:ans 4:mcq ; insert the different problem names / numbers of this assignment followed by problem type separated by a :. Use spaces to separate problems'
+    ASSIGNMENT_INIT_PROBLEM_IDS = '1:prog 2:code 3:ans 4:mcq ; insert the different problem numbers of this assignment followed by problem type separated by a :. Use spaces to separate problems'
 
     # Problem configuration file name and keywords
     PROBLEM_CFG_FORMAT = '+_2_{}_problems.cfg'  # Format for problems of an assignment / project configuration file name. E.g. +_2_Assignment_1_problems.cfg
@@ -71,7 +73,7 @@ class AgGlobals( object ):
     PROBLEM_INIT_TIMEOUT = -1  # Timeout interval to decide infinite loop. # -1 means do not timeout
     PROBLEM_INIT_LANGUAGE = ''
     PROBLEM_INIT_DEPENDS_ON = ''
-    PROBLEM_INIT_MARKS = 'compile:10 link:10 memleaks:10 0:0 50:80 100:100 ; Specify the different degrees to with the student output should match the reference output and the marks granted'
+    PROBLEM_INIT_MARKS = 'compile:10 compwarn:5 link:10 linkwarn:5 memleaks:10 0:0 50:80 100:100 ; Specify the different degrees to with the student output should match the reference output and the marks granted'
 
     # Different states of a problem
     PROBLEM_STATE_INITIALIZED = 1

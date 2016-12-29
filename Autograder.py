@@ -30,8 +30,12 @@ class Autograder( object ):
             and grading master directory names
         '''
         if not os.path.exists( config_file ):
-            print 'Error: Autograder Configuration File {} does not exist. Exit...'.format( config_file )
-            sys.exit( 0 )
+            local_config_file = os.path.join( os.getcwd(), config_file )
+            if not os.path.exists( local_config_file ):
+                print 'Error: Autograder Configuration File {} does not exist. Exit...'.format( config_file )
+                sys.exit( 0 )
+            else:
+                config_file = local_config_file
 
         self.config_file = config_file
 
@@ -65,6 +69,28 @@ class Autograder( object ):
         # self.ag_created = True
         self.ag_state = AgGlobals.AG_STATE_CREATED
 
+    '''
+        Generate a blank autograder configuration file
+    '''
+    @classmethod
+    def generage_autograder_config_skel( self, config_file_name ):
+        cfg_file_path = os.path.join( os.getcwd(), config_file_name )
+        if os.path.exists( cfg_file_path ):
+            print 'Error: The configuration file {} already exists. Exit...'.format( cfg_file_path )
+            return False
+
+        assignment_config = ConfigParser.SafeConfigParser()
+        assignment_config.add_section( AgGlobals.AUTOGRADER_CFG_SECTION )
+
+        assignment_config.set( AgGlobals.AUTOGRADER_CFG_SECTION, AgGlobals.AUTOGRADER_CFG_GRADING_ROOT, AgGlobals.AUTOGRADER_CFG_GRADING_ROOT_COMMENT )
+        assignment_config.set( AgGlobals.AUTOGRADER_CFG_SECTION, AgGlobals.AUTOGRADER_CFG_GRADING_MASTER, AgGlobals.AUTOGRADER_CFG_GRADING_MASTER_COMMENT )
+
+        with open( config_file_name, 'wb' ) as configfile:
+            assignment_config.write( configfile )
+
+        print 'Success: Blank autograder configuration file {} successfully created'.format( config_file_name )
+
+
 
 
     def created( self ):
@@ -93,7 +119,7 @@ class Autograder( object ):
         os.mkdir( os.path.join( self.grading_root, self.students_directory ) )
 
         # All the compiling and grading of student submission happens here.
-        # Foe each student there is a directory with the cloned student repo name in this directory.
+        # For each student there is a directory with the cloned student repo name in this directory.
         os.mkdir( os.path.join( self.grading_root, self.grading_directory ) )
 
         # Copy the autograder configuration file to autograder directory for later usage
@@ -116,8 +142,8 @@ class Autograder( object ):
         assignment = self.new_assignment( assignment_name )
 
         # Populate the assignment with the just created assignment configuration file
-        assignment.load_assignment( self.grading_root, self.grading_master, assignment_name )
-        assignment.generate_problem_config()
+        # assignment.load_assignment( self.grading_root, self.grading_master, assignment_name )
+        # assignment.generate_problem_config()
 
         print 'Setting up autograder directory structure completed successfully'
 
@@ -736,16 +762,19 @@ class Autograder( object ):
 
 
 if len( sys.argv ) > 2:
-    if sys.argv[1] == 'setup':
+    if sys.argv[1] == 'gencfg':
+        Autograder.generage_autograder_config_skel( sys.argv[2] )
+        exit()
+    elif sys.argv[1] == 'setup':
         # Setup the initial directory tree for grading one instance of a class
-        # Need to run once at the beginning of the semester / term / quater
+        # Need to run once at the beginning of the semester / term / quarter
         # Command:
         #    $ python Autograder.py setup <path to autograder configuration file>
         # Test Parameters
         #    setup /home/users/manu/Documents/manujinda/uo_classes/4_2016_summer/boyana/autograder_ws/autograder/autograder.cfg
         ag = Autograder( sys.argv[2] )
-        if ag.created():
-            ag.setup_grading_dir_tree()
+        # if ag.created():
+        ag.setup_grading_dir_tree()
 
         exit()
 else:

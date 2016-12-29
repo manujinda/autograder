@@ -207,7 +207,8 @@ class Assignment( object ):
                 section = AgGlobals.get_problem_section( self._5_subdir, p )
                 prob_config.add_section( section )
                 for key in sorted( temp.__dict__.keys() ):
-                    prob_config.set( section, key[4:], ' {}'.format( temp.__dict__[key] ) )
+                    if key[0:4] != '_99_':
+                        prob_config.set( section, key[4:], ' {}'.format( temp.__dict__[key] ) )
 
             with open( self.get_prob_config_path(), 'wb' ) as configfile:
                 prob_config.write( configfile )
