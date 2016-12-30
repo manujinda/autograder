@@ -347,7 +347,7 @@ class Problem( object ):
                             AgGlobals.write_to_log( student_log_file, '</pre></div>', 1 )
                             print '**** Compilation Errors present ****'
 
-                        if err.find( 'warning' ) >= 0:
+                        elif err.find( 'warning' ) >= 0:
                             AgGlobals.write_to_log( grading_log_file, 'Warning: Compiling file {}\n'.format( f[0] ), 1 )
                             # AgGlobals.write_to_log( student_log_file, '\tWarning: Compiling file {}\n'.format( f[0] ) )
                             AgGlobals.write_to_log( student_log_file, '<div class=warning>Warning: Compiling file {}</div>'.format( f[0] ), 1 )
@@ -422,7 +422,7 @@ class Problem( object ):
                     print '**** Linking Errors present ****'
 
                 # warning = warning_pattern.match( err )
-                if err.find( 'warning' ) >= 0:
+                elif err.find( 'warning' ) >= 0:
                     AgGlobals.write_to_log( grading_log_file, 'Warning: Linking target {} in problem: {} ) {}\n'.format( self._11_make_target, self._01_prob_no, self._02_name ), 1 )
                     # AgGlobals.write_to_log( student_log_file, '\tWarning: Linking target {} in problem: {} ) {}\n'.format( self._11_make_target, self._01_prob_no, self._02_name ) )
                     AgGlobals.write_to_log( student_log_file, '<div class=warning>Warning: Linking target {} in problem: {} ) {}</div>'.format( self._11_make_target, self._01_prob_no, self._02_name ), 1 )
@@ -477,40 +477,68 @@ class Problem( object ):
                     # print assignment
 
                     if gradebook:
-                        referenec_output_file_path = os.path.join( assignment_master_dir_path, AgGlobals.INPUT_OUTPUT_DIRECTORY, AgGlobals.get_output_file_name( assignment, self._01_prob_no, io ) )
-                        # print referenec_output_file_path
-                        rf = open( referenec_output_file_path, 'r' )
-                        r_lines = rf.read()
-                        rf.close()
-
-                        # print output_file_path
-                        sf = open( output_file_path )
-                        s_lines = sf.read()
-                        sf.close()
-
-                        sm = SequenceMatcher( None, s_lines, r_lines )
-                        matching_ratio, outpu_diff = self.grade_student_output( s_lines, r_lines, False )
-                        print matching_ratio
-                        print outpu_diff
-
                         AgGlobals.write_to_log( student_log_file, '<h4 class=output>$ {}</h4>'.format( cmd[3:] ), 1 )
                         AgGlobals.write_to_log( student_log_file, '<div>Inputs provided in order</div>', 1 )
                         AgGlobals.write_to_log( student_log_file, '<div class=input><pre>', 1 )
                         AgGlobals.write_to_log( student_log_file, self._99_inputs[io].get_inputs().replace( "&", "&amp;" ).replace( "<", "&lt;" ).replace( ">", "&gt;" ), 2 )
                         AgGlobals.write_to_log( student_log_file, '</pre></div>'.format( self._99_inputs[io].get_inputs() ), 1 )
-                        AgGlobals.write_to_log( student_log_file, '<div class=output_diff>', 1 )
-                        AgGlobals.write_to_log( student_log_file, outpu_diff, 2 )
-                        AgGlobals.write_to_log( student_log_file, '</div>', 1 )
+                        if self._99_inputs[io].does_output_to_stdout():
+                            referenec_output_file_path = os.path.join( assignment_master_dir_path, AgGlobals.INPUT_OUTPUT_DIRECTORY, AgGlobals.get_output_file_name( assignment, self._01_prob_no, io ) )
+                            # print referenec_output_file_path
+                            rf = open( referenec_output_file_path, 'r' )
+                            r_lines = rf.read()
+                            rf.close()
 
-                        matching_ratio_all_inputs += matching_ratio
-                        # print sm.ratio()
-                        # sm = SequenceMatcher( None, output_file_path, referenec_output_file_path )
+                            # print output_file_path
+                            sf = open( output_file_path )
+                            s_lines = sf.read()
+                            sf.close()
 
-                        # cmd = 'diff {} {}'.format( output_file_path, referenec_output_file_path )
-                        # retcode, out, err = Command( cmd ).run()
-                        # print out, err
-                        # for tag, i1, i2, j1, j2 in sm.get_opcodes():
-                        #    print ( '{:>7} a[{}:{}] b[{}:{}]'.format( tag, i1, i2, j1, j2 ) )
+                            sm = SequenceMatcher( None, s_lines, r_lines )
+                            matching_ratio, outpu_diff = self.grade_student_output( s_lines, r_lines, False )
+                            print matching_ratio
+                            print outpu_diff
+
+                            AgGlobals.write_to_log( student_log_file, '<h5 class=stdout>Standard Output</h5>', 1 )
+                            AgGlobals.write_to_log( student_log_file, '<div class=output_diff>', 1 )
+                            AgGlobals.write_to_log( student_log_file, outpu_diff, 2 )
+                            AgGlobals.write_to_log( student_log_file, '</div>', 1 )
+
+                            matching_ratio_all_inputs += matching_ratio
+                            # print sm.ratio()
+                            # sm = SequenceMatcher( None, output_file_path, referenec_output_file_path )
+
+                            # cmd = 'diff {} {}'.format( output_file_path, referenec_output_file_path )
+                            # retcode, out, err = Command( cmd ).run()
+                            # print out, err
+                            # for tag, i1, i2, j1, j2 in sm.get_opcodes():
+                            #    print ( '{:>7} a[{}:{}] b[{}:{}]'.format( tag, i1, i2, j1, j2 ) )
+
+                            for out_file in self._99_inputs[io].get_output_files_generated():
+                                output_file_path = os.path.join( in_out_dir, out_file )
+                                if os.path.exists( output_file_path ):
+                                    referenec_output_file_path = os.path.join( assignment_master_dir_path, AgGlobals.INPUT_OUTPUT_DIRECTORY, '{}_{}'.format( AgGlobals.get_output_file_name( assignment, self._01_prob_no, io ), out_file ) )
+                                    # print referenec_output_file_path
+                                    rf = open( referenec_output_file_path, 'r' )
+                                    r_lines = rf.read()
+                                    rf.close()
+
+                                    sf = open( output_file_path )
+                                    s_lines = sf.read()
+                                    sf.close()
+
+                                    sm = SequenceMatcher( None, s_lines, r_lines )
+                                    matching_ratio, outpu_diff = self.grade_student_output( s_lines, r_lines, False )
+                                    # print matching_ratio
+                                    # print outpu_diff
+
+                                    AgGlobals.write_to_log( student_log_file, '<h5 class=fileout>Output of file: {}</h5>'.format( out_file ), 1 )
+                                    AgGlobals.write_to_log( student_log_file, '<div class=output_diff>', 1 )
+                                    AgGlobals.write_to_log( student_log_file, outpu_diff, 2 )
+                                    AgGlobals.write_to_log( student_log_file, '</div>', 1 )
+                                else:
+                                    AgGlobals.write_to_log( grading_log_file, 'Error: Output file {} not created\n'.format( out_file ), 1 )
+                                    AgGlobals.write_to_log( student_log_file, '<div class=error>Error: Output file {} not created</div>'.format( out_file ), 1 )
 
                     for out_file in self._99_inputs[io].get_output_files_generated():
                         cmd = 'mv {0} {1}_{0}'.format( out_file, AgGlobals.get_output_file_name( assignment, self._01_prob_no, io ) )

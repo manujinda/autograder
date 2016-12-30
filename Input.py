@@ -40,6 +40,7 @@ class Input( object ):
         # The place where the output is produced.
         # stdout - Standard output
         # file - Output is produced in a file.
+        # both - Output to both stdout and files
         self._4_output = output  # 'stdout ; specify before the ;. values: stdout, file'
 
         # If output is produced in a file, the required file name is specified here
@@ -67,6 +68,9 @@ class Input( object ):
             print '\Input configuration file {} does not exist, exit...'.format( config_file )
             sys.exit()
 
+        input_nature_in_problem = self._1_nature
+        output_location_in_problem = self._4_output
+
         config = ConfigParser.SafeConfigParser()
         config.read( config_file )
         print self
@@ -80,6 +84,20 @@ class Input( object ):
             sys.exit()
         except ConfigParser.NoOptionError as no_op_err:
             print 'Error: {} in input configuration file {}. Exiting...'.format( no_op_err, config_file )
+            sys.exit()
+
+        if self._1_nature != input_nature_in_problem:
+            print 'Error:  Input nature mismatch for input'  # "{}" of type "{}"'.format( self._02_name, self._03_prob_type )
+            print '\tInput nature in problem configuration : {}'.format( input_nature_in_problem )
+            print '\tInput nature in input configuration    : {}'.format( self._1_nature )
+            print '\tExiting...'
+            sys.exit()
+
+        if self._4_output != output_location_in_problem:
+            print 'Error:  Output location mismatch for input'  # "{} - {}"'.format( self._01_prob_no, self._02_name )
+            print '\tOutput location in problem configuration : {}'.format( output_location_in_problem )
+            print '\tOutput location in input configuration    : {}'.format( self._4_output )
+            print '\tExiting...'
             sys.exit()
 
         if self._1_nature == AgGlobals.INPUT_NATURE_LONG:
@@ -118,3 +136,7 @@ class Input( object ):
             return self._5_out_file
         else:
             return []
+
+
+    def does_output_to_stdout( self ):
+        return self._4_output == AgGlobals.OUTPUT_TO_STDOUT or self._4_output == AgGlobals.OUTPUT_TO_BOTH
