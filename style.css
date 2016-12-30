@@ -35,3 +35,10 @@ h2.grading_session {
 	margin: 10px
 }
 
+del {
+	background: #ffe6e6;
+}
+
+ins {
+	background: #e6ffe6;
+}

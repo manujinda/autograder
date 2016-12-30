@@ -629,6 +629,7 @@ class Autograder( object ):
                     AgGlobals.write_to_log( grading_log_stud, '<p class=error>Error: {} directory does not exist in the repo</p>'.format( self.asmnt.get_assignment_sub_dir() ), 1 )
                     marks_dict[AgGlobals.GRADEBOOK_HEADER_COMMENT] = '{} directory does not exist in the repo'.format( self.asmnt.get_assignment_sub_dir() )
                     self.write_stud_marks( marks_dict, gb, grading_log_stud_path, html_skeleton )
+                    grading_log_stud.close()
                     continue
 
                 # Copy the provided files into student's directory in the grading directory

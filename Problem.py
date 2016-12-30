@@ -605,18 +605,22 @@ class Problem( object ):
 
             if op == 'insert':
                 if ( ro.strip() or not ignore_spaces ):
-                    html.append( '<ins style=\"background:#e6ffe6;\">{}</ins>'.format( ro ) )
+                    # html.append( '<ins style=\"background:#e6ffe6;\">{}</ins>'.format( ro ) )
+                    html.append( '<ins>{}</ins>'.format( ro ) )
                 else:
                     space_mismatch += len( ro )
             elif op == 'delete':
                 if ( so.strip() or not ignore_spaces ):
-                    html.append( '<del style=\"background:#ffe6e6;\">{}</del>'.format( so ) )
+                    # html.append( '<del style=\"background:#ffe6e6;\">{}</del>'.format( so ) )
+                    html.append( '<del>{}</del>'.format( so ) )
                 else:
                     html.append( '<span>{}</span>'.format( so ) )
                     space_mismatch += len( so )
             elif op == 'replace':
-                html.append( '<del style=\"background:#ffe6e6;\">{}</del>'.format( so ) )
-                html.append( '<ins style=\"background:#e6ffe6;\">{}</ins>'.format( ro ) )
+                # html.append( '<del style=\"background:#ffe6e6;\">{}</del>'.format( so ) )
+                # html.append( '<ins style=\"background:#e6ffe6;\">{}</ins>'.format( ro ) )
+                html.append( '<del>{}</del>'.format( so ) )
+                html.append( '<ins>{}</ins>'.format( ro ) )
             elif op == 'equal':
                 html.append( '<span>{}</span>'.format( so ) )
 
