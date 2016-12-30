@@ -110,7 +110,8 @@ class Input( object ):
             self._3_input = inp.read()
             inp.close()
 
-        if self._4_output != AgGlobals.OUTPUT_TO_STDOUT:
+        if self._4_output == AgGlobals.OUTPUT_TO_FILE or self._4_output == AgGlobals.OUTPUT_TO_BOTH:
+        # if self._4_output != AgGlobals.OUTPUT_TO_STDOUT:
             self._5_out_file = self._5_out_file.split()
 
         temp_marks = AgGlobals.parse_config_line( self._6_marks )
@@ -132,11 +133,12 @@ class Input( object ):
 
 
     def get_output_files_generated( self ):
-        if self._4_output != AgGlobals.OUTPUT_TO_STDOUT:
+        if self._4_output == AgGlobals.OUTPUT_TO_FILE or self._4_output == AgGlobals.OUTPUT_TO_BOTH:
+        # if self._4_output != AgGlobals.OUTPUT_TO_STDOUT:
             return self._5_out_file
         else:
             return []
 
 
-    def does_output_to_stdout( self ):
+    def outputs_to_stdout( self ):
         return self._4_output == AgGlobals.OUTPUT_TO_STDOUT or self._4_output == AgGlobals.OUTPUT_TO_BOTH

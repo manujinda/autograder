@@ -159,9 +159,27 @@ class AgGlobals( object ):
         return AgGlobals.INPUT_FILE_NAME_FORMAT.format( assignment_name, problem_id, input_id )
 
 
+    '''
+        This method returns a file name to store output of a test run
+        for a particular problem, input pair.
+        If the last parameter is None, this gives a file name to store
+        output produced in the standard output.
+        If the last parameter is a file name, this means that the problem
+        generates a file with this name as output when run on this input.
+        Since a problem could produce the same output file name for two
+        or more different inputs, if we keep only the original name, the
+        output file produced by the last set of inputs will only prevail
+        overwriting all the others. To prevent this, this function provides
+        a unique output file name prefixing the assignment, problem and input
+        ids creating a namespace effect.
+    '''
     @classmethod
-    def get_output_file_name( cls, assignment_name, problem_id, input_id ):
-        return AgGlobals.OUTPUT_FILE_NAME_FORMAT.format( assignment_name, problem_id, input_id )
+    def get_output_file_name( cls, assignment_name, problem_id, input_id, if_files_produced_name = None ):
+
+        if if_files_produced_name:
+            return '{}_{}'.format( AgGlobals.OUTPUT_FILE_NAME_FORMAT.format( assignment_name, problem_id, input_id ), if_files_produced_name )
+        else:
+            return AgGlobals.OUTPUT_FILE_NAME_FORMAT.format( assignment_name, problem_id, input_id )
 
 
     @classmethod
