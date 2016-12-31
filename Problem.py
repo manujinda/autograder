@@ -591,7 +591,6 @@ class Problem( object ):
 
     def get_gradebook_headers( self ):
         marks_header = []
-        print self._15_marks
         if self._03_prob_type == AgGlobals.PROBLEM_TYPE_PROG:
             if self._08_language in ['c', 'C', 'cpp', 'CPP']:
                 rubric = self._15_marks.keys()

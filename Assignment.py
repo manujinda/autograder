@@ -627,10 +627,7 @@ class Assignment( object ):
                 problems = sorted( self._6_problem_ids.keys() )
 
             for p in problems:
-                print p
                 headers = self._8_problems[p].get_gradebook_headers()
-
-                print headers
                 marks_header += headers
 
         return marks_header

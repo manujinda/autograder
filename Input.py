@@ -73,7 +73,7 @@ class Input( object ):
 
         config = ConfigParser.SafeConfigParser()
         config.read( config_file )
-        print self
+        # print self
 
         try:
             for key in sorted( self.__dict__.keys() ):
@@ -119,7 +119,7 @@ class Input( object ):
         for mark in temp_marks:
             self._6_marks[mark[0]] = mark[1]
 
-        print self
+        # print self
 
         return True
 
