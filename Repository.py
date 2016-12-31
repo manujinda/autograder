@@ -82,18 +82,31 @@ class Repository( object ):
                     fo.write( str( datetime.now() ) )
                     fo.close()
                     AgGlobals.write_to_log( grading_log_file, 'Success: Cloning\n' )
-                    AgGlobals.write_to_log( student_log_file, 'Success: Cloning\n' )
+                    # AgGlobals.write_to_log( student_log_file, 'Success: Cloning\n' )
+                    AgGlobals.write_to_log( student_log_file, '<h3 class=success>Success: Cloning Repo</h3>', 1 )
                     return True
                 else:
-                    AgGlobals.write_to_log( grading_log_file, '\tError: Cloning\n' )
-                    AgGlobals.write_to_log( grading_log_file, '\t{} {} {}'.format( retcode, out, err ) )
-                    AgGlobals.write_to_log( student_log_file, '\tError: Cloning\n' )
-                    AgGlobals.write_to_log( student_log_file, '\t{} {} {}'.format( retcode, out, err ) )
+                    AgGlobals.write_to_log( grading_log_file, 'Error: Cloning\n', 1 )
+                    AgGlobals.write_to_log( grading_log_file, '{} {} {}'.format( retcode, out, err ), 1 )
+                    # AgGlobals.write_to_log( student_log_file, '\tError: Cloning\n' )
+                    # AgGlobals.write_to_log( student_log_file, '\t{} {} {}'.format( retcode, out, err ) )
+                    AgGlobals.write_to_log( student_log_file, '<div class=error>Error: Cloning Repo - {}</div>'.format( self.uri ), 1 )
+
+                    AgGlobals.write_to_log( student_log_file, '<div class=error_out><pre>', 1 )
+                    err = err.replace( "&", "&amp;" ).replace( "<", "&lt;" ).replace( ">", "&gt;" )
+                    out = out.replace( "&", "&amp;" ).replace( "<", "&lt;" ).replace( ">", "&gt;" )
+                    AgGlobals.write_to_log( student_log_file, 'Return code: {}'.format( retcode ), 2 )
+                    AgGlobals.write_to_log( student_log_file, out, 2 )
+                    AgGlobals.write_to_log( student_log_file, err, 2 )
+                    AgGlobals.write_to_log( student_log_file, '</pre></div>', 1 )
+
+                    # AgGlobals.write_to_log( student_log_file, '{} {} {}'.format( retcode, out, err ), 1 )
                     return False
 
         else:
             print 'Error: Invalid repository uri: {}'.format( self.uri )
-            AgGlobals.write_to_log( student_log_file, '\tError: Invalid git uri' )
+            AgGlobals.write_to_log( student_log_file, '<div class=error>Error: Invalid git URI - {}</div>'.format( self.uri ), 1 )
+            # AgGlobals.write_to_log( student_log_file, '\tError: Invalid git uri' )
             return False
 
         return False
@@ -125,8 +138,9 @@ class Repository( object ):
                                 fo = open( os.path.join( path, AgGlobals.REPO_LAST_CHANGED_FILE ) , 'w' )
                                 fo.write( str( datetime.now() ) )
                                 fo.close()
-                                AgGlobals.write_to_log( grading_log_file, 'Success: Pull' )
-                                AgGlobals.write_to_log( student_log_file, 'Success: Pull' )
+                                AgGlobals.write_to_log( grading_log_file, 'Success: Pull', 1 )
+                                AgGlobals.write_to_log( student_log_file, '<h3 class=success>Success: Pull Repo</h3>', 1 )
+                                # AgGlobals.write_to_log( student_log_file, 'Success: Pull' )
                                 return True
                             else:
                                 diff_time = now_time - prev_update
@@ -135,21 +149,37 @@ class Repository( object ):
                                 # print now_time
                                 # print prev_update
                                 print 'There has been no change in the repo for {} days {} hours {} minutes'.format( diff_time.days, diff_time.seconds // 3600, ( diff_time.seconds // 60 ) % 60 )
-                                AgGlobals.write_to_log( grading_log_file, '\tNothing updated since {}\n'.format( prev_update ) )
-                                AgGlobals.write_to_log( grading_log_file, '\tNo activity for: {} days {} hours {} minutes\n'.format( diff_time.days, diff_time.seconds // 3600, ( diff_time.seconds // 60 ) % 60 ) )
-                                AgGlobals.write_to_log( student_log_file, '\tNothing updated since {}\n'.format( prev_update ) )
-                                AgGlobals.write_to_log( student_log_file, '\tNo activity for: {} days {} hours {} minutes\n'.format( diff_time.days, diff_time.seconds // 3600, ( diff_time.seconds // 60 ) % 60 ) )
+                                AgGlobals.write_to_log( grading_log_file, 'Nothing updated since {}\n'.format( prev_update.strftime( '%x :: %X' ) ), 1 )
+                                AgGlobals.write_to_log( grading_log_file, 'No activity for: {} days {} hours {} minutes\n'.format( diff_time.days, diff_time.seconds // 3600, ( diff_time.seconds // 60 ) % 60 ), 1 )
+
+
+                                AgGlobals.write_to_log( student_log_file, '<div class=warning>Warning: Nothing updated since {}</div>'.format( prev_update.strftime( '%x :: %X' ) ), 1 )
+                                AgGlobals.write_to_log( student_log_file, '<div class=warning>No activity for: {} days {} hours {} minutes</div>'.format( diff_time.days, diff_time.seconds // 3600, ( diff_time.seconds // 60 ) % 60 ), 1 )
+                                # AgGlobals.write_to_log( student_log_file, 'Nothing updated since {}\n'.format( prev_update.strftime( '%x :: %X' ) ), 1 )
+                                # AgGlobals.write_to_log( student_log_file, 'No activity for: {} days {} hours {} minutes\n'.format( diff_time.days, diff_time.seconds // 3600, ( diff_time.seconds // 60 ) % 60 ), 1 )
                                 return False
                         else:
-                            AgGlobals.write_to_log( grading_log_file, '\tError: pull\n' )
-                            AgGlobals.write_to_log( grading_log_file, '\t{} {} {}'.format( retcode, out, err ) )
-                            AgGlobals.write_to_log( student_log_file, '\tError: pull\n' )
-                            AgGlobals.write_to_log( student_log_file, '\t{} {} {}'.format( retcode, out, err ) )
+                            AgGlobals.write_to_log( grading_log_file, 'Error: pull\n', 1 )
+                            AgGlobals.write_to_log( grading_log_file, '{} {} {}'.format( retcode, out, err ), 1 )
+
+                            AgGlobals.write_to_log( student_log_file, '<div class=error>Error: Pulling Repo - {}</div>'.format( self.uri ), 1 )
+
+                            AgGlobals.write_to_log( student_log_file, '<div class=error_out><pre>', 1 )
+                            err = err.replace( "&", "&amp;" ).replace( "<", "&lt;" ).replace( ">", "&gt;" )
+                            out = out.replace( "&", "&amp;" ).replace( "<", "&lt;" ).replace( ">", "&gt;" )
+                            AgGlobals.write_to_log( student_log_file, 'Return code: {}'.format( retcode ), 2 )
+                            AgGlobals.write_to_log( student_log_file, out, 2 )
+                            AgGlobals.write_to_log( student_log_file, err, 2 )
+                            AgGlobals.write_to_log( student_log_file, '</pre></div>', 1 )
+
+                            # AgGlobals.write_to_log( student_log_file, '\tError: pull\n' )
+                            # AgGlobals.write_to_log( student_log_file, '\t{} {} {}'.format( retcode, out, err ) )
                             return False
                     else:
                         print 'this is not a git repo'
                         AgGlobals.write_to_log( grading_log_file, '\tError: Not a valid git repo\n' )
-                        AgGlobals.write_to_log( student_log_file, '\tError: Not a valid git repo\n' )
+                        AgGlobals.write_to_log( student_log_file, '<div class=error>Error: Invalid git URI - {}</div>'.format( self.uri ), 1 )
+                        # AgGlobals.write_to_log( student_log_file, '\tError: Not a valid git repo\n' )
                         return False
                 # os.chdir( cwd )
         else:
@@ -159,6 +189,10 @@ class Repository( object ):
 
     '''
     Copy a local repository to another local folder
+    At the moment I'm making use of git itself to do the job. I clone the
+    cloned student repo in students directory to the grading directory.
+    If this has any bad implications I'd have to copy files using
+    OS file copy utilities.
     '''
     def copy( self, source, destination, student ):
         src = os.path.join( source, student )
