@@ -296,7 +296,7 @@ class Problem( object ):
         return False
 
 
-    def compile( self, cwd, grading_log_file, student_log_file, gradebook ):
+    def compile( self, cwd, grading_log_file = None, student_log_file = None, gradebook = None ):
         # rubric = self._15_marks.keys()
 
         # if AgGlobals.RUBRIC_COMPILE in rubric:
@@ -384,7 +384,7 @@ class Problem( object ):
         return AgGlobals.is_flags_set( self._99_state, AgGlobals.PROBLEM_STATE_COMPILED )
 
 
-    def link( self, cwd, grading_log_file, student_log_file, gradebook ):
+    def link( self, cwd, grading_log_file = None, student_log_file = None, gradebook = None ):
         # rubric = self._15_marks.keys()
 
         # if AgGlobals.RUBRIC_LINK in rubric:

@@ -26,37 +26,21 @@ class Assignment( object ):
         self._1_asnmt_no = AgGlobals.ASSIGNMENT_INIT_NO
         self._2_name = AgGlobals.ASSIGNMENT_INIT_NAME
         self._3_duedate = AgGlobals.ASSIGNMENT_INIT_DUE_DATE
-        # self._4_gradingroot = ''
-
-        # This is the sub-directory in which each student submits his/her
-        # solutions to the assignment. Each student creates a sub-directory
-        # in his or her repo. When cloned each student directory will have
-        # a sub-directory by this name. Further, the master director for a
-        # particular assignment is also named with this.
-        # self._5_subdir = 'assignment1 ; This is the directory name where files for this assignment is stored'
 
         # IDs of problems that comprises this assignment
         self._6_problem_ids = AgGlobals.ASSIGNMENT_INIT_PROBLEM_IDS
-
-        # ID --> Problem mapping. Problem is an object of class Problem
-        # Each Problem encapsulated the details of that problem.
-        # self._8_problems = {}
 
         self._99_state = AgGlobals.ASSIGNMENT_STATE_INITIALIZED
 
 
     def __str__( self ):
-#         desc = ''
-#         for key in sorted( self.__dict__.keys() ):  # [:-1]:
-#             if key[0:4] != '_99_':
-#                 desc += '{} > {} \n'.format( key[3:], self.__dict__[key] )
-#         return desc
         return AgGlobals.string_of( self, 3 )
 
 
-    ''' Generate a new blank assignment.
-        Creates the directory and the default assignment configuration file '''
-    # @classmethod
+    '''
+        Generate a new blank assignment.
+        Creates the directory and the default assignment configuration file
+    '''
     def new_assignment( self, grading_root, grading_master, assignment_name ):
 
         assignment_master_sub_dir = os.path.join( grading_root, grading_master, assignment_name )
@@ -67,7 +51,7 @@ class Assignment( object ):
             assignment_config = ConfigParser.SafeConfigParser()
             assignment_config.add_section( assignment_name )
 
-            for key in sorted( self.__dict__.keys() ):  # [:-1]:
+            for key in sorted( self.__dict__.keys() ):
                 # Filter only the instances variables that are necessary for the configuration file
                 if key[0:4] != '_99_':
                     assignment_config.set( assignment_name, key[3:], ' {}'.format( self.__dict__[key] ) )
@@ -93,7 +77,6 @@ class Assignment( object ):
     '''
     def load_assignment( self, grading_root, grading_master, assignment_master_sub_dir ):
 
-        # config_file = os.path.join( grading_root, grading_master, assignment_master_sub_dir, '+_1_{}.cfg'.format( assignment_master_sub_dir ) )
         config_file = os.path.join( grading_root, grading_master, assignment_master_sub_dir, AgGlobals.get_asmt_cfg_name( assignment_master_sub_dir ) )
 
         # Check whether the assignment configuration file exists.
@@ -105,7 +88,7 @@ class Assignment( object ):
         config.read( config_file )
 
         try:
-            for key in sorted( self.__dict__.keys() ):  # [:-1]:
+            for key in sorted( self.__dict__.keys() ):
                 if key[0:4] != '_99_':
                     self.__dict__[key] = config.get( assignment_master_sub_dir, key[3:] ).strip()
         except ConfigParser.NoSectionError as no_sec_err:
@@ -115,17 +98,22 @@ class Assignment( object ):
             print 'Error: {} in assignment configuration file {}. Exiting...'.format( no_op_err, config_file )
             sys.exit()
 
-        # self._1_asnmt_no = int( self._1_asnmt_no )
         self._3_duedate = datetime.datetime.strptime( self._3_duedate, AgGlobals.ASSIGNMENT_CFG_DUE_DATE_FORMAT )
 
         self._4_gradingroot = grading_root
+
+        # This is the sub-directory in which each student submits his/her
+        # solutions to the assignment. Each student creates a sub-directory
+        # in his or her repo. When cloned each student directory will have
+        # a sub-directory by this name. Further, the master director for a
+        # particular assignment is also named with this.
         self._5_subdir = assignment_master_sub_dir
+
         self._7_grading_master = grading_master
 
         problems = AgGlobals.parse_config_line( self._6_problem_ids )
         temp_prob = {}
         for p in problems:
-#            temp_prob[p[0]] = p[1]
             try:
                 temp_prob[int( p[0] )] = p[1]
             except ValueError:
@@ -133,11 +121,10 @@ class Assignment( object ):
                 sys.exit()
 
 
-        # This is a dictiory of the form:
+        # This is a dictionary of the form:
         #    problem_id -> problem_type
         self._6_problem_ids = temp_prob
 
-        # print self
         self._99_state = AgGlobals.set_flags( self._99_state, AgGlobals.ASSIGNMENT_STATE_LOADED )
         return True
 
@@ -148,7 +135,7 @@ class Assignment( object ):
     def load_problems( self ):
         if AgGlobals.is_flags_set( self._99_state, AgGlobals.ASSIGNMENT_STATE_LOADED ):
             prob_conf = self.get_prob_config_path()
-            # section_prefix = '{}_problem_{}'.format( self._5_subdir, '{}' )
+
             # Check whether the problem configuration file exists.
             if not os.path.exists( prob_conf ):
                 print '\nProblem configuration file {} does not exist, exit...'.format( prob_conf )
@@ -172,7 +159,6 @@ class Assignment( object ):
                     return False
 
             self._99_state = AgGlobals.set_flags( self._99_state, AgGlobals.ASSIGNMENT_STATE_PROBLEMS_LOADED )
-            # print 'Loading success::::: {}'.format( self.get_masterdir() )
             return True
         else:
             print 'Error: Need to load an assignment configuration before loading Problems'
@@ -190,7 +176,6 @@ class Assignment( object ):
                 print 'Error: Problem configuration file {} already exists. Cannot overwrite. Exit...'.format( prob_cfg )
                 sys.exit()
 
-            # asgnmt_root = os.path.join( self._4_gradingroot, 'assignments', self._5_subdir )
             assignment_path = self.get_masterdir()
 
             if not os.path.exists( assignment_path ):
@@ -203,7 +188,6 @@ class Assignment( object ):
                 # temp.__dict__ provides the instances variables of object
                 # temp as instance variable name --> instance variable value
                 temp = Problem( p, self._6_problem_ids[p] )
-                # section = '{}_problem_{}'.format( self._5_subdir, p )
                 section = AgGlobals.get_problem_section( self._5_subdir, p )
                 prob_config.add_section( section )
                 for key in sorted( temp.__dict__.keys() ):
@@ -367,7 +351,6 @@ class Assignment( object ):
             for p in self._6_problem_ids.keys():
                 if self._8_problems[p].get_prob_type() == AgGlobals.PROBLEM_TYPE_PROG:
                     files.update( set( self._8_problems[p].get_files_provided() ) )
-                    # print self._8_problems[p].get_files_provided()
 
             master = self.get_masterdir()
             for f in files:
@@ -405,44 +388,6 @@ class Assignment( object ):
         else:
             print 'Error: Need to load an assignment configuration before checking "Submitted" files for that assignment'
             return False
-
-
-    ''' Delete later '''
-    def generate_input_config2( self ):
-        # If problems are loaded
-        if self.is_problems_loaded():
-
-            # Create input output directory
-            in_out_dir = os.path.join( self._4_gradingroot, self._7_grading_master, self._5_subdir, AgGlobals.INPUT_OUTPUT_DIRECTORY )
-            if not os.path.exists( in_out_dir ):
-                os.mkdir( in_out_dir )
-
-            input_config = ConfigParser.SafeConfigParser()
-
-            for p in sorted( self._6_problem_ids ):
-                in_out = self._8_problems[p].get_inp_outps()
-
-                for io in sorted( in_out ):
-                    print io, in_out[io]
-                    section = AgGlobals.get_input_section( self._5_subdir, p, io )
-                    input_config.add_section( section )
-
-                    temp_in = Input( in_out[io][0], in_out[io][1] )
-                    for key in sorted( temp_in.__dict__.keys() ):
-                        # Filter only the instances variables that are necessary for the configuration file
-                        if key[0:4] != '_99_':
-                            input_config.set( section, key[3:], ' {}'.format( temp_in.__dict__[key] ) )
-
-                    if in_out[io][0] == AgGlobals.INPUT_NATURE_LONG:
-                        input_file_path = os.path.join( in_out_dir, AgGlobals.get_input_file_name( self._5_subdir, p, io ) )
-                        input_config.set( section, 'input_file', input_file_path )
-                        fo = open( input_file_path, 'a' )
-                        fo.close()
-
-            cfg_path = os.path.join( in_out_dir, AgGlobals.get_input_cfg_name( self._5_subdir ) )
-            with open( cfg_path, 'wb' ) as configfile:
-                input_config.write( configfile )
-            print 'Success: Input configuration file {} successfully created'.format( cfg_path )
 
 
     def generate_input_config( self ):
@@ -490,43 +435,44 @@ class Assignment( object ):
     '''
     Compile files.
     '''
-    def compile( self, cwd = '', grading_log_file = None, student_log_file = None, gradebook = None ):
+    # def compile( self, cwd = '', grading_log_file = None, student_log_file = None, gradebook = None ):
+    def compile( self ):
         success = False
         # If problems are loaded
         if self.is_problems_loaded():
-            # os.chdir( self.get_masterdir() )
-            if not cwd:
-                cwd = self.get_masterdir()
+            # if not cwd:
+            cwd = self.get_masterdir()
             success = True
             for p in sorted( self._6_problem_ids.keys() ):
-                success = success and self._8_problems[p].compile( cwd, grading_log_file, student_log_file, gradebook )
+                success = success and self._8_problems[p].compile( cwd )
 
         return success
 
     '''
     Link
     '''
-    def link( self, cwd = '', grading_log_file = None, student_log_file = None, gradebook = None ):
+    # def link( self, cwd = '', grading_log_file = None, student_log_file = None, gradebook = None ):
+    def link( self ):
         success = False
         # If problems are loaded
         if self.is_problems_loaded():
-            # os.chdir( self.get_masterdir() )
-            if not cwd:
-                cwd = self.get_masterdir()
+            # if not cwd:
+            cwd = self.get_masterdir()
             success = True
             for p in sorted( self._6_problem_ids.keys() ):
-                success = success and self._8_problems[p].link( cwd, grading_log_file, student_log_file, gradebook )
+                success = success and self._8_problems[p].link( cwd )
 
         return success
 
 
-    def generate_output( self, cwd = '' ):
+    # def generate_output( self, cwd = '' ):
+    def generate_output( self ):
         # If problems are loaded
         if self.is_problems_loaded():
 
             # Create input output directory
-            if not cwd:
-                cwd = os.path.join( self._4_gradingroot, self._7_grading_master, self._5_subdir, AgGlobals.INPUT_OUTPUT_DIRECTORY )
+            # if not cwd:
+            cwd = os.path.join( self._4_gradingroot, self._7_grading_master, self._5_subdir, AgGlobals.INPUT_OUTPUT_DIRECTORY )
             if not os.path.exists( cwd ):
                 os.mkdir( cwd )
 
@@ -536,25 +482,6 @@ class Assignment( object ):
             print 'Success: Generating Reference Outputs'
 
 
-    def grade( self, cwd = '', grading_log_file = None, student_log_file = None, gradebook = None ):
-        success = False
-        # If problems are loaded
-        if self.is_problems_loaded():
-            # os.chdir( self.get_masterdir() )
-            if not cwd:
-                cwd = self.get_masterdir()
-            success = True
-            for p in sorted( self._6_problem_ids.keys() ):
-                success = success and self._8_problems[p].compile( cwd, grading_log_file, student_log_file, gradebook )
-
-                if success:
-                    success = success and self._8_problems[p].link( cwd, grading_log_file, student_log_file, gradebook )
-                else:
-                    # Compilation failed. Cannot link. Grade next problem
-                    success = True
-                    continue
-
-        return success
 
     '''
         Autograder do_grade2 calls this.
@@ -583,8 +510,6 @@ class Assignment( object ):
             success = True
 
             for p in problems:
-            # for p in sorted( self._6_problem_ids.keys() ):
-
                 AgGlobals.write_to_log( student_log_file, '<h3 class=problem_heading>Grading problem: {}) {}</h3>'.format( p, self._8_problems[p].get_name() ), 1 )
 
                 success = True
@@ -638,7 +563,6 @@ class Assignment( object ):
                             AgGlobals.write_to_log( grading_log_file, 'Error: File - {} - missing\n'.format( file_submitted[0] ), 1 )
                             AgGlobals.write_to_log( student_log_file, '<div class=error>Error: File - {} - missing</div>'.format( file_submitted[0] ), 1 )
                             gradebook[AgGlobals.GRADEBOOK_HEADER_COMMENT] += 'File - {} - missing. Cannot grade problem {}\n'.format( file_submitted[0], p )
-                            # self.write_stud_marks( marks_dict, gb )
                             # We cannot proceed with grading this problem.
                             skip_problem = True
 
@@ -650,7 +574,6 @@ class Assignment( object ):
                         AgGlobals.write_to_log( student_log_file, '<div class=error>Error:  Depends on problem - {}) {} - that did not suceed</div>'.format( depend, self._8_problems[depend].get_name() ), 1 )
                         gradebook[AgGlobals.GRADEBOOK_HEADER_COMMENT] += 'Depends on problem {}. Cannot grade problem {}\n'.format( depend, p )
                         skip_problem = True
-                        # break
 
                 if skip_problem:
                     # Rename the files back to what student has originally submitted.
@@ -683,7 +606,7 @@ class Assignment( object ):
                     # Linked successfully. Try to run and produce output
                     output_dir = os.path.join( cwd, AgGlobals.INPUT_OUTPUT_DIRECTORY )
                     self._8_problems[p].generate_output( self._5_subdir, output_dir, self.get_masterdir(), grading_log_file, student_log_file, gradebook )
-                    # self.generate_output( output_dir )
+
 
                 # Rename the files back to what student has originally submitted.
                 # This renaming is necessary to properly update the student submission
@@ -694,39 +617,7 @@ class Assignment( object ):
         return success
 
 
-#     def load_inputs( self ):
-#         if self._99_state == AgGlobals.ASSIGNMENT_STATE_LOADED:
-#             self.load_problems()
-#
-#         if self._99_state == AgGlobals.ASSIGNMENT_STATE_PROBLEMS_LOADED:
-#
-#             in_out_dir = os.path.join( self._4_gradingroot, self._7_grading_master, self._5_subdir, AgGlobals.INPUT_OUTPUT_DIRECTORY )
-#
-#             input_conf = os.path.join( in_out_dir, AgGlobals.get_input_cfg_name( self._5_subdir ) )
-#
-#             if not os.path.exists( input_conf ):
-#                 print '\nProblem configuration file {} does not exist, exit...'.format( input_conf )
-#                 sys.exit()
-#
-#             for p in sorted( self._6_problem_ids ):
-#                 in_out = self._8_problems[p].get_inp_outps()
-#
-#                 for io in sorted( in_out ):
-#                     section = AgGlobals.get_input_section( self._5_subdir, p, io )
-#
-#                     temp_in = Input( in_out[io][0], in_out[io][1] )
-#                     temp_in.load_input( input_conf, section )
-#
-#             print 'Success: Inputs successfully loaded'
-
-
-
-
-# p = Assignment()
-# p.test_meth()
-
     def generate_gradebook_headers( self, prob_no = None ):
-        # problem_header = ['']
         marks_header = [AgGlobals.GRADEBOOK_HEADER_STUDENT]
         if self.is_problems_loaded():
 
@@ -739,25 +630,9 @@ class Assignment( object ):
                 print p
                 headers = self._8_problems[p].get_gradebook_headers()
 
-                # problem_header.append( ',' )
-                # problem_header.append( headers[0] )
-
-                # marks_header.append( ',' )
-                # marks_header.append( headers[1] )
                 print headers
                 marks_header += headers
 
-#                 for h in range( len( headers[1] ) - 1 ):
-#                     problem_header.append( ', ' )
-
-        # problem_header.append( '\n' )
-        # marks_header.append( '\n' )
-
-        # print marks_header
-        # problem_header = ''.join( problem_header )
-        # marks_header = ''.join( marks_header )
-
-        # return( problem_header, marks_header )
         return marks_header
 
 
@@ -776,7 +651,7 @@ class Assignment( object ):
         # While there are more problems to search for dependencies
         while search_dependencis:
 
-            # Consider one such probelm
+            # Consider one such problem
             p = search_dependencis.pop()
 
             # If that problem is not already in the
@@ -802,3 +677,7 @@ class Assignment( object ):
                         search_dependencis.add( d )
 
         return sorted( dept_probs )
+
+
+    def is_valid_problem_id( self, prob_no ):
+        return prob_no in self._6_problem_ids.keys()

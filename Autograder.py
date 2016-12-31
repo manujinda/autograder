@@ -3,7 +3,6 @@
     Combines everything and performs autograding of a single project / assignemnt
 """
 import ConfigParser
-from __builtin__ import True
 from collections import OrderedDict
 import csv
 from datetime import datetime
@@ -13,18 +12,12 @@ import sys
 
 from AgGlobals import AgGlobals
 from Assignment import Assignment
-from Command import Command
-from Problem import Problem  # Just to access its instance variables to generate a sample configuration file
-from Repository import Repository
 from Student import Student
 
 
 class Autograder( object ):
 
     def __init__( self, config_file ):
-
-        # self.ag_created = False
-
         '''
             Read the autograder configuration file and populate grading root
             and grading master directory names
@@ -56,18 +49,15 @@ class Autograder( object ):
             print 'Error: {} in autograder configuration file {}. Exiting...'.format( no_op_err, self.config_file )
             sys.exit()
 
-
-        self.students = []
         self.students_dict = OrderedDict()
 
         self.asmnt = Assignment()
 
         self.students_directory = AgGlobals.STUDENTS_DIRECTORY  # self.agg.get_students_directory()
         self.grading_directory = AgGlobals.GRADING_DIRECTORY  # self.agg.get_grading_directory()
-        # self.asmnt_loaded = False  # Keeps track of whether a valid assignment configuration file has been loaded
 
-        # self.ag_created = True
         self.ag_state = AgGlobals.AG_STATE_CREATED
+
 
     '''
         Generate a blank autograder configuration file
@@ -92,13 +82,10 @@ class Autograder( object ):
 
 
 
-
     def created( self ):
-        # return self.ag_created
         return AgGlobals.is_flags_set( self.ag_state, AgGlobals.AG_STATE_CREATED )
 
 
-    # @classmethod
     '''
         Setup an autograder directory tree for grading
         projects / assignments for a particular offering
@@ -108,9 +95,6 @@ class Autograder( object ):
         if os.path.exists( self.grading_root ):
             print 'Error: Autograder grading root directory {} already exists. Exit...'.format( self.grading_root )
             sys.exit( 0 )
-
-#         students_directory = 'students'
-#         grading_directory = 'grading'
 
         os.mkdir( self.grading_root )
         os.mkdir( os.path.join( self.grading_root, self.grading_master ) )
@@ -139,11 +123,7 @@ class Autograder( object ):
 
         # Create an example assignment directory and configuration files
         assignment_name = '{}_{}'.format( self.grading_master[:-1], 1 )  # 'assignment1'
-        assignment = self.new_assignment( assignment_name )
-
-        # Populate the assignment with the just created assignment configuration file
-        # assignment.load_assignment( self.grading_root, self.grading_master, assignment_name )
-        # assignment.generate_problem_config()
+        self.new_assignment( assignment_name )
 
         print 'Setting up autograder directory structure completed successfully'
 
@@ -159,15 +139,9 @@ class Autograder( object ):
         return assignment
 
 
-
     def load_assignment( self, assignment_name ):
-
-        # print '\nEnter the assignment master sub-directory name : '
-        # self.assignment_master_sub_dir = '{}_{}'.format( self.grading_master[:-1], 1 )  # 'assignment1'
-
         if self.asmnt.load_assignment( self.grading_root, self.grading_master, assignment_name ):
             self.ag_state = AgGlobals.set_flags( self.ag_state, AgGlobals.AG_STATE_ASSIGNMENT_LOADED )
-
             return True
 
         return False
@@ -198,11 +172,9 @@ class Autograder( object ):
         #               assignment1\
         #               assignment2\
         if not os.path.exists( self.grading_root ):
-            print '\nGrading root directory {} does not exist, exit...'.format( self.grading_root )
+            print '\nGrading root directory {} does not exist, Exit...'.format( self.grading_root )
             return False
             # sys.exit()
-
-        # self.asmnt.masterdir = os.path.join( self.asmnt.gradingroot, 'assignments', self.asmnt.subdir )
 
         # Check whether the assignment master directory exists.
         # This is where all the solution and provided files are stored
@@ -242,34 +214,17 @@ class Autograder( object ):
             print '\nStudnt data file {} does not exist, exit...'.format( students )
             sys.exit()
 
-        self.students = []
+        # self.students = []
         self.students_dict = OrderedDict()
         with open( students ) as student_db:
             reader = csv.DictReader( student_db )
             for row in reader:
                 stud = Student( row )
-                self.students.append( stud )
+                # self.students.append( stud )
                 self.students_dict[stud.get_index()] = stud
-                # print '{}\n'.format( stud )
-                # self.check_student_directory( stud )
 
-        # return len( self.students ) > 0
         return len( self.students_dict ) > 0
 
-#     def clone_repos( self ):
-#         # When student database is sorted in the ascending order of  student index numbers
-#         # the length of the index number of the last student is the longest. Get the length
-#         # of that index number and pass that to the cloning method so that when creating the
-#         # local student repository directory name each directory have the index number of each
-#         # student prefixed to student name in such a way prefixed index numbers have the same
-#         # length with 0s padded in the left. e.g. 003_manujinda
-#         index_len = len( '{}'.format( self.students[-1].get_index() ) )
-#         for stud in self.students:
-#             stud_dir = os.path.join( self.grading_root, self.students_directory, stud.get_dir( index_len ) )
-#             if not os.path.exists( stud_dir ):
-#                 stud.clone_student_repo( stud_dir )
-#             else:
-#                 print 'Repository path {} already exists'.format( stud_dir )
 
     def update_repos( self ):
         # When student database is sorted in the ascending order of  student index numbers
@@ -281,8 +236,6 @@ class Autograder( object ):
         index_len = len( '{}'.format( self.students_dict[next( reversed( self.students_dict ) )].get_index() ) )
         for stud_no in self.students_dict.keys():
             stud = self.students_dict[stud_no]
-#         index_len = len( '{}'.format( self.students[-1].get_index() ) )
-#         for stud in self.students:
             stud_dir = os.path.join( self.grading_root, self.students_directory, stud.get_dir( index_len ) )
             if not os.path.exists( stud_dir ):
                 # Student repository has not been cloned. Have to clone it first
@@ -291,218 +244,21 @@ class Autograder( object ):
                 stud.pull_student_repo( stud_dir )
 
 
-
     '''
-    Copying files from cloned student repos to student grading folders.
-    At the moment I'm making use of git itself to do the job. I clone the
-    cloned student repo in students directory to the grading directory.
-    If this has any bad implications I'd have to copy files using
-    OS file copy utilities.
-    '''
-    def do_grading( self ):
-        # If students are loaded and problems are loaded
-        if len( self.students ) > 0 and AgGlobals.is_flags_set( self.ag_state, AgGlobals.AG_STATE_ASSIGNMENT_LOADED, AgGlobals.AG_STATE_PROBLEMS_LOADED, AgGlobals.AG_STATE_INPUTS_LOADED ) :
-
-            # This is the path for the students directory
-            source = os.path.join( self.grading_root, self.students_directory )
-
-            # This is the path for the grading directory
-            destination = os.path.join( self.grading_root, self.grading_directory )
-
-            # Length of the longest student index. This is used to insert
-            # leading 0's in the student directory name
-            index_len = len( '{}'.format( self.students[-1].get_index() ) )
-
-            # Get a dictionary of submitted file names and their aliases
-            # submitted_file_name --> set(alias1, alias2, ...)
-            file_aliases = self.asmnt.get_files_submitted_with_aliases()
-
-            # Get the assignment / project master sub directory
-            asmnt_master_sub_dir = self.asmnt.get_masterdir()
-
-            # Get a set of all the provided file names for this assignment / project
-            provided_files = self.asmnt.get_provided_files_set()
-
-            # Create a list of paths to all the provided files in the assignment master sub directory
-            provided_file_paths = []
-            for pf in provided_files:
-
-                # Generate the file path for this provided file
-                pf_path = os.path.join( asmnt_master_sub_dir, pf )
-
-                # Check whether this file exists in the assignment master sub directory
-                if os.path.exists( pf_path ):
-                    provided_file_paths.append( pf_path )
-
-                # If this file does not exists, we cannot proceed with the grading
-                else:
-                    print 'Error: Provided file {} does not exist. Cannot proceed with grading. Exit...'.format( pf_path )
-                    sys.exit( 1 )
-
-            # Open grading log file for this student
-            log_directory_path = os.path.join( asmnt_master_sub_dir, AgGlobals.LOG_FILE_DIRECTORY )
-            grading_log = open( os.path.join( log_directory_path, AgGlobals.AUTOGRADER_LOG_FILE_NAME ), 'a' )
-            AgGlobals.write_to_log( grading_log, '\n{0}<< Grading Session on {1} : START >>{0}\n'.format( '-' * 20, datetime.now() ) )
-
-            # Create the gradebook
-            gradebook_headers = self.asmnt.generate_gradebook_headers()
-            gradebook = open( os.path.join( log_directory_path, AgGlobals.get_gradebook_file_name( self.asmnt.get_assignment_sub_dir() ) ), 'wb' )
-            # gradebook_headers.append( 'Total' )
-            gradebook_headers += [ 'Total', 'Comment' ]
-            gb = csv.DictWriter( gradebook, gradebook_headers )
-            gb.writeheader()
-            # AgGlobals.write_to_log( gradebook, 'Marks for Grading Session on {}'.format( datetime.now() ) )
-            # AgGlobals.write_to_log( gradebook, gradebook_headers[0] )
-            # AgGlobals.write_to_log( gradebook, gradebook_headers[1] )
-
-            # gradebook.close()
-            # grading_log.close()
-            # exit()
-            # For each student
-            for stud in self.students:
-
-                grading_log_stud_path = os.path.join( log_directory_path, stud.get_stud_log_file_name( index_len, self.asmnt.get_assignment_sub_dir() ) )
-                grading_log_stud = open( grading_log_stud_path, 'a' )
-                AgGlobals.write_to_log( grading_log_stud, '\n{0}<< Grading Session on {1} : START >>{0}\n'.format( '-' * 20, datetime.now() ) )
-                AgGlobals.write_to_log( grading_log_stud, '\n{0} Student: {1} {0}\n'.format( '#' * 10, stud.get_name() ) )
-
-                AgGlobals.write_to_log( grading_log, '\n{0} Student: {1} {0}\n'.format( '#' * 10, stud.get_name() ) )
-                # AgGlobals.write_to_log( gradebook, '\n{}'.format( stud.get_index() ) )
-
-                marks_dict = {}
-                for h in gradebook_headers:
-                    marks_dict[h] = 0.0
-                marks_dict['Student'] = stud.get_index()
-                marks_dict['Comment'] = ''
-
-                # Student's directory name
-                stud_dir_name = stud.get_dir( index_len )
-
-                # Path for the student's directory in the students directory
-                stud_local_repo_path = os.path.join( source, stud_dir_name )
-
-                # Path for the student's directory in the grading directory
-                stud_dir_path = os.path.join( destination, stud_dir_name, self.asmnt.get_assignment_sub_dir() )
-
-                grading_log_stud_path = ''
-                # Update local student repository
-#                if not os.path.exists( stud_local_repo_path ):
-                    # Student repository has not been cloned. Have to clone it first
-#                    stud.clone_student_repo( stud_local_repo_path, grading_log, grading_log_stud )
-#                else:
-#                    stud.pull_student_repo( stud_local_repo_path, grading_log, grading_log_stud )
-
-                # Copy all the student submitted files from student directory in students directory
-                # to a directory with the same name in the grading directory
-#                stud.copy_student_repo( source, destination, index_len )
-
-                # Check whether student has created a directory with the proper name in his or her
-                # repository to upload files for this assignment / project
-                if not os.path.exists( stud_dir_path ):
-                    print 'Error: Student {} does not have the assignment directory {} in the repository.'.format( stud.get_name(), stud_dir_path )
-                    AgGlobals.write_to_log( grading_log, '\tError: {} directory does not exist in the repo\n'.format( self.asmnt.get_assignment_sub_dir() ) )
-                    marks_dict['Comment'] = '{} directory does not exist in the repo'.format( self.asmnt.get_assignment_sub_dir() )
-                    self.write_stud_marks( marks_dict, gb )
-                    continue
-
-                # Use this list to rename the files back to the original file name
-                # student submitted after the compilation is over.
-                # This renaming is necessary to properly update the student submission
-                # in the grading directory in subsequent copying and compiling.
-                rename_back_list = []
-
-                # For each file student is supposed to submit
-                for file_submitted in file_aliases.keys():
-
-                    # The path for that file in the student's directory in the grading directory
-                    file_path = os.path.join( stud_dir_path, file_submitted )
-
-                    # If student has not submitted a file with the exact name
-                    if not os.path.exists( file_path ):
-
-                        # Check whether the student has submitted a file that matches an alias
-                        # Alias could be a misspelled file name or a shorten file name
-                        found = False
-                        for file_alias in file_aliases[file_submitted]:
-                            file_alias_path = os.path.join( stud_dir_path, file_alias )
-
-                            # A file that matches an alias exists.
-                            # Student might have submitted this file thinking he/she is submitting
-                            # the file he/she is supposed to submit
-                            if os.path.exists( file_alias_path ):
-                                found = True
-                                # Rename the file. Might want to do this only when we provide the make file
-                                # cmd = 'mv {} {}'.format( file_alias, file_submitted )
-                                # retcode, out, err = Command( cmd ).run( cwd = stud_dir_path )
-                                shutil.move( file_alias_path, file_path )
-                                rename_back_list.append( ( file_path, file_alias_path ) )
-                                AgGlobals.write_to_log( grading_log, '\tWarning: Renamed file - {} --> {}\n'.format( file_alias, file_submitted ) )
-                                AgGlobals.write_to_log( grading_log_stud, '\tWarning: Renamed file - {} --> {}\n'.format( file_alias, file_submitted ) )
-                                marks_dict['Comment'] += 'Renamed file - {} --> {}\n'.format( file_alias, file_submitted )
-                                break
-
-                        if not found:
-                            print 'Error: Student {} has not submitted file {}'.format( stud.get_name(), file_submitted )
-                            AgGlobals.write_to_log( grading_log, '\tError: File - {} - missing\n'.format( file_submitted ) )
-                            AgGlobals.write_to_log( grading_log_stud, '\tError: File - {} - missing\n'.format( file_submitted ) )
-                            marks_dict['Comment'] += 'File - {} - missing\n'.format( file_submitted )
-                            self.write_stud_marks( marks_dict, gb )
-                            continue
-
-                # Copy the provided files into student's directory in the grading directory
-                for pf_path in provided_file_paths:
-                    # cmd = 'cp {} .'.format( pf_path )
-                    # retcode, out, err = Command( cmd ).run( cwd = stud_dir_path )
-                    shutil.copy2( pf_path, stud_dir_path )
-
-                self.asmnt.grade( stud_dir_path, grading_log, grading_log_stud, marks_dict )
-                # Compile student submission
-#                self.asmnt.compile( stud_dir_path, grading_log, grading_log_stud, gradebook )
-
-                # Link student submissions
-#                self.asmnt.link( stud_dir_path, grading_log, grading_log_stud, gradebook )
-
-                # Run student program and generate output for test input
-                output_dir = os.path.join( stud_dir_path, AgGlobals.INPUT_OUTPUT_DIRECTORY )
-#                self.asmnt.generate_output( output_dir )
-
-                # Rename the files back to what student has originally submitted.
-                # This renaming is necessary to properly update the student submission
-                # in the grading directory in subsequent copying and compiling.
-                for bad_file_name in rename_back_list:
-                    shutil.move( bad_file_name[0], bad_file_name[1] )
-
-                # gb.writerow( marks_dict )
-                self.write_stud_marks( marks_dict, gb )
-                # continue
-
-
-                grading_log_stud.close()
-                grading_log.flush()
-                os.fsync( grading_log )
-
-                gradebook.flush()
-                os.fsync( gradebook )
-
-            grading_log.close()
-            gradebook.close()
-
-
-    '''
-    **** I felt my initial do_grading() is flawed. This is my second attempt
-    Copying files from cloned student repos to student grading folders.
-    At the moment I'm making use of git itself to do the job. I clone the
-    cloned student repo in students directory to the grading directory.
-    If this has any bad implications I'd have to copy files using
-    OS file copy utilities.
+        Grading of student submissions
     '''
     def do_grading2( self, stud_no = None, prob_no = None ):
 
+        # A specific problem number is provided for grading
         if prob_no:
             try:
                 prob_no = int( prob_no )
             except ValueError:
                 print 'Error: Problem number "{}" must be an integer. Exiting...'.format( prob_no )
+                exit()
+
+            if not self.asmnt.is_valid_problem_id( prob_no ):
+                print 'Error: Invalid problem number {}'.format( prob_no )
                 exit()
 
         # Grade a specific student
@@ -514,6 +270,7 @@ class Autograder( object ):
                 print 'Error: Invalid student number for grading {}. Exiting...'.format( stud_no )
                 exit()
         else:
+            # Grade all the students
             students = self.students_dict.keys()
 
         # If students are loaded and problems are loaded
@@ -528,11 +285,6 @@ class Autograder( object ):
             # Length of the longest student index. This is used to insert
             # leading 0's in the student directory name
             index_len = len( '{}'.format( self.students_dict[next( reversed( self.students_dict ) )].get_index() ) )
-#            index_len = len( '{}'.format( self.students[-1].get_index() ) )
-
-            # Get a dictionary of submitted file names and their aliases
-            # submitted_file_name --> set(alias1, alias2, ...)
-            # file_aliases = self.asmnt.get_files_submitted_with_aliases()
 
             # Get the assignment / project master sub directory
             asmnt_master_sub_dir = self.asmnt.get_masterdir()
@@ -567,7 +319,6 @@ class Autograder( object ):
                 grades_file_stud_path = os.path.join( log_directory_path, self.students_dict[stud_no].get_stud_grades_file_name( index_len, self.asmnt.get_assignment_sub_dir() ) )
                 gradebook = open( grades_file_stud_path, 'wb' )
             else:
-                # gradebook = open( os.path.join( log_directory_path, AgGlobals.AUTOGRADER_GRADEBOOK_NAME ), 'wb' )
                 gradebook = open( os.path.join( log_directory_path, AgGlobals.get_gradebook_file_name( self.asmnt.get_assignment_sub_dir(), prob_no ) ), 'wb' )
             gradebook_headers += [ AgGlobals.GRADEBOOK_HEADER_TOTAL, AgGlobals.GRADEBOOK_HEADER_COMMENT ]
             gb = csv.DictWriter( gradebook, gradebook_headers )
@@ -577,14 +328,11 @@ class Autograder( object ):
             autograder_module_dir = os.path.dirname( os.path.realpath( __file__ ) )
             # Open and read grading output skeleton html
             html_file = open( os.path.join( autograder_module_dir, AgGlobals.STUDENT_LOG_HTML_SKELETON_FILE_NAME ), 'r' )
-            # html_file = open( 'skeleton.html', 'r' )
             html_skeleton = html_file.read()
 
             # For each student
             for stud_no in students:
-#            for stud_no in self.students_dict.keys():
                 stud = self.students_dict[stud_no]
-#            for stud in self.students:
 
                 grading_log_stud_path = os.path.join( log_directory_path, stud.get_stud_log_file_name( index_len, self.asmnt.get_assignment_sub_dir() ) )
                 grading_log_stud = open( grading_log_stud_path, 'a' )
@@ -609,17 +357,16 @@ class Autograder( object ):
                 # Path for the student's directory in the grading directory
                 stud_dir_path = os.path.join( destination, stud_dir_name, self.asmnt.get_assignment_sub_dir() )
 
-                # grading_log_stud_path = ''
                 # Update local student repository
-#                if not os.path.exists( stud_local_repo_path ):
+                if not os.path.exists( stud_local_repo_path ):
                     # Student repository has not been cloned. Have to clone it first
-#                    stud.clone_student_repo( stud_local_repo_path, grading_log, grading_log_stud )
-#                else:
-#                    stud.pull_student_repo( stud_local_repo_path, grading_log, grading_log_stud )
+                    stud.clone_student_repo( stud_local_repo_path, grading_log, grading_log_stud )
+                else:
+                    stud.pull_student_repo( stud_local_repo_path, grading_log, grading_log_stud )
 
                 # Copy all the student submitted files from student directory in students directory
                 # to a directory with the same name in the grading directory
-#                stud.copy_student_repo( source, destination, index_len )
+                stud.copy_student_repo( source, destination, index_len )
 
                 # Check whether student has created a directory with the proper name in his or her
                 # repository to upload files for this assignment / project
@@ -661,7 +408,7 @@ class Autograder( object ):
 
         gb_csv.writerow( marks_dict )
 
-        grading_log_stud_html = open( '{}{}'.format( grading_log_stud_path[:-3], 'html' ), 'wb' )
+        grading_log_stud_html = open( AgGlobals.get_stud_html_log_file_path( grading_log_stud_path ), 'wb' )
         grading_log_stud = open( grading_log_stud_path, 'r' )
         stud_log_entries = grading_log_stud.read()
         AgGlobals.write_to_log( grading_log_stud_html, html_skeleton )
@@ -669,17 +416,6 @@ class Autograder( object ):
         AgGlobals.write_to_log( grading_log_stud_html, '</body>\n</html>' )
         grading_log_stud.close()
         grading_log_stud_html.close()
-
-
-    # # !! Needs update.. student.get_dir() has been changed to get_dir(index_len)
-#     def check_student_directory( self, student ):
-#         try:
-#             stud_dir = os.path.join( self.asmnt.gradingroot, student.get_dir() )
-#             if not os.path.exists( stud_dir ):
-#                 print '\nStudnt directory {} for {} does not exist, creating it...'.format( student.get_dir(), student.get_name() )
-#                 os.mkdir( stud_dir )
-#         except AttributeError:
-#             print '\nInput parameter should be of type Student'
 
 
     '''
@@ -696,9 +432,7 @@ class Autograder( object ):
             if result:
                 self.ag_state = AgGlobals.set_flags( self.ag_state, AgGlobals.AG_STATE_PROBLEMS_LOADED )
 
-            # print self.asmnt.get_files_submitted_with_aliases()
             return result
-
         return False
 
 
@@ -711,12 +445,10 @@ class Autograder( object ):
 
     def load_input( self ):
         if AgGlobals.is_flags_set( self.ag_state, AgGlobals.AG_STATE_ASSIGNMENT_LOADED ):
-        # if self.asmnt_loaded:
             if self.asmnt.load_input():
                 self.ag_state = AgGlobals.set_flags( self.ag_state, AgGlobals.AG_STATE_INPUTS_LOADED )
 
                 return True
-
         return False
 
 
@@ -726,7 +458,6 @@ class Autograder( object ):
                 self.ag_state = AgGlobals.set_flags( self.ag_state, AgGlobals.AG_STATE_COMPILED )
 
                 return True
-
         return False
 
 
@@ -737,7 +468,6 @@ class Autograder( object ):
                     self.ag_state = AgGlobals.set_flags( self.ag_state, AgGlobals.AG_STATE_LINKED )
 
                     return True
-
         return False
 
 
@@ -749,16 +479,8 @@ class Autograder( object ):
                         self.ag_state = AgGlobals.set_flags( self.ag_state, AgGlobals.AG_STATE_OUTPUTS_GENERATED )
 
                         return True
-
         return False
 
-
-#     def correct_submitted_file_names( self ):
-#         if len( self.students ) > 0:
-#             index_len = len( '{}'.format( self.students[-1].get_index() ) )
-#             for stud in self.students:
-#                 directory = os.path.join( self.grading_root, self.grading_directory, stud.get_dir( index_len ), self.asmnt. )
-#                 stud.copy_student_repo( source, destination,  )
 
 
 
