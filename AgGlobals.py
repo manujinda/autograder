@@ -138,6 +138,22 @@ class AgGlobals( object ):
     REPO_LAST_CHANGED_FILE = 'last_changed.txt'
     REPO_GIT_ALREADY_UP_TO_DATE = 'Already up-to-date.\n'
 
+    # Supported languages
+    LANGUAGE_C_CPP = ['c', 'C', 'cpp', 'CPP']
+    SOURCE_FILE_NAME_REGEXP_C_CPP = '^([_a-zA-Z0-9]+)\.(?:c|C|cpp|CPP)$'
+    MAKE_CLEAN = 'make clean'
+
+    PRODUCE_OBJECT_CODE = 'obj'
+    PRODUCE_BINARY_CODE = 'bin'
+
+    @classmethod
+    def get_compile_command( cls, language, target_name, output_type ):
+        if language in AgGlobals.LANGUAGE_C_CPP:
+            if output_type == AgGlobals.PRODUCE_OBJECT_CODE:
+                return 'make {}.o'.format( target_name )
+
+            if output_type == AgGlobals.PRODUCE_BINARY_CODE:
+                return 'make {}'.format( target_name )
 
     @classmethod
     def get_asmt_cfg_name( cls, assignment_name ):

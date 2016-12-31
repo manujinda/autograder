@@ -52,7 +52,7 @@ class Problem( object ):
             #                              stdout    - Output is printed on standard output
             #                              file      - Output is produced in a specific file.
             #                              both      - Part of the output is to stdout and part to a file
-            self._07_inp_outps = AgGlobals.PROBLEM_INIT_INP_OUTPS  # '1:short:stdout 2:long:file 3:long:both ; List the nature of inputs and outputs to test submissions for this programming problem. Format - Input_ID:Input_Lenght:Output_location'
+            self._07_inp_outps = AgGlobals.PROBLEM_INIT_INP_OUTPS
 
             self._09_command_line_options = AgGlobals.PROBLEM_INIT_COMMAND_LINE_OPTIONS
             self._10_student_make_file = AgGlobals.PROBLEM_INIT_STUDENT_MAKE_FILE
@@ -67,9 +67,6 @@ class Problem( object ):
 
         self._06_files_submitted = AgGlobals.PROBLEM_INIT_FILES_SUBMITTED
 
-        # self._12_scores = []
-
-        # self._14_depends_on = ' ; Problem numbers of other problems that this problem is dependent on. These problems should be specified prior to this problem'
         self._14_depends_on = AgGlobals.PROBLEM_INIT_DEPENDS_ON
 
         # The percentage the student outputs for all grading input for this problem should
@@ -82,11 +79,8 @@ class Problem( object ):
 
 
     def __str__( self ):
-#         desc = ''
-#         for f in sorted( self.__dict__.keys() ):
-#             desc += '{} > {} \n'.format( f[4:], self.__dict__[f] )
-#         return desc
         return AgGlobals.string_of( self, 4 )
+
 
     '''
     Read problem configuration file and populate the instance variables
@@ -117,7 +111,6 @@ class Problem( object ):
             print 'Error: {} in problem configuration file {}. Exiting...'.format( no_op_err, config_file )
             sys.exit()
 
-
         try:
             self._01_prob_no = int( self._01_prob_no )
         except ValueError:
@@ -146,10 +139,7 @@ class Problem( object ):
                 print 'Error: Problem {} - {} is dependent on problem id "{}" which is not an integer problem id. Exiting...'.format( self._01_prob_no, self._02_name, p )
                 sys.exit()
 
-        self._14_depends_on = temp_dept  # self._14_depends_on.split()
-#         if self._01_prob_no in self._14_depends_on:
-#             print 'Error: Problem {} - {} is dependent on itself. Exiting...'.format( self._01_prob_no, self._02_name )
-#             sys.exit()
+        self._14_depends_on = temp_dept
 
         for p in self._14_depends_on:
             if p == self._01_prob_no:
@@ -163,7 +153,6 @@ class Problem( object ):
             self._05_files_provided = self._05_files_provided.split()
             self._99_compiled = False
 
-            # self._07_inp_outps = '1:short:stdout 2:long:file
             in_out = AgGlobals.parse_config_line( self._07_inp_outps )
             temp_io = {}
             for io in in_out:
@@ -174,7 +163,6 @@ class Problem( object ):
                     sys.exit()
                 else:
                     temp_io[io[0]] = ( io[1], io[2] )
-                    # temp_io.append( {'id':io[0], 'length':io[1], 'out_to':io[2]} )
 
             # self._07_inp_outps is a dictionary with the format:
             #    input_id -> ( Input_Length, Output_Location )
@@ -182,7 +170,6 @@ class Problem( object ):
 
             self._13_timeout = int( self._13_timeout )
 
-        # self._06_files_submitted = 'file_1:alias_1_1:alias_1_2 file_2:alias_2_1 ; List the names of the files students are supposed to submit before the ; separated by spaces. To handle naming errors, for each file a student is supposed to submit you can give a : separated list of aliases'
         # This is a list of lists with all the submitted file names and their file name aliases.
         # The first entry is the expected file name
         self._06_files_submitted = AgGlobals.parse_config_line( self._06_files_submitted )
@@ -203,7 +190,7 @@ class Problem( object ):
 
             try:
                 self._15_marks[thresh] = float( mark[1] )
-            except ValueError as e:
+            except ValueError:
                 print 'Error: Problem Configuration File: {}'.format( config_file )
                 print '\tMarks should be Integer or Real valued. Check'
                 print '\t\tProblem: {}'.format( self._01_prob_no )
@@ -214,7 +201,6 @@ class Problem( object ):
                 self._99_threshold_marks[thresh] = self._15_marks[thresh]
 
         self._99_state = AgGlobals.set_flags( self._99_state, AgGlobals.PROBLEM_STATE_LOADED )
-        # print self
         return True
 
 
@@ -297,15 +283,6 @@ class Problem( object ):
 
 
     def compile( self, cwd, grading_log_file = None, student_log_file = None, gradebook = None ):
-        # rubric = self._15_marks.keys()
-
-        # if AgGlobals.RUBRIC_COMPILE in rubric:
-        #    gradebook['{}_Compile'.format( self._01_prob_no )] = self._15_marks[AgGlobals.RUBRIC_COMPILE]
-
-        # if AgGlobals.RUBRIC_COMPILE_WARNING in rubric:
-        #    gradebook['{}_No Warnings Compiling'.format( self._01_prob_no )] = self._15_marks[AgGlobals.RUBRIC_COMPILE_WARNING]
-
-        # return True
 
         if self._03_prob_type == AgGlobals.PROBLEM_TYPE_PROG and AgGlobals.is_flags_set( self._99_state, AgGlobals.PROBLEM_STATE_LOADED ):
 
@@ -313,27 +290,24 @@ class Problem( object ):
             compile_success = 0
             warnings_present = False
 
-            if self._08_language in ['c', 'C', 'cpp', 'CPP']:
+            if self._08_language in AgGlobals.LANGUAGE_C_CPP:
                 # Cleanup
-                retcode, out, err = Command( 'make clean' ).run( cwd = cwd )
+                retcode, out, err = Command( AgGlobals.MAKE_CLEAN ).run( cwd = cwd )
 
-                # print 'return: ', retcode
-                # print 'output: ', out
-                # print 'error: ', err
-
-                source_pattern = re.compile( '^([_a-zA-Z0-9]+)\.(?:c|C|cpp|CPP)$' )
+                source_pattern = re.compile( AgGlobals.SOURCE_FILE_NAME_REGEXP_C_CPP )
 
                 for f in self._06_files_submitted:
                     source_file = source_pattern.match( f[0] )
                     if source_file:
-                        # print source_file.group( 1 )
-
-                        cmd = 'make {}.o'.format( source_file.group( 1 ) )
+                        # cmd = 'make {}.o'.format( source_file.group( 1 ) )
+                        cmd = AgGlobals.get_compile_command( self._08_language, source_file.group( 1 ), AgGlobals.PRODUCE_OBJECT_CODE )
                         retcode, out, err = Command( cmd ).run( cwd = cwd )
 
-                        print retcode
-                        print out
-                        print err
+                        if not gradebook:
+                            print cmd
+                            print retcode
+                            print out
+                            print err
 
                         compile_success += retcode
 
@@ -363,7 +337,6 @@ class Problem( object ):
                             warnings_present = True
 
                 if compile_success == 0:
-                    # self._99_state = AgGlobals.PROBLEM_STATE_COMPILED
                     self._99_state = AgGlobals.set_flags( self._99_state, AgGlobals.PROBLEM_STATE_COMPILED )
 
                     if gradebook:
@@ -385,30 +358,22 @@ class Problem( object ):
 
 
     def link( self, cwd, grading_log_file = None, student_log_file = None, gradebook = None ):
-        # rubric = self._15_marks.keys()
-
-        # if AgGlobals.RUBRIC_LINK in rubric:
-        #    gradebook['{}_Link'.format( self._01_prob_no )] = self._15_marks[AgGlobals.RUBRIC_LINK]
-
-        # if AgGlobals.RUBRIC_LINK_WARNING in rubric:
-        #    gradebook['{}_No Warnings Linking'.format( self._01_prob_no )] = self._15_marks[AgGlobals.RUBRIC_LINK_WARNING]
-
-        # return True
-
-        # self._99_linked = False
         if self._03_prob_type == AgGlobals.PROBLEM_TYPE_PROG and AgGlobals.is_flags_set( self._99_state, AgGlobals.PROBLEM_STATE_COMPILED ):
 
             self._99_state = AgGlobals.clear_flags( self._99_state, AgGlobals.PROBLEM_STATE_LINKED )
             link_success = 0
             warnings_present = False
 
-            if self._08_language in ['c', 'C', 'cpp', 'CPP']:
-                cmd = 'make {}'.format( self._11_make_target )
+            if self._08_language in AgGlobals.LANGUAGE_C_CPP:
+                # cmd = 'make {}'.format( self._11_make_target )
+                cmd = AgGlobals.get_compile_command( self._08_language, self._11_make_target, AgGlobals.PRODUCE_BINARY_CODE )
                 retcode, out, err = Command( cmd ).run( cwd = cwd )
 
-                print retcode
-                print out
-                print err
+                if not gradebook:
+                    print cmd
+                    print retcode
+                    print out
+                    print err
 
                 link_success += retcode
 
@@ -422,7 +387,6 @@ class Problem( object ):
                     AgGlobals.write_to_log( student_log_file, '</pre></div>', 1 )
                     print '**** Linking Errors present ****'
 
-                # warning = warning_pattern.match( err )
                 elif err.find( 'warning' ) >= 0:
                     AgGlobals.write_to_log( grading_log_file, 'Warning: Linking target {} in problem: {} ) {}\n'.format( self._11_make_target, self._01_prob_no, self._02_name ), 1 )
                     # AgGlobals.write_to_log( student_log_file, '\tWarning: Linking target {} in problem: {} ) {}\n'.format( self._11_make_target, self._01_prob_no, self._02_name ) )
@@ -437,8 +401,6 @@ class Problem( object ):
                     print '**** Linking Warnings present ****'
                     warnings_present = True
 
-                # self._99_linked = ( link_success == 0 )
-                # self._99_state = AgGlobals.PROBLEM_STATE_LINKED
                 if link_success == 0:
                     self._99_state = AgGlobals.set_flags( self._99_state, AgGlobals.PROBLEM_STATE_LINKED )
 
@@ -470,12 +432,12 @@ class Problem( object ):
                     cmd = '../{} {}'.format( self._11_make_target, self._99_inputs[io].get_cmd_line_input() )
                     retcode, out, err = Command( cmd ).run( self._99_inputs[io].get_inputs(), self._13_timeout, fo, in_out_dir )
                     fo.close()
-                    # print 'running return code: ', retcode
-                    # print out
-                    # print err
 
-                    # print os.path.pardir( in_out_dir )
-                    # print assignment
+                    if not gradebook:
+                        print cmd
+                        print 'Running return code: ', retcode
+                        print out
+                        print err
 
                     if gradebook:
                         total_output_match = 0
@@ -489,12 +451,10 @@ class Problem( object ):
 
                         if self._99_inputs[io].outputs_to_stdout():
                             referenec_output_file_path = os.path.join( assignment_master_dir_path, AgGlobals.INPUT_OUTPUT_DIRECTORY, AgGlobals.get_output_file_name( assignment, self._01_prob_no, io ) )
-                            # print referenec_output_file_path
                             rf = open( referenec_output_file_path, 'r' )
                             r_lines = rf.read()
                             rf.close()
 
-                            # print output_file_path
                             sf = open( output_file_path )
                             s_lines = sf.read()
                             sf.close()
@@ -503,31 +463,19 @@ class Problem( object ):
                             match_len, comb_len, outpu_diff = self.grade_student_output( s_lines, r_lines, False )
                             total_output_match += match_len
                             total_output_len += comb_len
-                            matching_ratio = match_len / comb_len
-                            # matching_ratio, outpu_diff = self.grade_student_output( s_lines, r_lines, False )
-                            print matching_ratio
-                            print outpu_diff
 
                             AgGlobals.write_to_log( student_log_file, '<h5 class=stdout>Standard Output</h5>', 1 )
                             AgGlobals.write_to_log( student_log_file, '<div class=output_diff>', 1 )
                             AgGlobals.write_to_log( student_log_file, outpu_diff, 2 )
                             AgGlobals.write_to_log( student_log_file, '</div>', 1 )
 
-                            # matching_ratio_all_inputs += matching_ratio
-
-                            # print sm.ratio()
-                            # sm = SequenceMatcher( None, output_file_path, referenec_output_file_path )
-
                             # cmd = 'diff {} {}'.format( output_file_path, referenec_output_file_path )
                             # retcode, out, err = Command( cmd ).run()
                             # print out, err
-                            # for tag, i1, i2, j1, j2 in sm.get_opcodes():
-                            #    print ( '{:>7} a[{}:{}] b[{}:{}]'.format( tag, i1, i2, j1, j2 ) )
 
                         for out_file in self._99_inputs[io].get_output_files_generated():
 
                             referenec_output_file_path = os.path.join( assignment_master_dir_path, AgGlobals.INPUT_OUTPUT_DIRECTORY, AgGlobals.get_output_file_name( assignment, self._01_prob_no, io, out_file ) )
-                            # print referenec_output_file_path
                             rf = open( referenec_output_file_path, 'r' )
                             r_lines = rf.read()
                             rf.close()
@@ -548,10 +496,6 @@ class Problem( object ):
                             match_len, comb_len, outpu_diff = self.grade_student_output( s_lines, r_lines, False )
                             total_output_match += match_len
                             total_output_len += comb_len
-                            matching_ratio = match_len / comb_len
-                            # matching_ratio, outpu_diff = self.grade_student_output( s_lines, r_lines, False )
-                            # print matching_ratio
-                            # print outpu_diff
 
                             AgGlobals.write_to_log( student_log_file, '<div class=output_diff>', 1 )
                             AgGlobals.write_to_log( student_log_file, outpu_diff, 2 )
@@ -563,8 +507,6 @@ class Problem( object ):
                     for out_file in self._99_inputs[io].get_output_files_generated():
                         output_file_path = os.path.join( in_out_dir, out_file )
                         if os.path.exists( output_file_path ):
-                            # final_output_file_path = os.path.join( in_out_dir, AgGlobals.get_output_file_name( assignment, self._01_prob_no, io, out_file ) )
-                            # print final_output_file_path
                             shutil.move( output_file_path, os.path.join( in_out_dir, AgGlobals.get_output_file_name( assignment, self._01_prob_no, io, out_file ) ) )
                             # cmd = 'mv {0} {1}_{0}'.format( out_file, AgGlobals.get_output_file_name( assignment, self._01_prob_no, io ) )
                             # retcode, out, err = Command( cmd ).run( cwd = in_out_dir )
@@ -572,7 +514,6 @@ class Problem( object ):
                 if gradebook:
                     final_matching_percentage = matching_ratio_all_inputs * 100.0 / len( self._99_inputs )
                     print final_matching_percentage, '%'
-                    # print sorted( self._99_threshold_marks, reverse = True )
 
                     for m in sorted( self._99_threshold_marks, reverse = True ):
                         if final_matching_percentage >= m:
@@ -605,20 +546,16 @@ class Problem( object ):
 
             if op == 'insert':
                 if ( ro.strip() or not ignore_spaces ):
-                    # html.append( '<ins style=\"background:#e6ffe6;\">{}</ins>'.format( ro ) )
                     html.append( '<ins>{}</ins>'.format( ro ) )
                 else:
                     space_mismatch += len( ro )
             elif op == 'delete':
                 if ( so.strip() or not ignore_spaces ):
-                    # html.append( '<del style=\"background:#ffe6e6;\">{}</del>'.format( so ) )
                     html.append( '<del>{}</del>'.format( so ) )
                 else:
                     html.append( '<span>{}</span>'.format( so ) )
                     space_mismatch += len( so )
             elif op == 'replace':
-                # html.append( '<del style=\"background:#ffe6e6;\">{}</del>'.format( so ) )
-                # html.append( '<ins style=\"background:#e6ffe6;\">{}</ins>'.format( ro ) )
                 html.append( '<del>{}</del>'.format( so ) )
                 html.append( '<ins>{}</ins>'.format( ro ) )
             elif op == 'equal':
@@ -641,40 +578,22 @@ class Problem( object ):
 
         # Reverse engineer the formula used in ratio() to
         # get the default matching elements
-        def_match = matching_ratio * comb_len
+        matching = matching_ratio * comb_len
 
         if ignore_spaces:
-            # Total lengths of student and reference outputs
-            # comb_len = len( student_out ) + len( reference_out )
-            # print 'comb_len: ', comb_len
-
-            # Reverse engineer the formula used in ratio() to
-            # get the default matching elements
-            # def_match = matching_ratio * comb_len
 
             # Add the elements mismatched due to spaces
             # in the the count of matching elements
-            def_match += space_mismatch
-            # new_match = def_match + space_mismatch
+            matching += space_mismatch
 
-            # Re-compute a new ratio using the new matching count
-            # matching_ratio = new_match / comb_len
-
-        # print "space match : ", space_match
-        # print "old ratio : ", def_ratio
-        # print "Matching ratio : ", matching_ratio
-        return def_match, comb_len, "".join( html )
-        # return matching_ratio, "".join( html )
+        return matching, comb_len, "".join( html )
 
 
     def get_gradebook_headers( self ):
-        # problem_header = []
         marks_header = []
         print self._15_marks
         if self._03_prob_type == AgGlobals.PROBLEM_TYPE_PROG:
             if self._08_language in ['c', 'C', 'cpp', 'CPP']:
-#                 problem_header = self._01_prob_no
-#                 marks_header = 'compile, link, marks'
                 rubric = self._15_marks.keys()
 
                 if AgGlobals.RUBRIC_COMPILE in rubric:
@@ -694,11 +613,4 @@ class Problem( object ):
 
                 marks_header.append( AgGlobals.get_gradebook_heading( AgGlobals.RUBRIC_MARKS, self._01_prob_no ) )
 
-                # problem_header.append( self._01_prob_no )
-
-                # for r in range( len( marks_header ) - 1 ):
-                #    problem_header.append( '' )
-
-        # return ( ','.join( problem_header ), ','.join( marks_header ) )
-        print marks_header
         return marks_header
