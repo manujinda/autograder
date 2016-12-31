@@ -293,6 +293,10 @@ class AgGlobals( object ):
         return AgGlobals.STUDENT_LOG_FILE_NAME_FORMAT.format( assignment_sub_dir_name, student_dir_name )
 
     @classmethod
+    def get_stud_html_log_file_path( cls, student_grading_log_path ):
+        return '{}{}'.format( student_grading_log_path[:-3], 'html' )
+
+    @classmethod
     def get_stud_grades_file_name( cls, student_dir_name, assignment_sub_dir_name ):
         return AgGlobals.STUDENT_GRADES_FILE_NAME_FORMAT.format( assignment_sub_dir_name, student_dir_name )
 
