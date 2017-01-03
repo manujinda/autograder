@@ -29,10 +29,6 @@ class Student( object ):
         self._8_repo = Repository( data_dict[ AgGlobals.STUDENT_DB_FIED_REPO ] )
 
     def __str__( self ):
-#         desc = ''
-#         for f in sorted( self.__dict__.keys() ):
-#             desc += '{} > {} \n'.format( f[3:], self.__dict__[f] )
-#         return desc
         return AgGlobals.string_of( self, 3 )
 
     def get_dir( self, index_len ):
