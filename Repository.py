@@ -68,9 +68,9 @@ class Repository( object ):
                 # out, err = cloning.communicate()
 
                 retcode, out, err = Command( cmd ).run()
-                print out
-                print err
-                print retcode  # cloning.returncode
+                # print out
+                # print err
+                # print retcode  # cloning.returncode
 
                 if retcode == 0:
                     fo = open( os.path.join( path, AgGlobals.REPO_LAST_CHANGED_FILE ) , 'w' )
@@ -99,7 +99,7 @@ class Repository( object ):
                     return False
 
         else:
-            print 'Error: Invalid repository uri: {}'.format( self.uri )
+            print '\tError: Invalid repository uri: {}'.format( self.uri )
             AgGlobals.write_to_log( student_log_file, '<div class=error>Error: Invalid git URI - {}</div>'.format( self.uri ), 1 )
             # AgGlobals.write_to_log( student_log_file, '\tError: Invalid git uri' )
             return False
@@ -118,7 +118,7 @@ class Repository( object ):
                         # out, err = pulling.communicate()
 
                         retcode, out, err = Command( 'git pull' ).run( cwd = path )
-                        print out
+                        # print out
                         # print err
                         # print retcode  # pulling.returncode
 
@@ -143,7 +143,7 @@ class Repository( object ):
                                 # print diff_time
                                 # print now_time
                                 # print prev_update
-                                print 'There has been no change in the repo for {} days {} hours {} minutes'.format( diff_time.days, diff_time.seconds // 3600, ( diff_time.seconds // 60 ) % 60 )
+                                print '\tThere has been no change in the repo for {} days {} hours {} minutes'.format( diff_time.days, diff_time.seconds // 3600, ( diff_time.seconds // 60 ) % 60 )
                                 AgGlobals.write_to_log( grading_log_file, 'Nothing updated since {}\n'.format( prev_update.strftime( '%x :: %X' ) ), 1 )
                                 AgGlobals.write_to_log( grading_log_file, 'No activity for: {} days {} hours {} minutes\n'.format( diff_time.days, diff_time.seconds // 3600, ( diff_time.seconds // 60 ) % 60 ), 1 )
 
@@ -171,7 +171,7 @@ class Repository( object ):
                             # AgGlobals.write_to_log( student_log_file, '\t{} {} {}'.format( retcode, out, err ) )
                             return False
                     else:
-                        print 'this is not a git repo'
+                        print '\tthis is not a git repo'
                         AgGlobals.write_to_log( grading_log_file, '\tError: Not a valid git repo\n' )
                         AgGlobals.write_to_log( student_log_file, '<div class=error>Error: Invalid git URI - {}</div>'.format( self.uri ), 1 )
                         # AgGlobals.write_to_log( student_log_file, '\tError: Not a valid git repo\n' )
@@ -208,16 +208,16 @@ class Repository( object ):
                     # print repo_copy
                 else:
                     cmd = ''
-                    print 'Error: Destination directory already exists but not a repository'
+                    print '\tError: Destination directory already exists but not a repository'
 
                 if cmd:
                     # copying = subprocess.Popen( cmd.split(), stdout = subprocess.PIPE, stderr = subprocess.PIPE )
                     # out, err = copying.communicate()
 
                     retcode, out, err = Command( cmd ).run( cwd = cwd )
-                    print out
-                    print err
-                    print retcode  # copying.returncode
+                    # print out
+                    # print err
+                    # print retcode  # copying.returncode
 
                 # os.chdir( cwd )
 

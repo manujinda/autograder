@@ -62,6 +62,14 @@ class Problem( object ):
             # -1 means do not timeout
             self._13_timeout = AgGlobals.PROBLEM_INIT_TIMEOUT
 
+            # When comparing student output with reference output
+            # are we considering mismatches due to missing or additional
+            # spaces in the student output as mismatches and deduct marks
+            # based on them.
+            # Yes - ignore such mismatches and give student a higher mark
+            # No - Do not ignore such mismatches. Student output must match spaces in the reference output.
+            self._16_ignore_spaces = AgGlobals.PROBLEM_INIT_IGNORE_SPACES
+
         if self._03_prob_type == AgGlobals.PROBLEM_TYPE_PROG or self._03_prob_type == AgGlobals.PROBLEM_TYPE_CODE:
             self._08_language = AgGlobals.PROBLEM_INIT_LANGUAGE
 
@@ -170,6 +178,11 @@ class Problem( object ):
 
             self._13_timeout = int( self._13_timeout )
 
+            if self._16_ignore_spaces.lower() == 'yes' or self._16_ignore_spaces.lower() == 'y':
+                self._16_ignore_spaces = True
+            else:
+                self._16_ignore_spaces = False
+
         # This is a list of lists with all the submitted file names and their file name aliases.
         # The first entry is the expected file name
         self._06_files_submitted = AgGlobals.parse_config_line( self._06_files_submitted )
@@ -242,8 +255,12 @@ class Problem( object ):
     def generate_input_config( self, assignment, in_out_dir, cfg ):
         if self._03_prob_type == AgGlobals.PROBLEM_TYPE_PROG and AgGlobals.is_flags_set( self._99_state, AgGlobals.PROBLEM_STATE_LOADED ):
             for io in sorted( self._07_inp_outps ):
-                print io, self._07_inp_outps[io]
+                # print io, self._07_inp_outps[io]
                 section = AgGlobals.get_input_section( assignment, self._01_prob_no, io )
+
+                # if "['{}']".format( section ) in cfg.sections():
+                #    print 'Error: Input configuration section: {} already exists. Did not overwrite'.format( section )
+                #    return
                 cfg.add_section( section )
 
                 temp_in = Input( self._07_inp_outps[io][0], self._07_inp_outps[io][1] )
@@ -320,7 +337,7 @@ class Problem( object ):
                             err = err.replace( "&", "&amp;" ).replace( "<", "&lt;" ).replace( ">", "&gt;" )
                             AgGlobals.write_to_log( student_log_file, err, 2 )
                             AgGlobals.write_to_log( student_log_file, '</pre></div>', 1 )
-                            print '**** Compilation Errors present ****'
+                            print '\t**** Compilation Errors present ****\n'
 
                         elif err.find( 'warning' ) >= 0:
                             AgGlobals.write_to_log( grading_log_file, 'Warning: Compiling file {}\n'.format( f[0] ), 1 )
@@ -333,7 +350,7 @@ class Problem( object ):
                             err = err.replace( "&", "&amp;" ).replace( "<", "&lt;" ).replace( ">", "&gt;" )
                             AgGlobals.write_to_log( student_log_file, err, 2 )
                             AgGlobals.write_to_log( student_log_file, '</pre></div>', 1 )
-                            print '**** Compilation Warnings present ****'
+                            print '\t**** Compilation Warnings present ****\n'
                             warnings_present = True
 
                 if compile_success == 0:
@@ -385,7 +402,7 @@ class Problem( object ):
                     err = err.replace( "&", "&amp;" ).replace( "<", "&lt;" ).replace( ">", "&gt;" )
                     AgGlobals.write_to_log( student_log_file, err, 2 )
                     AgGlobals.write_to_log( student_log_file, '</pre></div>', 1 )
-                    print '**** Linking Errors present ****'
+                    print '\t**** Linking Errors present ****\n'
 
                 elif err.find( 'warning' ) >= 0:
                     AgGlobals.write_to_log( grading_log_file, 'Warning: Linking target {} in problem: {} ) {}\n'.format( self._11_make_target, self._01_prob_no, self._02_name ), 1 )
@@ -398,7 +415,7 @@ class Problem( object ):
                     err = err.replace( "&", "&amp;" ).replace( "<", "&lt;" ).replace( ">", "&gt;" )
                     AgGlobals.write_to_log( student_log_file, err, 2 )
                     AgGlobals.write_to_log( student_log_file, '</pre></div>', 1 )
-                    print '**** Linking Warnings present ****'
+                    print '\t**** Linking Warnings present ****\n'
                     warnings_present = True
 
                 if link_success == 0:
@@ -426,6 +443,7 @@ class Problem( object ):
             # Check whether the program has been successfully compiled, linked and inputs has been loaded
             if AgGlobals.is_flags_set( self._99_state, AgGlobals.PROBLEM_STATE_LINKED, AgGlobals.PROBLEM_STATE_INPUTS_LOADED ):
                 matching_ratio_all_inputs = 0
+                total_weight = 0
                 for io in sorted( self._99_inputs ):
                     output_file_path = os.path.join( in_out_dir, AgGlobals.get_output_file_name( assignment, self._01_prob_no, io ) )
                     fo = open( output_file_path, 'w' )
@@ -436,8 +454,8 @@ class Problem( object ):
                     if not gradebook:
                         print cmd
                         print 'Running return code: ', retcode
-                        print out
-                        print err
+                        # print out
+                        # print err
 
                     if gradebook:
                         total_output_match = 0
@@ -460,7 +478,7 @@ class Problem( object ):
                             sf.close()
 
                             sm = SequenceMatcher( None, s_lines, r_lines )
-                            match_len, comb_len, outpu_diff = self.grade_student_output( s_lines, r_lines, False )
+                            match_len, comb_len, outpu_diff = self.grade_student_output( s_lines, r_lines, self._16_ignore_spaces )
                             total_output_match += match_len
                             total_output_len += comb_len
 
@@ -493,7 +511,7 @@ class Problem( object ):
                                 s_lines = ''
 
                             sm = SequenceMatcher( None, s_lines, r_lines )
-                            match_len, comb_len, outpu_diff = self.grade_student_output( s_lines, r_lines, False )
+                            match_len, comb_len, outpu_diff = self.grade_student_output( s_lines, r_lines, self._16_ignore_spaces )
                             total_output_match += match_len
                             total_output_len += comb_len
 
@@ -502,7 +520,9 @@ class Problem( object ):
                             AgGlobals.write_to_log( student_log_file, '</div>', 1 )
 
                         matching_ratio_this_input = total_output_match / total_output_len
-                        matching_ratio_all_inputs += matching_ratio_this_input
+                        weight = self._99_inputs[io].get_weight()
+                        matching_ratio_all_inputs += ( matching_ratio_this_input * weight )
+                        total_weight += weight
 
                     for out_file in self._99_inputs[io].get_output_files_generated():
                         output_file_path = os.path.join( in_out_dir, out_file )
@@ -512,8 +532,8 @@ class Problem( object ):
                             # retcode, out, err = Command( cmd ).run( cwd = in_out_dir )
 
                 if gradebook:
-                    final_matching_percentage = matching_ratio_all_inputs * 100.0 / len( self._99_inputs )
-                    print final_matching_percentage, '%'
+                    final_matching_percentage = matching_ratio_all_inputs * 100.0 / total_weight  # len( self._99_inputs )
+                    # print '\t{} %'.format( final_matching_percentage )
 
                     for m in sorted( self._99_threshold_marks, reverse = True ):
                         if final_matching_percentage >= m:

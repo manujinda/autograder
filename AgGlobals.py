@@ -74,6 +74,7 @@ class AgGlobals( object ):
     PROBLEM_INIT_LANGUAGE = ''
     PROBLEM_INIT_DEPENDS_ON = ''
     PROBLEM_INIT_MARKS = 'compile:10 compwarn:5 link:10 linkwarn:5 memleaks:10 0:0 50:80 100:100 ; Specify the different degrees to with the student output should match the reference output and the marks granted'
+    PROBLEM_INIT_IGNORE_SPACES = 'No'
 
     # Different states of a problem
     PROBLEM_STATE_INITIALIZED = 1

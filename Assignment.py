@@ -60,8 +60,8 @@ class Assignment( object ):
             with open( cfg_path, 'wb' ) as configfile:
                 assignment_config.write( configfile )
             print 'Success: Blank assignment {} successfully created'.format( assignment_name )
-            print 'Update the configuration file: {} as necessary to define the assignment'.format( cfg_path )
-            print 'Then run python ... to generate problem skeleton file'
+            # print 'Update the configuration file: {} as necessary to define the assignment'.format( cfg_path )
+            # print 'Then run python ... to generate problem skeleton file'
         else:
             print 'Error: Assignment {} already exists. Cannot overwrite'.format( assignment_name )
 
@@ -197,7 +197,8 @@ class Assignment( object ):
             with open( self.get_prob_config_path(), 'wb' ) as configfile:
                 prob_config.write( configfile )
 
-            print 'Setting up problem configuration file skeleton completed successfully'
+            print 'Success: Setting up problem configuration file skeleton'
+            print 'File at: {}'.format( self.get_prob_config_path() )
             return True
         else:
             print 'Error: Need to load an assignment configuration before generating problem configurations'
@@ -353,13 +354,15 @@ class Assignment( object ):
                     files.update( set( self._8_problems[p].get_files_provided() ) )
 
             master = self.get_masterdir()
+            print 'Creating provided files:'
             for f in files:
                 file_path = os.path.join( master, f )
                 if not os.path.exists( file_path ):
-                    print 'Provided file {} does not exist in the master directory. Creating...'.format( f )
                     fo = open( file_path, 'a' )
                     fo.close()
-
+                    print '\tCreated \t\t{}'.format( f )
+                else:
+                    print '\t\tAlready exists \t\t{}'.format( f )
             return True
         else:
             print 'Error: Need to load an assignment configuration before checking "Provided" files for that assignment'
@@ -377,12 +380,15 @@ class Assignment( object ):
                 files.update( set( self._8_problems[p].get_files_submitted() ) )
 
             master = self.get_masterdir()
+            print 'Creating submitted files'
             for f in files:
                 file_path = os.path.join( master, f )
                 if not os.path.exists( file_path ):
-                    print 'Submitted file {} does not exist in the master directory. Creating...'.format( f )
                     fo = open( file_path, 'a' )
                     fo.close()
+                    print '\tCreated \t\t{}'.format( f )
+                else:
+                    print '\t\tAlready exists \t\t{}'.format( f )
 
             return True
         else:
@@ -408,7 +414,7 @@ class Assignment( object ):
             with open( cfg_path, 'wb' ) as configfile:
                 input_config.write( configfile )
 
-            print 'Success: Input configuration file {} successfully created'.format( cfg_path )
+            print 'Success: Generating input configuration file\n\t {}'.format( cfg_path )
 
 
     def load_input( self ):
@@ -605,6 +611,9 @@ class Assignment( object ):
                 if success:
                     # Linked successfully. Try to run and produce output
                     output_dir = os.path.join( cwd, AgGlobals.INPUT_OUTPUT_DIRECTORY )
+                    if not os.path.exists( output_dir ):
+                        os.mkdir( output_dir )
+
                     self._8_problems[p].generate_output( self._5_subdir, output_dir, self.get_masterdir(), grading_log_file, student_log_file, gradebook )
 
 

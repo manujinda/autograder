@@ -51,7 +51,11 @@ class Input( object ):
         # the amount of marks granted if student output achieves that level.
         # Format: a list of matching_%:marks
         # 0 means no matching at all and 100 means perfect matching.
-        self._6_marks = AgGlobals.INPUT_INIT_MARKS
+        # self._6_marks = AgGlobals.INPUT_INIT_MARKS
+
+        # Defines how important this input in assessing student output
+        # Higher the weight, higher the importance.
+        self._7_weight = 1.0
 
 
     def __str__( self ):
@@ -87,14 +91,14 @@ class Input( object ):
             sys.exit()
 
         if self._1_nature != input_nature_in_problem:
-            print 'Error:  Input nature mismatch for input'  # "{}" of type "{}"'.format( self._02_name, self._03_prob_type )
+            print 'Error:  Input nature mismatch for input {}'.format( section )  # "{}" of type "{}"'.format( self._02_name, self._03_prob_type )
             print '\tInput nature in problem configuration : {}'.format( input_nature_in_problem )
             print '\tInput nature in input configuration    : {}'.format( self._1_nature )
             print '\tExiting...'
             sys.exit()
 
         if self._4_output != output_location_in_problem:
-            print 'Error:  Output location mismatch for input'  # "{} - {}"'.format( self._01_prob_no, self._02_name )
+            print 'Error:  Output location mismatch for input {}'.format( section )  # "{} - {}"'.format( self._01_prob_no, self._02_name )
             print '\tOutput location in problem configuration : {}'.format( output_location_in_problem )
             print '\tOutput location in input configuration    : {}'.format( self._4_output )
             print '\tExiting...'
@@ -114,12 +118,22 @@ class Input( object ):
         # if self._4_output != AgGlobals.OUTPUT_TO_STDOUT:
             self._5_out_file = self._5_out_file.split()
 
-        temp_marks = AgGlobals.parse_config_line( self._6_marks )
-        self._6_marks = {}
-        for mark in temp_marks:
-            self._6_marks[mark[0]] = mark[1]
+        # temp_marks = AgGlobals.parse_config_line( self._6_marks )
+        # self._6_marks = {}
+        # for mark in temp_marks:
+        #    self._6_marks[mark[0]] = mark[1]
 
         # print self
+
+        try:
+            self._7_weight = float( self._7_weight )
+        except:
+            print 'Error: Weight {} for input {} must be an integer or a float. Exiting...'.format( self._7_weight, section )
+            sys.exit()
+
+        if self._7_weight <= 0:
+            print 'Error: Weight {} for input {} must be positive. Exiting...'.format( self._7_weight, section )
+            sys.exit()
 
         return True
 
@@ -142,3 +156,7 @@ class Input( object ):
 
     def outputs_to_stdout( self ):
         return self._4_output == AgGlobals.OUTPUT_TO_STDOUT or self._4_output == AgGlobals.OUTPUT_TO_BOTH
+
+
+    def get_weight( self ):
+        return self._7_weight

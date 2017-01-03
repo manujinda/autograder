@@ -49,6 +49,14 @@ class Autograder( object ):
             print 'Error: {} in autograder configuration file {}. Exiting...'.format( no_op_err, self.config_file )
             sys.exit()
 
+        if not self.grading_root:
+            print 'Error: Empty grading root. Exit...'
+            sys.exit()
+
+        if not self.grading_master:
+            print 'Error: Empty grading master. Exit...'
+            sys.exit()
+
         self.students_dict = OrderedDict()
 
         self.asmnt = Assignment()
@@ -125,7 +133,8 @@ class Autograder( object ):
         assignment_name = '{}_{}'.format( self.grading_master[:-1], 1 )  # 'assignment1'
         self.new_assignment( assignment_name )
 
-        print 'Setting up autograder directory structure completed successfully'
+        print 'Success: Setting up autograder directory structure'
+        print 'Grading root: {}'.format( self.grading_root )
 
 
     ''' Generate a new blank assignment.
@@ -249,29 +258,36 @@ class Autograder( object ):
     '''
     def do_grading2( self, stud_no = None, prob_no = None ):
 
+        print 'Grading',
+
         # A specific problem number is provided for grading
         if prob_no:
             try:
                 prob_no = int( prob_no )
             except ValueError:
-                print 'Error: Problem number "{}" must be an integer. Exiting...'.format( prob_no )
+                print '\nError: Problem number "{}" must be an integer. Exiting...'.format( prob_no )
                 exit()
 
             if not self.asmnt.is_valid_problem_id( prob_no ):
-                print 'Error: Invalid problem number {}'.format( prob_no )
+                print '\nError: Invalid problem number {}'.format( prob_no )
                 exit()
+
+            print 'problem number {}'.format( prob_no ),
 
         # Grade a specific student
         if stud_no:
             # Check whether this is a valid student number
             if stud_no in self.students_dict.keys():
                 students = [stud_no]
+                print 'of student {}'.format( stud_no ),
             else:
-                print 'Error: Invalid student number for grading {}. Exiting...'.format( stud_no )
+                print '\nError: Invalid student number for grading {}. Exiting...'.format( stud_no )
                 exit()
         else:
             # Grade all the students
             students = self.students_dict.keys()
+
+        print 'of {}'.format( self.asmnt.get_assignment_sub_dir() )
 
         # If students are loaded and problems are loaded
         if len( students ) > 0 and AgGlobals.is_flags_set( self.ag_state, AgGlobals.AG_STATE_ASSIGNMENT_LOADED, AgGlobals.AG_STATE_PROBLEMS_LOADED, AgGlobals.AG_STATE_INPUTS_LOADED ) :
@@ -334,6 +350,8 @@ class Autograder( object ):
             for stud_no in students:
                 stud = self.students_dict[stud_no]
 
+                print '\nStudent: {}) {}'.format( stud.get_index(), stud.get_name() )
+
                 grading_log_stud_path = os.path.join( log_directory_path, stud.get_stud_log_file_name( index_len, self.asmnt.get_assignment_sub_dir() ) )
                 grading_log_stud = open( grading_log_stud_path, 'a' )
                 # AgGlobals.write_to_log( grading_log_stud, '\n{0}<< Grading Session on {1} : START >>{0}\n'.format( '-' * 20, datetime.now() ) )
@@ -371,7 +389,7 @@ class Autograder( object ):
                 # Check whether student has created a directory with the proper name in his or her
                 # repository to upload files for this assignment / project
                 if not os.path.exists( stud_dir_path ):
-                    print 'Error: Student {} does not have the assignment directory {} in the repository.'.format( stud.get_name(), stud_dir_path )
+                    print '\tError: Student {} does not have the assignment directory {} in the repository.'.format( stud.get_name(), stud_dir_path )
                     AgGlobals.write_to_log( grading_log, '\tError: {} directory does not exist in the repo\n'.format( self.asmnt.get_assignment_sub_dir() ) )
                     AgGlobals.write_to_log( grading_log_stud, '<p class=error>Error: {} directory does not exist in the repo</p>'.format( self.asmnt.get_assignment_sub_dir() ), 1 )
                     marks_dict[AgGlobals.GRADEBOOK_HEADER_COMMENT] = '{} directory does not exist in the repo'.format( self.asmnt.get_assignment_sub_dir() )
@@ -633,7 +651,18 @@ if len( sys.argv ) > 3:
                                         ag.do_grading2( stud_no = sys.argv[5], prob_no = sys.argv[6] )
                                 else:
                                     ag.do_grading2()
-
+                            else:
+                                print 'Error: Inputs not loaded. Exiting...'
+                        else:
+                            print 'Error: Students not loaded. Exiting...'
+                    else:
+                        print 'Error: Problems not loaded. Exiting...'
+                else:
+                    print 'Error: Assignment not loaded. Exiting...'
+            else:
+                print 'Error: Invalid autograder directory configuration. Exiting...'
+        else:
+            print 'Error: Autograder not properly created. Exiting...'
 
 
     elif sys.argv[1] == 'setasmnt':
