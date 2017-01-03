@@ -7,7 +7,7 @@ A class to encapsulate a version control repository such as Git
 from datetime import datetime
 import os
 import re
-import subprocess
+# import subprocess
 
 from AgGlobals import AgGlobals
 from Command import Command
@@ -38,12 +38,11 @@ class Repository( object ):
         if valid_rui:
             self.protocol = 'https' if valid_rui.group( 1 ) == 'https://' else 'ssh'
             self.host = valid_rui.group( 2 )
-            self.user_name = valid_rui.group( 3 )  # ( 4 )
-            self.repo_name = valid_rui.group( 4 )  # ( 5 )
-            self.repo_type = valid_rui.group( 5 )  # ( 6 )
+            self.user_name = valid_rui.group( 3 )
+            self.repo_name = valid_rui.group( 4 )
+            self.repo_type = valid_rui.group( 5 )
             self.valid = True
         else:
-            # self.uri = ''
             self.protocol = ''
             self.host = ''
             self.user_name = ''
@@ -54,10 +53,6 @@ class Repository( object ):
 
 
     def __str__( self ):
-#         desc = ''
-#         for f in sorted( self.__dict__.keys() ):
-#             desc += '{} > {} \n'.format( f, self.__dict__[f] )
-#         return desc
         return AgGlobals.string_of( self )
 
     def clone( self, path = '', grading_log_file = None, student_log_file = None ):
