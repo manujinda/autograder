@@ -98,7 +98,11 @@ class Assignment( object ):
             print 'Error: {} in assignment configuration file {}. Exiting...'.format( no_op_err, config_file )
             sys.exit()
 
-        self._3_duedate = datetime.datetime.strptime( self._3_duedate, AgGlobals.ASSIGNMENT_CFG_DUE_DATE_FORMAT )
+        try:
+            self._3_duedate = datetime.datetime.strptime( self._3_duedate, AgGlobals.ASSIGNMENT_CFG_DUE_DATE_FORMAT )
+        except ValueError:
+            print 'Error: Invalid date time format for duedate. Exiting...'
+            sys.exit()
 
         self._4_gradingroot = grading_root
 
@@ -281,6 +285,12 @@ class Assignment( object ):
 
         return False
 
+
+    def get_deadline( self ):
+        if AgGlobals.is_flags_set( self._99_state, AgGlobals.ASSIGNMENT_STATE_LOADED ):
+            return self._3_duedate
+        else:
+            return False
 
     '''
         Accumulate all the file names student is supposed to submit and their possible aliases

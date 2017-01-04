@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """
     autograder.py
     Combines everything and performs autograding of a single project / assignemnt
@@ -324,10 +326,17 @@ class Autograder( object ):
                     print 'Error: Provided file {} does not exist. Cannot proceed with grading. Exit...'.format( pf_path )
                     sys.exit( 1 )
 
+            now_time = datetime.now()
+            deadline = self.asmnt.get_deadline()
+
+            if not deadline:
+                print 'Error: Assignment deadline not properly set or assignment not proplerly loaded. Exiting...'
+                sys.exit()
+
             # Open grading log file for this student
             log_directory_path = os.path.join( asmnt_master_sub_dir, AgGlobals.LOG_FILE_DIRECTORY )
             grading_log = open( os.path.join( log_directory_path, AgGlobals.AUTOGRADER_LOG_FILE_NAME ), 'a' )
-            AgGlobals.write_to_log( grading_log, '\n{0}<< Grading Session on {1} : START >>{0}\n'.format( '-' * 20, datetime.now().strftime( '%x :: %X' ) ) )
+            AgGlobals.write_to_log( grading_log, '\n{0}<< Grading Session on {1} : START >>{0}\n'.format( '-' * 20, now_time.strftime( '%x :: %X' ) ) )
 
             # Create the gradebook
             gradebook_headers = self.asmnt.generate_gradebook_headers( prob_no )
@@ -375,12 +384,14 @@ class Autograder( object ):
                 # Path for the student's directory in the grading directory
                 stud_dir_path = os.path.join( destination, stud_dir_name, self.asmnt.get_assignment_sub_dir() )
 
-                # Update local student repository
-                if not os.path.exists( stud_local_repo_path ):
-                    # Student repository has not been cloned. Have to clone it first
-                    stud.clone_student_repo( stud_local_repo_path, grading_log, grading_log_stud )
-                else:
-                    stud.pull_student_repo( stud_local_repo_path, grading_log, grading_log_stud )
+                # Update student repos only if this is before the deadline
+                if now_time <= deadline:
+                    # Update local student repository
+                    if not os.path.exists( stud_local_repo_path ):
+                        # Student repository has not been cloned. Have to clone it first
+                        stud.clone_student_repo( stud_local_repo_path, grading_log, grading_log_stud )
+                    else:
+                        stud.pull_student_repo( stud_local_repo_path, grading_log, grading_log_stud )
 
                 # Copy all the student submitted files from student directory in students directory
                 # to a directory with the same name in the grading directory
@@ -500,6 +511,144 @@ class Autograder( object ):
         return False
 
 
+if len( sys.argv ) > 1:
+    if sys.argv[1] == 'gencfg' or sys.argv[1] == '-cfg':
+        Autograder.generage_autograder_config_skel( sys.argv[2] )
+        exit()
+
+    if sys.argv[1] == 'setup' or sys.argv[1] == '-s':
+        # Setup the initial directory tree for grading one instance of a class
+        # Need to run once at the beginning of the semester / term / quarter
+        # Command:
+        #    $ python Autograder.py setup <path to autograder configuration file>
+        # Test Parameters
+        #    setup /home/users/manu/Documents/manujinda/uo_classes/4_2016_summer/boyana/autograder_ws/autograder/autograder.cfg
+        if len( sys.argv ) > 2:
+            ag = Autograder( sys.argv[2] )
+            # if ag.created():
+            ag.setup_grading_dir_tree()
+        else:
+            print 'USAGE: Autograder.py setup <path to autograder configuration file>'
+        exit()
+
+    if len( sys.argv ) == 7 or len( sys.argv ) == 4:
+        ag_cfg = os.path.join( sys.argv[2], AgGlobals.AUTOGRADER_CFG_NAME )
+        next_para = 3
+    elif len( sys.argv ) == 6 or len( sys.argv ) == 3:
+        ag_cfg = os.path.join( os.getcwd(), AgGlobals.AUTOGRADER_CFG_NAME )
+        next_para = 2
+#     elif len( sys.argv ) > 3:
+#         ag_cfg = os.path.join( sys.argv[2], AgGlobals.AUTOGRADER_CFG_NAME )
+#         next_para = 3
+#     elif len( sys.argv ) > 2:
+#         ag_cfg = os.path.join( os.getcwd(), AgGlobals.AUTOGRADER_CFG_NAME )
+#         next_para = 2
+
+    ag = Autograder( ag_cfg )
+
+    if not ag.created():
+        print 'Error: Autograder not properly created. Exiting...'
+        sys.exit()
+
+    if not ag.validate_config():
+        print 'Error: Invalid Autograder directory configuration. Exiting... '
+        sys.exit()
+
+    if sys.argv[1] == 'newasmnt' or sys.argv[1] == '-n':
+        # Create a sub directory for a new assignment / project and provide
+        # skeleton configuration file as a start
+        # Command:
+        #    $ python Autograder.py newasmnt <path to autograder root directory> <assignment / project name>
+        # Test Parameters
+        #    newasmnt /home/users/manu/Documents/manujinda/uo_classes/4_2016_summer/boyana/grading assignment_2
+        ag.new_assignment( sys.argv[next_para] )
+        sys.exit()
+
+    if not ag.load_assignment( sys.argv[next_para] ):
+        print 'Error: Loading assignment {}. Exiting...'.format( sys.argv[next_para] )
+        sys.exit()
+
+    next_para += 1
+
+    if sys.argv[1] == 'genprob' or sys.argv[1] == '-p':
+        # Generate blank problem configuration file based on a filled assignment / project configuration file
+        # Command:
+        #     $ python Autograder.py genprob <path to autograder root directory> <assignment / project name>
+        # Test Parameters
+        #    genprob /home/users/manu/Documents/manujinda/uo_classes/4_2016_summer/boyana/grading assignment_2
+        ag.gen_prob_config_skel()
+        sys.exit()
+
+    if not ag.load_problems():
+        print 'Error: Loading problems. Exiting...'
+        sys.exit()
+
+    if sys.argv[1] == 'genfiles' or sys.argv[1] == '-f':
+        # Generate blank files described in the Assignment / Project. The configuration files for the
+        # Assignment and its problems must be complete before running this command
+        # Command:
+        #     $ python Autograder.py genfiles <path to autograder root directory> <assignment / project name>
+        # Test Parameters
+        #    genfiles /home/users/manu/Documents/manujinda/uo_classes/4_2016_summer/boyana/grading assignment_2
+        ag.generate_files()
+
+    elif sys.argv[1] == 'compile' or sys.argv[1] == '-c':
+        # Compile program files belonging to this assignment / project
+        # Assignment and its problems must be complete before running this command
+        # Command:
+        #     $ python Autograder.py compile <path to autograder root directory> <assignment / project name>
+        # Test Parameters
+        #    compile /home/users/manu/Documents/manujinda/uo_classes/4_2016_summer/boyana/grading assignment_2
+        ag.compile()
+
+    elif sys.argv[1] == 'link' or sys.argv[1] == '-l':
+        # Link object files belonging to this assignment / project
+        # Assignment and its problems must be compiled before running this command
+        # Command:
+        #     $ python Autograder.py link <path to autograder root directory> <assignment / project name>
+        # Test Parameters
+        #    link /home/users/manu/Documents/manujinda/uo_classes/4_2016_summer/boyana/grading assignment_2
+        ag.link()
+
+    elif sys.argv[1] == 'genout' or sys.argv[1] == '-o':
+        # Generate reference outputs for test input
+        # Assignment and its problems must be compiled before running this command
+        # Command:
+        #     $ python Autograder.py genout <path to autograder root directory> <assignment / project name>
+        # Test Parameters
+        #    genout /home/users/manu/Documents/manujinda/uo_classes/4_2016_summer/boyana/grading assignment_2
+        ag.generate_output()
+
+    elif sys.argv[1] == 'grading' or sys.argv[1] == '-g':
+        # Perform grading
+        # Students, Assignment and its problems must be loaded before running this command
+        # Command:
+        #     $ python Autograder.py grading <path to autograder root directory> <assignment / project name>
+        # Test Parameters
+        #    grading /home/users/manu/Documents/manujinda/uo_classes/4_2016_summer/boyana/grading assignment_2
+        if ag.read_students():
+            if ag.load_input():
+                if len( sys.argv ) > 5:
+                    if sys.argv[next_para] == '-s':
+                        ag.do_grading2( stud_no = sys.argv[next_para + 1] )
+                    elif sys.argv[next_para] == '-p':
+                        ag.do_grading2( prob_no = sys.argv[next_para + 1] )
+                    elif sys.argv[next_para] == '-sp' and len( sys.argv ) > 6:
+                        ag.do_grading2( stud_no = sys.argv[next_para + 1], prob_no = sys.argv[next_para + 2] )
+                else:
+                    ag.do_grading2()
+            else:
+                print 'Error: Inputs not loaded. Exiting...'
+        else:
+            print 'Error: Students not loaded. Exiting...'
+
+else:
+    print 'USAGE: Autograder.py <flag>'
+
+exit()
+
+
+####################
 
 
 if len( sys.argv ) > 2:
@@ -518,6 +667,7 @@ if len( sys.argv ) > 2:
         ag.setup_grading_dir_tree()
 
         exit()
+
 else:
     print 'Error: Invalid command'
     exit()

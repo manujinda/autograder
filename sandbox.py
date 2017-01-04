@@ -11,7 +11,7 @@ This chages rapidly. Not a part of the main project. This is just my playground 
 import ConfigParser
 from collections import OrderedDict
 import csv
-from datetime import datetime
+from datetime import datetime, timedelta
 from difflib import HtmlDiff
 from difflib import SequenceMatcher
 import os
@@ -23,6 +23,22 @@ from Assignment import Assignment
 from Command import Command
 from Repository import Repository
 from diff_match_patch import diff_match_patch
+
+# Playing with data and time
+dt = datetime.strptime( '01/03/2017::16:00', '%m/%d/%Y::%H:%M' )
+now = datetime.now()
+
+print dt
+print dt + timedelta( minutes = 30 )
+print now
+
+if now > dt + timedelta( 30 ):
+    print 'grater'
+else:
+    print 'lesser'
+exit()
+
+
 
 # Checking the current directory of a python script
 

@@ -37,7 +37,7 @@ class AgGlobals( object ):
 
     # Assignment / project configuration file name and formats
     ASSIGNMENT_CFG_FORMAT = '+_1_{}.cfg'  # Format for the assignment / project configuration file name. E.g. +_1_Assignment_1.cfg
-    ASSIGNMENT_CFG_DUE_DATE_FORMAT = '%m/%d/%Y'  # This should match the format provided in ASSIGNMENT_INIT_DUE_DATE
+    ASSIGNMENT_CFG_DUE_DATE_FORMAT = '%m/%d/%Y::%H:%M'  # This should match the format provided in ASSIGNMENT_INIT_DUE_DATE
 
     # Different states of an assignment / project
     ASSIGNMENT_STATE_INITIALIZED = 10
@@ -48,7 +48,7 @@ class AgGlobals( object ):
     # These values are chosen this way to automatically generate a meaningful assignment / project configuration file with comments.
     ASSIGNMENT_INIT_NO = '1 ; insert the assignment number before the ; sign'
     ASSIGNMENT_INIT_NAME = 'hello world ; insert the assignment name before the ; sign'
-    ASSIGNMENT_INIT_DUE_DATE = '6/28/2016 ; insert the due date before the ; sign. Format mm/dd/yyyy'
+    ASSIGNMENT_INIT_DUE_DATE = '6/28/2016::18:35 ; insert the due date before the ; sign. Format mm/dd/yyyy::hour:minute'
     ASSIGNMENT_INIT_PROBLEM_IDS = '1:prog 2:code 3:ans 4:mcq ; insert the different problem numbers of this assignment followed by problem type separated by a :. Use spaces to separate problems'
 
     # Problem configuration file name and keywords
