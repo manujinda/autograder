@@ -537,6 +537,9 @@ if len( sys.argv ) > 1:
     elif len( sys.argv ) == 6 or len( sys.argv ) == 3:
         ag_cfg = os.path.join( os.getcwd(), AgGlobals.AUTOGRADER_CFG_NAME )
         next_para = 2
+    else:
+        print 'Error: Invalid autograder command line. Exiting...'
+        sys.exit()
 #     elif len( sys.argv ) > 3:
 #         ag_cfg = os.path.join( sys.argv[2], AgGlobals.AUTOGRADER_CFG_NAME )
 #         next_para = 3
