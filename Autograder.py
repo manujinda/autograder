@@ -330,8 +330,18 @@ class Autograder( object ):
             deadline = self.asmnt.get_deadline()
 
             if not deadline:
-                print 'Error: Assignment deadline not properly set or assignment not proplerly loaded. Exiting...'
+                print 'Error: Assignment deadline not properly set or assignment not properly loaded. Exiting...'
                 sys.exit()
+
+            update_repos = False
+            if now_time > deadline:
+                print 'Warning: Assignment deadline has passed!'
+                print 'Deadline: {}'.format( deadline )
+                print 'Now     : {}'.format( now_time )
+                choice = raw_input( 'Do you want to update repos (Y | n)?: ' )
+
+                if choice.lower() == 'y':
+                    update_repos = True
 
             # Open grading log file for this student
             log_directory_path = os.path.join( asmnt_master_sub_dir, AgGlobals.LOG_FILE_DIRECTORY )
@@ -385,7 +395,7 @@ class Autograder( object ):
                 stud_dir_path = os.path.join( destination, stud_dir_name, self.asmnt.get_assignment_sub_dir() )
 
                 # Update student repos only if this is before the deadline
-                if now_time <= deadline:
+                if now_time <= deadline or update_repos:
                     # Update local student repository
                     if not os.path.exists( stud_local_repo_path ):
                         # Student repository has not been cloned. Have to clone it first

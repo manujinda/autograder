@@ -113,7 +113,7 @@ class Repository( object ):
             if os.path.exists( path ):
                 # os.chdir( path )
                 if self.repo_type == 'git':
-                    if os.path.exists( '.git' ):
+                    if os.path.exists( os.path.join( path, '.git' ) ):
                         # pulling = subprocess.Popen( ['git', 'pull'], stdout = subprocess.PIPE, stderr = subprocess.PIPE )
                         # out, err = pulling.communicate()
 
@@ -171,7 +171,7 @@ class Repository( object ):
                             # AgGlobals.write_to_log( student_log_file, '\t{} {} {}'.format( retcode, out, err ) )
                             return False
                     else:
-                        print '\tthis is not a git repo'
+                        print '\t{} Does not contain a git repo'
                         AgGlobals.write_to_log( grading_log_file, '\tError: Not a valid git repo\n' )
                         AgGlobals.write_to_log( student_log_file, '<div class=error>Error: Invalid git URI - {}</div>'.format( self.uri ), 1 )
                         # AgGlobals.write_to_log( student_log_file, '\tError: Not a valid git repo\n' )
