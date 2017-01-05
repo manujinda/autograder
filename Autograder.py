@@ -335,10 +335,13 @@ class Autograder( object ):
 
             update_repos = False
             if now_time > deadline:
-                print 'Warning: Assignment deadline has passed!'
-                print 'Deadline: {}'.format( deadline )
-                print 'Now     : {}'.format( now_time )
-                choice = raw_input( 'Do you want to update repos (Y | n)?: ' )
+                print '\nWarning: Assignment deadline has passed!'
+                print 'Now     : {}'.format( now_time.strftime( '%x :: %X' ) )
+                print 'Deadline: {}'.format( deadline.strftime( '%x :: %X' ) )
+                lateness = now_time - deadline
+                print 'Lateness: {}\n'.format( str( lateness ).split( '.', 2 )[0] )
+                # print 'Lateness: {}'.format( lateness - timedelta( microseconds = lateness.microseconds ) )
+                choice = raw_input( 'Do you want to update repos (Y | n)? ' )
 
                 if choice.lower() == 'y':
                     update_repos = True
