@@ -16,6 +16,7 @@ from difflib import HtmlDiff
 from difflib import SequenceMatcher
 import os
 import pprint
+import re
 import sys
 
 from AgGlobals import AgGlobals
@@ -23,6 +24,52 @@ from Assignment import Assignment
 from Command import Command
 from Repository import Repository
 from diff_match_patch import diff_match_patch
+
+
+# Playing with adding random seed.
+c_file = open( 'sticks_sol.c', 'r' )
+lines = c_file.readlines()
+c_file.close()
+
+stdlib_found = False
+for l in lines:
+    if '#include' in l:
+        if '<stdlib.h>' in l:
+            stdlib_found = True
+            print 'lib found'
+
+if not stdlib_found:
+    for i in range( len( lines ) ):
+        if '#include' in lines[i]:
+            lines.insert( i, '#include <stdlib.h>\r\n' )
+            break
+
+for i in range( len( lines ) ):
+    if 'srand' in lines[i]:
+        lines[i] = 'srand(1)\r\n'
+        break
+
+
+line = 'abc srand(time(NULL)); def'
+print line
+regex = re.compile( r"srand\(.*\);" )
+line = regex.sub( 'srand(3);', line )
+print line
+# for line in some_file:
+#     line = regex.sub( "interfaceOpDataFile %s" % fileIn, line )
+# print lines
+
+# print lines
+print 'open'
+
+c_file = open( 'sticks_sol.c', 'wb' )
+c_file.writelines( lines )
+c_file.close()
+
+
+exit()
+
+
 
 # Playing with data and time
 dt = datetime.strptime( '01/03/2017::16:00', '%m/%d/%Y::%H:%M' )

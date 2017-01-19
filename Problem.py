@@ -70,6 +70,13 @@ class Problem( object ):
             # No - Do not ignore such mismatches. Student output must match spaces in the reference output.
             self._16_ignore_spaces = AgGlobals.PROBLEM_INIT_IGNORE_SPACES
 
+            # The files that need to be updated with a random seed that
+            # matches the seed used to generate the reference output
+            # Format is a space separated list of file_name:seed
+            # file names must match either provided or submitted files
+            # timeout values must be integers
+            self._17_random = 'provided_1:2' 'file_1:3'
+
         if self._03_prob_type == AgGlobals.PROBLEM_TYPE_PROG or self._03_prob_type == AgGlobals.PROBLEM_TYPE_CODE:
             self._08_language = AgGlobals.PROBLEM_INIT_LANGUAGE
 
@@ -157,6 +164,10 @@ class Problem( object ):
                 print 'Error: Problem {} - {} is dependent on problem {} that comes after it. Exiting...'.format( self._01_prob_no, self._02_name, p )
                 sys.exit()
 
+        # This is a list of lists with all the submitted file names and their file name aliases.
+        # The first entry is the expected file name
+        self._06_files_submitted = AgGlobals.parse_config_line( self._06_files_submitted )
+
         if self._03_prob_type == AgGlobals.PROBLEM_TYPE_PROG:
             self._05_files_provided = self._05_files_provided.split()
             self._99_compiled = False
@@ -183,9 +194,24 @@ class Problem( object ):
             else:
                 self._16_ignore_spaces = False
 
-        # This is a list of lists with all the submitted file names and their file name aliases.
-        # The first entry is the expected file name
-        self._06_files_submitted = AgGlobals.parse_config_line( self._06_files_submitted )
+            # Properly format and validate random value generation related stuff
+            temp_rand = AgGlobals.parse_config_line( self._17_random )
+            all_files = self.get_files_submitted() + self.get_files_provided()
+            self._17_random = {}
+            for tr in temp_rand:
+                if not tr[0] in all_files:
+                    print 'Error - {}) {}: The file "{}{}" to modify random number generation seed is not among the submitted of provided files. Exit...'.format( self._01_prob_no, self._02_name, tr[0], tr[1] )
+                    sys.exit()
+
+                try:
+                    seed = int( tr[1] )
+                except ValueError:
+                    print 'Error - {}) {}: The seed "{}:{}" for random number generation must be an integer. Exit...'.format( self._01_prob_no, self._02_name, tr[0], tr[1] )
+                    sys.exit()
+
+                self._17_random[tr[0]] = seed
+
+            print self._17_random
 
         temp_marks = AgGlobals.parse_config_line( self._15_marks )
         self._15_marks = {}
@@ -311,6 +337,30 @@ class Problem( object ):
                 # Cleanup
                 retcode, out, err = Command( AgGlobals.MAKE_CLEAN ).run( cwd = cwd )
 
+                # Set random number generation seed
+                seed_pattern = re.compile( r"srand\(.*\);" )
+                rand_file_rename = {}
+                for f in self._17_random.keys():
+                    new_seed = 'srand({});'.format( self._17_random[f] )
+                    file_path = os.path.join( cwd, f )
+                    file_backup_path = '{}_backup'.format( file_path )
+                    rand_file_rename[file_backup_path] = file_path
+                    shutil.copy2( file_path, file_backup_path )
+
+                    source = open( file_backup_path, 'r' )
+                    lines = source.readlines()
+                    source.close()
+
+                    for i in range( len( lines ) ):
+                        if 'srand' in lines[i]:
+                            lines[i] = seed_pattern.sub( new_seed, lines[i] )
+                            break
+
+                    dest = open( file_path, 'w' )
+                    dest.writelines( lines )
+                    dest.close()
+
+
                 source_pattern = re.compile( AgGlobals.SOURCE_FILE_NAME_REGEXP_C_CPP )
 
                 for f in self._06_files_submitted:
@@ -370,6 +420,11 @@ class Problem( object ):
 
                     else:
                         print 'Success: Compiling sample solution'
+
+
+                # Clean up changed files due to seed changing
+                for f in rand_file_rename:
+                    shutil.move( f, rand_file_rename[f] )
 
         return AgGlobals.is_flags_set( self._99_state, AgGlobals.PROBLEM_STATE_COMPILED )
 
