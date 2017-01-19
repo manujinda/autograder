@@ -75,7 +75,7 @@ class Problem( object ):
             # Format is a space separated list of file_name:seed
             # file names must match either provided or submitted files
             # timeout values must be integers
-            self._17_seed = 'provided_1:2' 'file_1:3'
+            self._17_seed = 'provided_1:2 file_1:3'
 
         if self._03_prob_type == AgGlobals.PROBLEM_TYPE_PROG or self._03_prob_type == AgGlobals.PROBLEM_TYPE_CODE:
             self._08_language = AgGlobals.PROBLEM_INIT_LANGUAGE
@@ -177,7 +177,7 @@ class Problem( object ):
             for io in in_out:
                 if io[0] in temp_io:
                     print 'Error: Duplicate input id for problem: {} - {}'.format( self._01_prob_no, self._02_name )
-                    print '\t{} -> ( {}, {} ) and {0} -> ( {}, {} )'.format( io[0], temp_io[io[0]][0], temp_io[io[0]][1], io[1], io[2] )
+                    print '\t{} -> ( {}, {} ) and {} -> ( {}, {} )'.format( io[0], temp_io[io[0]][0], temp_io[io[0]][1], io[1], io[2] )
                     print 'Exiting...'
                     sys.exit()
                 else:
@@ -195,21 +195,27 @@ class Problem( object ):
                 self._16_ignore_spaces = False
 
             # Properly format and validate random value generation related stuff
+
             temp_rand = AgGlobals.parse_config_line( self._17_seed )
             all_files = self.get_files_submitted() + self.get_files_provided()
             self._17_seed = {}
-            for tr in temp_rand:
-                if not tr[0] in all_files:
-                    print 'Error - {}) {}: The file "{}{}" to modify random number generation seed is not among the submitted of provided files. Exit...'.format( self._01_prob_no, self._02_name, tr[0], tr[1] )
+            if temp_rand:
+                if len( temp_rand[0] ) != 2:
+                    print 'Error - {}) {}: Random number seeds should appear as <file_name>:<seed>. It is not the case with "{}". Exit...'.format( self._01_prob_no, self._02_name, temp_rand[0][0] )
                     sys.exit()
 
-                try:
-                    seed = int( tr[1] )
-                except ValueError:
-                    print 'Error - {}) {}: The seed "{}:{}" for random number generation must be an integer. Exit...'.format( self._01_prob_no, self._02_name, tr[0], tr[1] )
-                    sys.exit()
+                for tr in temp_rand:
+                    if not tr[0] in all_files:
+                        print 'Error - {}) {}: The file "{}{}" to modify random number generation seed is not among the submitted of provided files. Exit...'.format( self._01_prob_no, self._02_name, tr[0], tr[1] )
+                        sys.exit()
 
-                self._17_seed[tr[0]] = seed
+                    try:
+                        seed = int( tr[1] )
+                    except ValueError:
+                        print 'Error - {}) {}: The seed "{}:{}" for random number generation must be an integer. Exit...'.format( self._01_prob_no, self._02_name, tr[0], tr[1] )
+                        sys.exit()
+
+                    self._17_seed[tr[0]] = seed
 
             # print self._17_seed
 
