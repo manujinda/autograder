@@ -453,8 +453,8 @@ class Problem( object ):
 
 
                 # Clean up changed files due to seed changing
-                for f in seed_file_rename:
-                    shutil.move( f, seed_file_rename[f] )
+#                 for f in seed_file_rename:
+#                     shutil.move( f, seed_file_rename[f] )
 
         return AgGlobals.is_flags_set( self._99_state, AgGlobals.PROBLEM_STATE_COMPILED )
 
