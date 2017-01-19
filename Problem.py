@@ -75,7 +75,7 @@ class Problem( object ):
             # Format is a space separated list of file_name:seed
             # file names must match either provided or submitted files
             # timeout values must be integers
-            self._17_random = 'provided_1:2' 'file_1:3'
+            self._17_seed = 'provided_1:2' 'file_1:3'
 
         if self._03_prob_type == AgGlobals.PROBLEM_TYPE_PROG or self._03_prob_type == AgGlobals.PROBLEM_TYPE_CODE:
             self._08_language = AgGlobals.PROBLEM_INIT_LANGUAGE
@@ -195,9 +195,9 @@ class Problem( object ):
                 self._16_ignore_spaces = False
 
             # Properly format and validate random value generation related stuff
-            temp_rand = AgGlobals.parse_config_line( self._17_random )
+            temp_rand = AgGlobals.parse_config_line( self._17_seed )
             all_files = self.get_files_submitted() + self.get_files_provided()
-            self._17_random = {}
+            self._17_seed = {}
             for tr in temp_rand:
                 if not tr[0] in all_files:
                     print 'Error - {}) {}: The file "{}{}" to modify random number generation seed is not among the submitted of provided files. Exit...'.format( self._01_prob_no, self._02_name, tr[0], tr[1] )
@@ -209,9 +209,9 @@ class Problem( object ):
                     print 'Error - {}) {}: The seed "{}:{}" for random number generation must be an integer. Exit...'.format( self._01_prob_no, self._02_name, tr[0], tr[1] )
                     sys.exit()
 
-                self._17_random[tr[0]] = seed
+                self._17_seed[tr[0]] = seed
 
-            print self._17_random
+            # print self._17_seed
 
         temp_marks = AgGlobals.parse_config_line( self._15_marks )
         self._15_marks = {}
@@ -338,27 +338,51 @@ class Problem( object ):
                 retcode, out, err = Command( AgGlobals.MAKE_CLEAN ).run( cwd = cwd )
 
                 # Set random number generation seed
-                seed_pattern = re.compile( r"srand\(.*\);" )
-                rand_file_rename = {}
-                for f in self._17_random.keys():
-                    new_seed = 'srand({});'.format( self._17_random[f] )
+                seed_pattern = re.compile( AgGlobals.RANTOM_SEED_REGEXP_C )
+                seed_file_rename = {}
+                for f in self._17_seed.keys():
                     file_path = os.path.join( cwd, f )
-                    file_backup_path = '{}_backup'.format( file_path )
-                    rand_file_rename[file_backup_path] = file_path
-                    shutil.copy2( file_path, file_backup_path )
 
-                    source = open( file_backup_path, 'r' )
-                    lines = source.readlines()
+                    source = open( file_path, 'r' )
+                    source_contents = source.read()
                     source.close()
 
-                    for i in range( len( lines ) ):
-                        if 'srand' in lines[i]:
-                            lines[i] = seed_pattern.sub( new_seed, lines[i] )
-                            break
+                    file_has_seed = seed_pattern.search( source_contents )
 
-                    dest = open( file_path, 'w' )
-                    dest.writelines( lines )
-                    dest.close()
+                    if file_has_seed:
+                        new_seed = 'srand({});'.format( self._17_seed[f] )
+
+                        file_backup_path = '{}_backup'.format( file_path )
+                        seed_file_rename[file_backup_path] = file_path
+                        shutil.copy2( file_path, file_backup_path )
+
+                        source_contents = seed_pattern.sub( new_seed, source_contents )
+
+                        dest = open( file_path, 'w' )
+                        dest.writelines( source_contents )
+                        dest.close()
+
+#                     new_seed = 'srand({});'.format( self._17_seed[f] )
+#                     file_path = os.path.join( cwd, f )
+#                     file_backup_path = '{}_backup'.format( file_path )
+#                     rand_file_rename[file_backup_path] = file_path
+#                     shutil.copy2( file_path, file_backup_path )
+#
+#                     source = open( file_backup_path, 'r' )
+#                     # lines = source.readlines()
+#                     lines = source.read()
+#                     source.close()
+
+#                    lines = seed_pattern.sub( new_seed, lines )
+#                     for i in range( len( lines ) ):
+#                         if 'srand' in lines[i]:
+#                             lines[i] = seed_pattern.sub( new_seed, lines[i] )
+#                             break
+
+#                     dest = open( file_path, 'w' )
+#                     # dest.writelines( lines )
+#                     dest.write( lines )
+#                     dest.close()
 
 
                 source_pattern = re.compile( AgGlobals.SOURCE_FILE_NAME_REGEXP_C_CPP )
@@ -423,8 +447,8 @@ class Problem( object ):
 
 
                 # Clean up changed files due to seed changing
-                for f in rand_file_rename:
-                    shutil.move( f, rand_file_rename[f] )
+                for f in seed_file_rename:
+                    shutil.move( f, seed_file_rename[f] )
 
         return AgGlobals.is_flags_set( self._99_state, AgGlobals.PROBLEM_STATE_COMPILED )
 
