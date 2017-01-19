@@ -365,7 +365,7 @@ class Problem( object ):
                         source_contents = seed_pattern.sub( new_seed, source_contents )
 
                         dest = open( file_path, 'w' )
-                        dest.writelines( source_contents )
+                        dest.write( source_contents )
                         dest.close()
 
 #                     new_seed = 'srand({});'.format( self._17_seed[f] )

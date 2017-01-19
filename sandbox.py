@@ -50,9 +50,15 @@ for i in range( len( lines ) ):
         break
 
 
-line = 'abc srand(time(NULL)); def'
+line = 'abc srand(time(NULL)); def srand(34); aaaaa srand(4);'
+line = 'aaa srand(time(NULL)); def srand(34); aaaa srand(3);\n adfdsf );'
+# line = 'aaa bbb aaa bbb aaa ccc'
 print line
-regex = re.compile( r"srand\(.*\);" )
+regex = re.compile( "srand\s*\(.*?\)\s*;" )
+# regex = re.compile( "aaa" )
+# line = regex.sub( 'srand(3);', line )
+# print re.findall( r"srand\s*\(.*\)\s*;", line )
+# line = re.sub( r"srand\s*\(.*\)\s*;", 'srand(3);', line )
 line = regex.sub( 'srand(3);', line )
 print line
 # for line in some_file:

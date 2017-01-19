@@ -143,7 +143,7 @@ class AgGlobals( object ):
     LANGUAGE_C_CPP = ['c', 'C', 'cpp', 'CPP']
     SOURCE_FILE_NAME_REGEXP_C_CPP = '^([_a-zA-Z0-9]+)\.(?:c|C|cpp|CPP)$'
     MAKE_CLEAN = 'make clean'
-    RANTOM_SEED_REGEXP_C = r'srand\(.*\);'
+    RANTOM_SEED_REGEXP_C = r'srand\s*\(.*?\)\s*;'
 
     PRODUCE_OBJECT_CODE = 'obj'
     PRODUCE_BINARY_CODE = 'bin'
