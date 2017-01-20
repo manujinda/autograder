@@ -341,7 +341,7 @@ class Problem( object ):
 
             if self._08_language in AgGlobals.LANGUAGE_C_CPP:
                 # Cleanup
-                retcode, out, err = Command( AgGlobals.MAKE_CLEAN ).run( cwd = cwd )
+                # retcode, out, err = Command( AgGlobals.MAKE_CLEAN ).run( cwd = cwd )
 
                 # Set random number generation seed
                 seed_pattern = re.compile( AgGlobals.RANTOM_SEED_REGEXP_C )

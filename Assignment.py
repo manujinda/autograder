@@ -13,7 +13,8 @@ import shutil
 import sys
 
 from AgGlobals import AgGlobals
-from Input import Input
+from Command import Command
+# from Input import Input
 from Problem import Problem
 
 
@@ -458,6 +459,10 @@ class Assignment( object ):
         if self.is_problems_loaded():
             # if not cwd:
             cwd = self.get_masterdir()
+
+            # Cleanup... Might have to debug
+            retcode, out, err = Command( AgGlobals.MAKE_CLEAN ).run( cwd = cwd )
+
             success = True
             for p in sorted( self._6_problem_ids.keys() ):
                 success = success and self._8_problems[p].compile( cwd )
@@ -524,6 +529,9 @@ class Assignment( object ):
                 problems = sorted( self._6_problem_ids.keys() )
 
             success = True
+
+            # Cleanup... Might have to debug
+            retcode, out, err = Command( AgGlobals.MAKE_CLEAN ).run( cwd = cwd )
 
             for p in problems:
                 AgGlobals.write_to_log( student_log_file, '<h3 class=problem_heading>Grading problem: {}) {}</h3>'.format( p, self._8_problems[p].get_name() ), 1 )
